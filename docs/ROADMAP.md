@@ -18,7 +18,7 @@ Se o plano apresentado tiver algo a mais do que a etapa pede, recuse e diga o qu
 
 ## Fase B — Backend
 
-### [ ] B0 — Esqueleto do backend
+### [x] B0 — Esqueleto do backend
 Repositório git, pasta `/backend`, TypeScript, Fastify com `GET /health`, ESLint, Prettier, Vitest e scripts npm.
 **Pronto quando:** `npm run dev` sobe o servidor, `GET /health` responde 200, e `npm test`, `npm run lint` e `npm run typecheck` passam. Seção "Comandos" do `CLAUDE.md` preenchida.
 
@@ -127,3 +127,6 @@ Deploy e CI/CD, aplicativo mobile.
 ## Pendências
 
 Coisas notadas durante uma etapa que ficam para depois.
+
+- (B0) A B4 precisa decidir como ligar os schemas Zod ao Fastify (ex.: `fastify-type-provider-zod`, que não está na tabela de stack do `SPEC.md`). Por isso o `GET /health` ficou sem schema Zod.
+- (B0) O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.

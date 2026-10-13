@@ -78,4 +78,14 @@ Não crie abstrações sem uso concreto: nada de classes base genéricas, reposi
 
 ## Comandos
 
-Preencher na etapa B0, quando os scripts existirem (dev, test, lint, typecheck, migrate, seed).
+Rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`).
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Sobe a API em `http://localhost:3000` com recarga automática |
+| `npm test` | Roda os testes com Vitest |
+| `npm run lint` | ESLint e verificação de formatação do Prettier |
+| `npm run typecheck` | Checagem de tipos com `tsc --noEmit` |
+| `npm run format` | Formata o código com Prettier |
+
+`migrate` e `seed` entram aqui nas etapas que criarem esses scripts.
