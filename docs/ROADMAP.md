@@ -22,8 +22,8 @@ Se o plano apresentado tiver algo a mais do que a etapa pede, recuse e diga o qu
 Repositório git, pasta `/backend`, TypeScript, Fastify com `GET /health`, ESLint, Prettier, Vitest e scripts npm.
 **Pronto quando:** `npm run dev` sobe o servidor, `GET /health` responde 200, e `npm test`, `npm run lint` e `npm run typecheck` passam. Seção "Comandos" do `CLAUDE.md` preenchida.
 
-### [ ] B1 — Banco de dados e configuração
-Docker Compose com Postgres (banco de desenvolvimento e de teste), Knex configurado, variáveis de ambiente validadas na inicialização, `.env.example`.
+### [x] B1 — Banco de dados e configuração
+Docker Compose com Postgres (banco de desenvolvimento), Knex configurado, variáveis de ambiente validadas na inicialização, `.env.example`.
 **Pronto quando:** `docker compose up` sobe o banco, o servidor recusa iniciar com variável faltando, e `GET /health` informa se o banco está acessível.
 
 ### [ ] B2 — Tabela de restaurantes
@@ -130,3 +130,5 @@ Coisas notadas durante uma etapa que ficam para depois.
 
 - (B0) A B4 precisa decidir como ligar os schemas Zod ao Fastify (ex.: `fastify-type-provider-zod`, que não está na tabela de stack do `SPEC.md`). Por isso o `GET /health` ficou sem schema Zod.
 - (B0) O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.
+- (B1) Decidido pelo dono: testes só em memória, sem Postgres de teste. O critério de pronto da B3 ("testes de integração do repositório Knex passam contra o banco de teste") precisa ser reescrito antes da B3; os repositórios Knex ficam sem teste automatizado.
+- (B1) O Knex escreve `Acquire connection error` direto no console quando o banco está fora do ar, fora do logger do Fastify. Decidir se vale redirecionar para o logger.

@@ -2,12 +2,19 @@ import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from 'fastify';
-import { healthRoutes } from './routes/health.routes.js';
+import { healthRoutes, type DatabaseCheck } from './routes/health.routes.js';
 
-export function buildApp(options: FastifyServerOptions = {}): FastifyInstance {
+export interface AppDependencies {
+  checkDatabase: DatabaseCheck;
+}
+
+export function buildApp(
+  { checkDatabase }: AppDependencies,
+  options: FastifyServerOptions = {},
+): FastifyInstance {
   const app = Fastify(options);
 
-  app.register(healthRoutes);
+  app.register(healthRoutes, { checkDatabase });
 
   return app;
 }

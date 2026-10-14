@@ -56,7 +56,8 @@ Não crie abstrações sem uso concreto: nada de classes base genéricas, reposi
 ## Testes
 
 - Use cases: testes unitários com repositório em memória.
-- Repositórios Knex e rotas: testes de integração contra o Postgres de teste.
+- Rotas: testes com `app.inject` e dependências em memória.
+- Não há Postgres de teste; os repositórios Knex não têm teste automatizado.
 - Uma etapa só está pronta com testes passando, `lint` e `typecheck` limpos.
 
 ## Git
@@ -78,7 +79,7 @@ Não crie abstrações sem uso concreto: nada de classes base genéricas, reposi
 
 ## Comandos
 
-Rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`).
+Rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`). O banco sobe com `docker compose up -d` na raiz, e o `/backend/.env` é uma cópia do `.env.example`.
 
 | Comando | O que faz |
 |---|---|
