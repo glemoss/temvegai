@@ -88,5 +88,6 @@ Rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`). O ba
 | `npm run lint` | ESLint e verificação de formatação do Prettier |
 | `npm run typecheck` | Checagem de tipos com `tsc --noEmit` |
 | `npm run format` | Formata o código com Prettier |
-
-`migrate` e `seed` entram aqui nas etapas que criarem esses scripts.
+| `npm run migrate` | Aplica as migrations pendentes |
+| `npm run migrate:rollback` | Desfaz o último lote de migrations |
+| `npm run seed` | Apaga e recria os dados de exemplo (só desenvolvimento) |

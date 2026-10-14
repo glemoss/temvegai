@@ -26,7 +26,7 @@ Repositório git, pasta `/backend`, TypeScript, Fastify com `GET /health`, ESLin
 Docker Compose com Postgres (banco de desenvolvimento), Knex configurado, variáveis de ambiente validadas na inicialização, `.env.example`.
 **Pronto quando:** `docker compose up` sobe o banco, o servidor recusa iniciar com variável faltando, e `GET /health` informa se o banco está acessível.
 
-### [ ] B2 — Tabela de restaurantes
+### [x] B2 — Tabela de restaurantes
 Migration da tabela `restaurants` conforme o `SPEC.md` e seed com 5 restaurantes de exemplo em Florianópolis.
 **Pronto quando:** `migrate` e `seed` rodam do zero sem erro, e o rollback da migration funciona.
 

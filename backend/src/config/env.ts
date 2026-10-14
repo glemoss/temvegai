@@ -27,3 +27,15 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 
   return result.data;
 }
+
+export function loadEnvOrExit(): Env {
+  try {
+    return loadEnv();
+  } catch (error) {
+    if (error instanceof InvalidEnvError) {
+      console.error(error.message);
+      process.exit(1);
+    }
+    throw error;
+  }
+}
