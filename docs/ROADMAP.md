@@ -30,9 +30,9 @@ Docker Compose com Postgres (banco de desenvolvimento), Knex configurado, variá
 Migration da tabela `restaurants` conforme o `SPEC.md` e seed com 5 restaurantes de exemplo em Florianópolis.
 **Pronto quando:** `migrate` e `seed` rodam do zero sem erro, e o rollback da migration funciona.
 
-### [ ] B3 — Entidade e repositório
+### [x] B3 — Entidade e repositório
 Tipo `Restaurant`, interface `RestaurantRepository` com `findAll` e `findById`, implementação com Knex e implementação em memória para testes.
-**Pronto quando:** testes de integração do repositório Knex passam contra o banco de teste. Nenhuma rota nova nesta etapa.
+**Pronto quando:** o repositório em memória e a conversão de linha do banco para `Restaurant` têm testes unitários, e `test`, `lint` e `typecheck` passam. O repositório Knex é verificado contra o banco pelos critérios da B4 (`findAll`) e da B5 (`findById`). Nenhuma rota nova nesta etapa.
 
 ### [ ] B4 — Listar restaurantes
 `ListRestaurantsUseCase` e `GET /restaurants`, passando por route, controller e use case. Ponto único de composição das dependências.
@@ -130,5 +130,5 @@ Coisas notadas durante uma etapa que ficam para depois.
 
 - (B0) A B4 precisa decidir como ligar os schemas Zod ao Fastify (ex.: `fastify-type-provider-zod`, que não está na tabela de stack do `SPEC.md`). Por isso o `GET /health` ficou sem schema Zod.
 - (B0) O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.
-- (B1) Decidido pelo dono: testes só em memória, sem Postgres de teste. O critério de pronto da B3 ("testes de integração do repositório Knex passam contra o banco de teste") precisa ser reescrito antes da B3; os repositórios Knex ficam sem teste automatizado.
 - (B1) O Knex escreve `Acquire connection error` direto no console quando o banco está fora do ar, fora do logger do Fastify. Decidir se vale redirecionar para o logger.
+- (B3) `findById` com um id que não é UUID faz o Postgres lançar erro de sintaxe. A B5 precisa validar o id e devolver 400 antes de chegar no repositório.
