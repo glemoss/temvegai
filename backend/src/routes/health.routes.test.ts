@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
+import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memory-restaurant.repository.js';
 
 describe('GET /health', () => {
   it('responds 200 when the database is reachable', async () => {
-    const app = buildApp({ checkDatabase: async () => true });
+    const app = buildApp({
+      checkDatabase: async () => true,
+      restaurantRepository: new InMemoryRestaurantRepository(),
+    });
 
     const response = await app.inject({ method: 'GET', url: '/health' });
 
@@ -14,7 +18,10 @@ describe('GET /health', () => {
   });
 
   it('responds 503 when the database is unreachable', async () => {
-    const app = buildApp({ checkDatabase: async () => false });
+    const app = buildApp({
+      checkDatabase: async () => false,
+      restaurantRepository: new InMemoryRestaurantRepository(),
+    });
 
     const response = await app.inject({ method: 'GET', url: '/health' });
 

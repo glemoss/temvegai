@@ -28,8 +28,8 @@ routes  →  controllers  →  use cases  →  repositories (interfaces)
                                   implementações com Knex
 ```
 
-- **Routes**: registram o endpoint no Fastify e o schema Zod de entrada e saída. Sem lógica.
-- **Controllers**: traduzem HTTP para chamada de use case e a resposta de volta para HTTP. Sem regra de negócio, sem acesso a banco.
+- **Routes**: registram o endpoint no Fastify. Sem lógica.
+- **Controllers**: validam a entrada com Zod (`schema.parse`), traduzem HTTP para chamada de use case e a resposta de volta para HTTP. Sem regra de negócio, sem acesso a banco. Não há schema de saída.
 - **Use cases**: uma classe por operação (ex.: `ListRestaurantsUseCase`), com um método `execute`. Contêm a regra de negócio. Não conhecem Fastify nem Knex.
 - **Repositories**: o use case depende de uma interface (ex.: `RestaurantRepository`). A implementação com Knex fica separada e é a única parte que importa o Knex.
 

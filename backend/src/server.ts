@@ -1,12 +1,16 @@
 import { buildApp } from './app.js';
 import { loadEnvOrExit } from './config/env.js';
 import { createDatabase, isDatabaseReachable } from './database/connection.js';
+import { KnexRestaurantRepository } from './repositories/knex/knex-restaurant.repository.js';
 
 const env = loadEnvOrExit();
 const db = createDatabase(env.DATABASE_URL);
 
 const app = buildApp(
-  { checkDatabase: () => isDatabaseReachable(db) },
+  {
+    checkDatabase: () => isDatabaseReachable(db),
+    restaurantRepository: new KnexRestaurantRepository(db),
+  },
   { logger: true },
 );
 

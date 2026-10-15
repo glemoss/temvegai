@@ -34,9 +34,9 @@ Migration da tabela `restaurants` conforme o `SPEC.md` e seed com 5 restaurantes
 Tipo `Restaurant`, interface `RestaurantRepository` com `findAll` e `findById`, implementação com Knex e implementação em memória para testes.
 **Pronto quando:** o repositório em memória e a conversão de linha do banco para `Restaurant` têm testes unitários, e `test`, `lint` e `typecheck` passam. O repositório Knex é verificado contra o banco pelos critérios da B4 (`findAll`) e da B5 (`findById`). Nenhuma rota nova nesta etapa.
 
-### [ ] B4 — Listar restaurantes
+### [x] B4 — Listar restaurantes
 `ListRestaurantsUseCase` e `GET /restaurants`, passando por route, controller e use case. Ponto único de composição das dependências.
-**Pronto quando:** `GET /restaurants` devolve os restaurantes do seed, com teste unitário do use case e teste de integração da rota.
+**Pronto quando:** `GET /restaurants` devolve os restaurantes do seed, com teste unitário do use case.
 
 ### [ ] B5 — Detalhe e tratamento de erros
 `GetRestaurantUseCase`, `GET /restaurants/:id`, `RestaurantNotFoundError` e error handler único com formato de erro padronizado.
@@ -128,7 +128,7 @@ Deploy e CI/CD, aplicativo mobile.
 
 Coisas notadas durante uma etapa que ficam para depois.
 
-- (B0) A B4 precisa decidir como ligar os schemas Zod ao Fastify (ex.: `fastify-type-provider-zod`, que não está na tabela de stack do `SPEC.md`). Por isso o `GET /health` ficou sem schema Zod.
 - (B0) O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.
 - (B1) O Knex escreve `Acquire connection error` direto no console quando o banco está fora do ar, fora do logger do Fastify. Decidir se vale redirecionar para o logger.
 - (B3) `findById` com um id que não é UUID faz o Postgres lançar erro de sintaxe. A B5 precisa validar o id e devolver 400 antes de chegar no repositório.
+- (B4) Decidido pelo dono: Zod só na entrada, com `schema.parse` no controller, sem dependência nova e sem schema de saída. Sem schema registrado no Fastify, a B10 não tem de onde gerar o OpenAPI automaticamente; decidir na B10.
