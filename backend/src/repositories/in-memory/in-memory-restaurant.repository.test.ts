@@ -30,7 +30,7 @@ describe('InMemoryRestaurantRepository', () => {
   it('returns an empty list when there are no restaurants', async () => {
     const repository = new InMemoryRestaurantRepository();
 
-    expect(await repository.findAll()).toEqual([]);
+    expect(await repository.findAll({})).toEqual([]);
   });
 
   it('returns all restaurants ordered by name', async () => {
@@ -40,7 +40,7 @@ describe('InMemoryRestaurantRepository', () => {
       kairu,
     ]);
 
-    expect(await repository.findAll()).toEqual([desvioVeg, kairu, tsanThe]);
+    expect(await repository.findAll({})).toEqual([desvioVeg, kairu, tsanThe]);
   });
 
   it('finds a restaurant by id', async () => {

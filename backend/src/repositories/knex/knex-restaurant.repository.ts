@@ -1,6 +1,9 @@
 import type { Knex } from 'knex';
 import type { Restaurant, RestaurantType } from '../../entities/restaurant.js';
-import type { RestaurantRepository } from '../restaurant.repository.js';
+import type {
+  RestaurantFilters,
+  RestaurantRepository,
+} from '../restaurant.repository.js';
 
 export interface RestaurantRow {
   id: string;
@@ -39,11 +42,40 @@ export function toRestaurant(row: RestaurantRow): Restaurant {
   };
 }
 
+// Makes % and _ match literally instead of acting as LIKE wildcards.
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&');
+}
+
 export class KnexRestaurantRepository implements RestaurantRepository {
   constructor(private readonly db: Knex) {}
 
-  async findAll(): Promise<Restaurant[]> {
-    const rows = await this.db<RestaurantRow>('restaurants').orderBy('name');
+  async findAll({
+    type,
+    neighborhood,
+    name,
+    bounds,
+  }: RestaurantFilters): Promise<Restaurant[]> {
+    const query = this.db<RestaurantRow>('restaurants').orderBy('name');
+
+    if (type) {
+      query.where({ type });
+    }
+    if (neighborhood) {
+      query.whereRaw('lower(neighborhood) = lower(?)', [neighborhood]);
+    }
+    if (name) {
+      query.whereRaw('unaccent(name) ilike unaccent(?)', [
+        `%${escapeLike(name)}%`,
+      ]);
+    }
+    if (bounds) {
+      query
+        .whereBetween('latitude', [bounds.minLat, bounds.maxLat])
+        .whereBetween('longitude', [bounds.minLng, bounds.maxLng]);
+    }
+
+    const rows = await query;
     return rows.map(toRestaurant);
   }
 
