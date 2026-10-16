@@ -38,9 +38,9 @@ Tipo `Restaurant`, interface `RestaurantRepository` com `findAll` e `findById`, 
 `ListRestaurantsUseCase` e `GET /restaurants`, passando por route, controller e use case. Ponto único de composição das dependências.
 **Pronto quando:** `GET /restaurants` devolve os restaurantes do seed, com teste unitário do use case.
 
-### [ ] B5 — Detalhe e tratamento de erros
+### [x] B5 — Detalhe e tratamento de erros
 `GetRestaurantUseCase`, `GET /restaurants/:id`, `RestaurantNotFoundError` e error handler único com formato de erro padronizado.
-**Pronto quando:** id existente devolve 200, id inexistente devolve 404 e id inválido devolve 400, todos no mesmo formato de erro e com testes.
+**Pronto quando:** id existente devolve 200, id inexistente devolve 404 e id inválido devolve 400, os erros no mesmo formato, com teste unitário do use case.
 
 ### [ ] B6 — Filtros
 Parâmetros em `GET /restaurants`: `type`, `neighborhood`, `q` (busca por nome) e área visível do mapa (`minLat`, `maxLat`, `minLng`, `maxLng`).
@@ -130,5 +130,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 
 - (B0) O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.
 - (B1) O Knex escreve `Acquire connection error` direto no console quando o banco está fora do ar, fora do logger do Fastify. Decidir se vale redirecionar para o logger.
-- (B3) `findById` com um id que não é UUID faz o Postgres lançar erro de sintaxe. A B5 precisa validar o id e devolver 400 antes de chegar no repositório.
 - (B4) Decidido pelo dono: Zod só na entrada, com `schema.parse` no controller, sem dependência nova e sem schema de saída. Sem schema registrado no Fastify, a B10 não tem de onde gerar o OpenAPI automaticamente; decidir na B10.

@@ -56,7 +56,7 @@ Não crie abstrações sem uso concreto: nada de classes base genéricas, reposi
 ## Testes
 
 - Use cases: testes unitários com repositório em memória.
-- Rotas: testes com `app.inject` e dependências em memória.
+- Rotas não têm teste automatizado (decisão do dono); são verificadas com `curl` contra o banco de desenvolvimento.
 - Não há Postgres de teste; os repositórios Knex não têm teste automatizado.
 - Uma etapa só está pronta com testes passando, `lint` e `typecheck` limpos.
 
