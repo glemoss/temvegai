@@ -11,6 +11,9 @@ function setup() {
   const userRepository = new InMemoryUserRepository();
   const passwordHasher: PasswordHasher = {
     hash: vi.fn(async (plain: string) => `hashed:${plain}`),
+    verify: vi.fn(
+      async (hash: string, plain: string) => hash === `hashed:${plain}`,
+    ),
   };
   const useCase = new CreateAdminUseCase(userRepository, passwordHasher);
   return { userRepository, passwordHasher, useCase };

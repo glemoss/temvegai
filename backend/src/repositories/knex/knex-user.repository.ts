@@ -1,7 +1,11 @@
 import type { Knex } from 'knex';
 import type { User } from '../../entities/user.js';
 import { EmailAlreadyInUseError } from '../../use-cases/errors/email-already-in-use.error.js';
-import type { CreateUserData, UserRepository } from '../user.repository.js';
+import type {
+  CreateUserData,
+  UserCredentials,
+  UserRepository,
+} from '../user.repository.js';
 
 export interface UserRow {
   id: string;
@@ -35,9 +39,19 @@ function isUniqueViolation(error: unknown): boolean {
 export class KnexUserRepository implements UserRepository {
   constructor(private readonly db: Knex) {}
 
+  async findById(id: string): Promise<User | null> {
+    const row = await this.db<UserRow>('users').where({ id }).first();
+    return row ? toUser(row) : null;
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     const row = await this.db<UserRow>('users').where({ email }).first();
     return row ? toUser(row) : null;
+  }
+
+  async findCredentialsByEmail(email: string): Promise<UserCredentials | null> {
+    const row = await this.db<UserRow>('users').where({ email }).first();
+    return row ? { user: toUser(row), passwordHash: row.password_hash } : null;
   }
 
   async create({ email, passwordHash }: CreateUserData): Promise<User> {

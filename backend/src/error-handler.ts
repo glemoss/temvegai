@@ -1,6 +1,8 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import { InvalidCredentialsError } from './use-cases/errors/invalid-credentials.error.js';
 import { RestaurantNotFoundError } from './use-cases/errors/restaurant-not-found.error.js';
+import { UnauthenticatedError } from './use-cases/errors/unauthenticated.error.js';
 
 interface ErrorBody {
   error: {
@@ -40,6 +42,30 @@ export function errorHandler(
     return reply
       .status(404)
       .send(errorBody('RESTAURANT_NOT_FOUND', 'Restaurante não encontrado.'));
+  }
+
+  if (error instanceof InvalidCredentialsError) {
+    return reply
+      .status(401)
+      .send(errorBody('INVALID_CREDENTIALS', 'E-mail ou senha inválidos.'));
+  }
+
+  if (error instanceof UnauthenticatedError) {
+    return reply
+      .status(401)
+      .send(errorBody('UNAUTHENTICATED', 'Não autenticado.'));
+  }
+
+  // Raised by @fastify/rate-limit when the login attempts are exceeded.
+  if (error.statusCode === 429) {
+    return reply
+      .status(429)
+      .send(
+        errorBody(
+          'TOO_MANY_REQUESTS',
+          'Muitas tentativas. Tente novamente mais tarde.',
+        ),
+      );
   }
 
   // Errors raised by Fastify itself, such as a malformed JSON body.

@@ -2,6 +2,8 @@ import { buildApp } from './app.js';
 import { loadEnvOrExit } from './config/env.js';
 import { createDatabase, isDatabaseReachable } from './database/connection.js';
 import { KnexRestaurantRepository } from './repositories/knex/knex-restaurant.repository.js';
+import { KnexUserRepository } from './repositories/knex/knex-user.repository.js';
+import { Argon2PasswordHasher } from './services/argon2-password-hasher.js';
 
 const env = loadEnvOrExit();
 const db = createDatabase(env.DATABASE_URL);
@@ -10,6 +12,10 @@ const app = buildApp(
   {
     checkDatabase: () => isDatabaseReachable(db),
     restaurantRepository: new KnexRestaurantRepository(db),
+    userRepository: new KnexUserRepository(db),
+    passwordHasher: new Argon2PasswordHasher(),
+    jwtSecret: env.JWT_SECRET,
+    cookieSecure: env.NODE_ENV === 'production',
   },
   { logger: true },
 );

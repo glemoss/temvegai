@@ -50,7 +50,7 @@ Parâmetros em `GET /restaurants`: `type`, `neighborhood`, `q` (busca por nome) 
 Migration da tabela `users` conforme o `SPEC.md`, interface `UserRepository` com implementação Knex e em memória, interface `PasswordHasher` com implementação argon2, `CreateAdminUseCase` e o comando `npm run create-admin` (pede e-mail e senha no terminal).
 **Pronto quando:** o comando cria um admin com a senha salva como hash, recusa e-mail repetido e senha com menos de 12 caracteres, com testes. Nenhuma rota nova nesta etapa.
 
-### [ ] B8 — Login
+### [x] B8 — Login
 `LoginUseCase`, `POST /auth/login`, `POST /auth/logout` e `GET /auth/me`. O login grava um JWT em cookie `httpOnly`. Hook de autenticação reutilizável para proteger rotas. Limite de tentativas na rota de login.
 **Pronto quando:** credenciais certas devolvem 200 e gravam o cookie; e-mail inexistente e senha errada devolvem o mesmo 401 com a mesma mensagem; `GET /auth/me` devolve o admin com cookie válido e 401 sem cookie ou com cookie expirado; logout apaga o cookie; excesso de tentativas devolve 429. Tudo com testes.
 
@@ -131,5 +131,8 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (B0) O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.
 - (B1) O Knex escreve `Acquire connection error` direto no console quando o banco está fora do ar, fora do logger do Fastify. Decidir se vale redirecionar para o logger.
 - (B4) Decidido pelo dono: Zod só na entrada, com `schema.parse` no controller, sem dependência nova e sem schema de saída. Sem schema registrado no Fastify, a B10 não tem de onde gerar o OpenAPI automaticamente; decidir na B10.
-- (B5) Decidido pelo dono: rotas sem teste automatizado por enquanto. Se forem adicionados testes de integração com `app.inject` e repositório em memória (o `health.routes.test.ts` serve de modelo), voltar a regra do `CLAUDE.md` para "Rotas: testes com `app.inject` e dependências em memória".
+- (B5) ~~Rotas sem teste automatizado.~~ Resolvido na B8: o dono decidiu testar rotas com `app.inject` e dependências em memória, e o `CLAUDE.md` foi atualizado.
 - (B7) O `argon2` também tem script de instalação fora do `allowScripts` (mesmo aviso do `esbuild` na B0). Funciona sem ele porque o pacote traz binários prontos; entra na mesma decisão.
+- (B8) `migrate`, `seed` e `create-admin` usam a mesma validação de ambiente do servidor e agora também exigem `JWT_SECRET`, embora não o usem. Decidir se os comandos devem validar só o que precisam.
+- (B8) O logout só apaga o cookie: um token copiado continua válido até expirar (7 dias). Revogação de sessão não está no escopo da v1.
+- (B8) O limite de tentativas do login fica na memória do processo; reiniciar o servidor zera a contagem, e com mais de uma instância cada uma conta separado. Basta para a v1, mas entra na conversa de deploy.

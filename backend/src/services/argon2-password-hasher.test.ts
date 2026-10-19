@@ -16,4 +16,18 @@ describe('Argon2PasswordHasher', () => {
       await hasher.hash('correct-horse-battery'),
     );
   });
+
+  it('verifies the right password against its hash', async () => {
+    const hasher = new Argon2PasswordHasher();
+    const hash = await hasher.hash('correct-horse-battery');
+
+    expect(await hasher.verify(hash, 'correct-horse-battery')).toBe(true);
+  });
+
+  it('rejects a wrong password', async () => {
+    const hasher = new Argon2PasswordHasher();
+    const hash = await hasher.hash('correct-horse-battery');
+
+    expect(await hasher.verify(hash, 'wrong-horse-battery')).toBe(false);
+  });
 });
