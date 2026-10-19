@@ -7,6 +7,7 @@ import { InMemoryUserRepository } from './repositories/in-memory/in-memory-user.
 const frontendOrigin = 'http://localhost:5173';
 
 let app: FastifyInstance;
+let registeredRoutes: string[];
 
 beforeEach(async () => {
   app = buildApp({
@@ -20,6 +21,19 @@ beforeEach(async () => {
     jwtSecret: 'a'.repeat(32),
     cookieSecure: false,
     corsOrigin: frontendOrigin,
+  });
+
+  // The API routes, without the ones added by plugins (docs, CORS preflight)
+  // and the HEAD routes Fastify creates for each GET.
+  registeredRoutes = [];
+  app.addHook('onRoute', ({ method, url }) => {
+    if (
+      typeof method === 'string' &&
+      !['HEAD', 'OPTIONS'].includes(method) &&
+      !url.startsWith('/docs')
+    ) {
+      registeredRoutes.push(`${method} ${url}`);
+    }
   });
 
   await app.ready();
@@ -78,5 +92,72 @@ describe('CORS', () => {
     expect(response.headers['access-control-allow-origin']).toBe(
       frontendOrigin,
     );
+  });
+});
+
+describe('API documentation', () => {
+  it('serves the documentation page', async () => {
+    const response = await app.inject({ method: 'GET', url: '/docs' });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toContain('text/html');
+  });
+
+  it('documents every route of the API', async () => {
+    const response = await app.inject({ method: 'GET', url: '/docs/json' });
+
+    expect(response.statusCode).toBe(200);
+    const paths: Record<string, Record<string, unknown>> = response.json()
+      .paths;
+    const documentedRoutes = Object.entries(paths).flatMap(
+      ([path, operations]) =>
+        Object.keys(operations).map(
+          (method) =>
+            `${method.toUpperCase()} ${path.replace(/{(\w+)}/g, ':$1')}`,
+        ),
+    );
+
+    expect(registeredRoutes.length).toBeGreaterThan(0);
+    expect(documentedRoutes.sort()).toEqual(registeredRoutes.sort());
+  });
+
+  it('builds the parameters and bodies from the controller schemas', async () => {
+    const response = await app.inject({ method: 'GET', url: '/docs/json' });
+    const { paths } = response.json();
+
+    const listParameters = paths['/restaurants'].get.parameters.map(
+      ({ name }: { name: string }) => name,
+    );
+    expect(listParameters).toEqual([
+      'type',
+      'neighborhood',
+      'q',
+      'minLat',
+      'maxLat',
+      'minLng',
+      'maxLng',
+    ]);
+
+    const restaurantBody =
+      paths['/restaurants'].post.requestBody.content['application/json'].schema;
+    expect(restaurantBody.required).toEqual(
+      expect.arrayContaining([
+        'name',
+        'type',
+        'address',
+        'neighborhood',
+        'latitude',
+        'longitude',
+      ]),
+    );
+    expect(restaurantBody.additionalProperties).toBe(false);
+
+    const idParameter = paths['/restaurants/{id}'].get.parameters[0];
+    expect(idParameter).toMatchObject({
+      name: 'id',
+      in: 'path',
+      required: true,
+      schema: { type: 'string', format: 'uuid' },
+    });
   });
 });

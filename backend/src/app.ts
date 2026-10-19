@@ -2,6 +2,8 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyCors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUi from '@fastify/swagger-ui';
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
@@ -19,6 +21,7 @@ import {
 } from './controllers/session-cookie.js';
 import { UpdateRestaurantController } from './controllers/update-restaurant.controller.js';
 import { errorHandler, notFoundHandler } from './error-handler.js';
+import { openApiDocument } from './openapi.js';
 import type { RestaurantRepository } from './repositories/restaurant.repository.js';
 import type { UserRepository } from './repositories/user.repository.js';
 import { authRoutes } from './routes/auth.routes.js';
@@ -105,6 +108,12 @@ export function buildApp(
   });
   // Off by default; only routes with `config.rateLimit` are limited.
   app.register(fastifyRateLimit, { global: false });
+
+  app.register(fastifySwagger, {
+    mode: 'static',
+    specification: { document: openApiDocument },
+  });
+  app.register(fastifySwaggerUi, { routePrefix: '/docs' });
 
   app.register(healthRoutes, { checkDatabase });
   app.register(restaurantsRoutes, {

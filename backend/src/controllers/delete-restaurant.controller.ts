@@ -2,7 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { DeleteRestaurantUseCase } from '../use-cases/delete-restaurant.use-case.js';
 
-const paramsSchema = z.object({
+export const paramsSchema = z.object({
   id: z.uuid(),
 });
 

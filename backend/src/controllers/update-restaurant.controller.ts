@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { UpdateRestaurantUseCase } from '../use-cases/update-restaurant.use-case.js';
 import { restaurantBodySchema } from './restaurant-body.js';
 
-const paramsSchema = z.object({
+export const paramsSchema = z.object({
   id: z.uuid(),
 });
 

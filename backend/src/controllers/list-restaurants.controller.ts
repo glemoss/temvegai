@@ -20,7 +20,7 @@ function coordinate(limit: number) {
     .optional();
 }
 
-const querySchema = z
+export const querySchema = z
   .object({
     type: z.enum(['fully_vegan', 'vegan_options']).optional(),
     neighborhood: optionalText,

@@ -7,7 +7,7 @@ import {
   sessionCookieOptions,
 } from './session-cookie.js';
 
-const bodySchema = z.object({
+export const bodySchema = z.object({
   email: z.string().trim().pipe(z.email()),
   password: z.string().min(1),
 });
