@@ -91,3 +91,4 @@ Rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`). O ba
 | `npm run migrate` | Aplica as migrations pendentes |
 | `npm run migrate:rollback` | Desfaz o último lote de migrations |
 | `npm run seed` | Apaga e recria os dados de exemplo (só desenvolvimento) |
+| `npm run create-admin` | Cria uma conta de admin (pede e-mail e senha no terminal) |

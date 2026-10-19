@@ -46,7 +46,7 @@ Tipo `Restaurant`, interface `RestaurantRepository` com `findAll` e `findById`, 
 Parâmetros em `GET /restaurants`: `type`, `neighborhood`, `q` (busca por nome) e área visível do mapa (`minLat`, `maxLat`, `minLng`, `maxLng`).
 **Pronto quando:** cada filtro funciona sozinho e combinado, parâmetros inválidos devolvem 400, com teste unitário do use case. A busca por nome ignora maiúsculas e acentos (extensão `unaccent`).
 
-### [ ] B7 — Contas de admin
+### [x] B7 — Contas de admin
 Migration da tabela `users` conforme o `SPEC.md`, interface `UserRepository` com implementação Knex e em memória, interface `PasswordHasher` com implementação argon2, `CreateAdminUseCase` e o comando `npm run create-admin` (pede e-mail e senha no terminal).
 **Pronto quando:** o comando cria um admin com a senha salva como hash, recusa e-mail repetido e senha com menos de 12 caracteres, com testes. Nenhuma rota nova nesta etapa.
 
@@ -132,3 +132,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (B1) O Knex escreve `Acquire connection error` direto no console quando o banco está fora do ar, fora do logger do Fastify. Decidir se vale redirecionar para o logger.
 - (B4) Decidido pelo dono: Zod só na entrada, com `schema.parse` no controller, sem dependência nova e sem schema de saída. Sem schema registrado no Fastify, a B10 não tem de onde gerar o OpenAPI automaticamente; decidir na B10.
 - (B5) Decidido pelo dono: rotas sem teste automatizado por enquanto. Se forem adicionados testes de integração com `app.inject` e repositório em memória (o `health.routes.test.ts` serve de modelo), voltar a regra do `CLAUDE.md` para "Rotas: testes com `app.inject` e dependências em memória".
+- (B7) O `argon2` também tem script de instalação fora do `allowScripts` (mesmo aviso do `esbuild` na B0). Funciona sem ele porque o pacote traz binários prontos; entra na mesma decisão.
