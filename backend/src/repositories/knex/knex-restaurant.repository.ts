@@ -1,6 +1,7 @@
 import type { Knex } from 'knex';
 import type { Restaurant, RestaurantType } from '../../entities/restaurant.js';
 import type {
+  RestaurantData,
   RestaurantFilters,
   RestaurantRepository,
 } from '../restaurant.repository.js';
@@ -39,6 +40,27 @@ export function toRestaurant(row: RestaurantRow): Restaurant {
     openingHours: row.opening_hours,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+type RestaurantDataRow = Omit<
+  RestaurantRow,
+  'id' | 'created_at' | 'updated_at'
+>;
+
+function toRestaurantDataRow(data: RestaurantData): RestaurantDataRow {
+  return {
+    name: data.name,
+    description: data.description,
+    type: data.type,
+    address: data.address,
+    neighborhood: data.neighborhood,
+    latitude: String(data.latitude),
+    longitude: String(data.longitude),
+    phone: data.phone,
+    website: data.website,
+    instagram: data.instagram,
+    opening_hours: data.openingHours,
   };
 }
 
@@ -84,5 +106,27 @@ export class KnexRestaurantRepository implements RestaurantRepository {
       .where({ id })
       .first();
     return row ? toRestaurant(row) : null;
+  }
+
+  async create(data: RestaurantData): Promise<Restaurant> {
+    const [row] = await this.db<RestaurantRow>('restaurants')
+      .insert(toRestaurantDataRow(data))
+      .returning('*');
+    return toRestaurant(row as RestaurantRow);
+  }
+
+  async update(id: string, data: RestaurantData): Promise<Restaurant | null> {
+    const [row] = await this.db<RestaurantRow>('restaurants')
+      .where({ id })
+      .update({ ...toRestaurantDataRow(data), updated_at: this.db.fn.now() })
+      .returning('*');
+    return row ? toRestaurant(row as RestaurantRow) : null;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const deleted = await this.db<RestaurantRow>('restaurants')
+      .where({ id })
+      .delete();
+    return deleted > 0;
   }
 }

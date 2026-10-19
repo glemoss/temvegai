@@ -5,6 +5,8 @@ import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from 'fastify';
+import { CreateRestaurantController } from './controllers/create-restaurant.controller.js';
+import { DeleteRestaurantController } from './controllers/delete-restaurant.controller.js';
 import { GetCurrentAdminController } from './controllers/get-current-admin.controller.js';
 import { GetRestaurantController } from './controllers/get-restaurant.controller.js';
 import { ListRestaurantsController } from './controllers/list-restaurants.controller.js';
@@ -14,6 +16,7 @@ import {
   SESSION_COOKIE_NAME,
   SESSION_MAX_AGE_SECONDS,
 } from './controllers/session-cookie.js';
+import { UpdateRestaurantController } from './controllers/update-restaurant.controller.js';
 import { errorHandler, notFoundHandler } from './error-handler.js';
 import type { RestaurantRepository } from './repositories/restaurant.repository.js';
 import type { UserRepository } from './repositories/user.repository.js';
@@ -22,10 +25,13 @@ import { healthRoutes, type DatabaseCheck } from './routes/health.routes.js';
 import { restaurantsRoutes } from './routes/restaurants.routes.js';
 import { FastifyJwtTokenIssuer } from './services/fastify-jwt-token-issuer.js';
 import type { PasswordHasher } from './services/password-hasher.js';
+import { CreateRestaurantUseCase } from './use-cases/create-restaurant.use-case.js';
+import { DeleteRestaurantUseCase } from './use-cases/delete-restaurant.use-case.js';
 import { GetCurrentAdminUseCase } from './use-cases/get-current-admin.use-case.js';
 import { GetRestaurantUseCase } from './use-cases/get-restaurant.use-case.js';
 import { ListRestaurantsUseCase } from './use-cases/list-restaurants.use-case.js';
 import { LoginUseCase } from './use-cases/login.use-case.js';
+import { UpdateRestaurantUseCase } from './use-cases/update-restaurant.use-case.js';
 
 export interface AppDependencies {
   checkDatabase: DatabaseCheck;
@@ -54,6 +60,15 @@ export function buildApp(
   );
   const getRestaurantController = new GetRestaurantController(
     new GetRestaurantUseCase(restaurantRepository),
+  );
+  const createRestaurantController = new CreateRestaurantController(
+    new CreateRestaurantUseCase(restaurantRepository),
+  );
+  const updateRestaurantController = new UpdateRestaurantController(
+    new UpdateRestaurantUseCase(restaurantRepository),
+  );
+  const deleteRestaurantController = new DeleteRestaurantController(
+    new DeleteRestaurantUseCase(restaurantRepository),
   );
   const loginController = new LoginController(
     new LoginUseCase(
@@ -86,6 +101,9 @@ export function buildApp(
   app.register(restaurantsRoutes, {
     listRestaurantsController,
     getRestaurantController,
+    createRestaurantController,
+    updateRestaurantController,
+    deleteRestaurantController,
   });
   app.register(authRoutes, {
     loginController,

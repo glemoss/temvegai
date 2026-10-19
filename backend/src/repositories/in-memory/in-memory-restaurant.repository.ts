@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import type { Restaurant } from '../../entities/restaurant.js';
 import type {
+  RestaurantData,
   RestaurantFilters,
   RestaurantRepository,
 } from '../restaurant.repository.js';
@@ -13,7 +15,12 @@ function normalize(value: string): string {
 }
 
 export class InMemoryRestaurantRepository implements RestaurantRepository {
-  constructor(private readonly restaurants: Restaurant[] = []) {}
+  private readonly restaurants: Restaurant[];
+
+  // Copies the list so writes do not change the caller's array.
+  constructor(restaurants: Restaurant[] = []) {
+    this.restaurants = [...restaurants];
+  }
 
   async findAll({
     type,
@@ -45,5 +52,48 @@ export class InMemoryRestaurantRepository implements RestaurantRepository {
 
   async findById(id: string): Promise<Restaurant | null> {
     return this.restaurants.find((restaurant) => restaurant.id === id) ?? null;
+  }
+
+  async create(data: RestaurantData): Promise<Restaurant> {
+    const now = new Date();
+    const restaurant: Restaurant = {
+      ...data,
+      id: randomUUID(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.restaurants.push(restaurant);
+    return restaurant;
+  }
+
+  async update(id: string, data: RestaurantData): Promise<Restaurant | null> {
+    const index = this.restaurants.findIndex(
+      (restaurant) => restaurant.id === id,
+    );
+    const current = this.restaurants[index];
+    if (!current) {
+      return null;
+    }
+
+    const restaurant: Restaurant = {
+      ...data,
+      id,
+      createdAt: current.createdAt,
+      updatedAt: new Date(),
+    };
+    this.restaurants[index] = restaurant;
+    return restaurant;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const index = this.restaurants.findIndex(
+      (restaurant) => restaurant.id === id,
+    );
+    if (index === -1) {
+      return false;
+    }
+
+    this.restaurants.splice(index, 1);
+    return true;
   }
 }

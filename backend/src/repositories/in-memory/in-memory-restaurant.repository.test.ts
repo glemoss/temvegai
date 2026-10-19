@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Restaurant } from '../../entities/restaurant.js';
+import type { RestaurantData } from '../restaurant.repository.js';
 import { InMemoryRestaurantRepository } from './in-memory-restaurant.repository.js';
 
 function makeRestaurant(overrides: Partial<Restaurant>): Restaurant {
@@ -21,6 +22,20 @@ function makeRestaurant(overrides: Partial<Restaurant>): Restaurant {
     ...overrides,
   };
 }
+
+const data: RestaurantData = {
+  name: 'Novo Veg',
+  description: 'Comida caseira',
+  type: 'vegan_options',
+  address: 'Rua Nova, 2',
+  neighborhood: 'Trindade',
+  latitude: -27.5865,
+  longitude: -48.5226,
+  phone: '(48) 3333-4444',
+  website: 'https://novoveg.com',
+  instagram: 'novoveg',
+  openingHours: 'Seg a sex, 11h–15h',
+};
 
 const tsanThe = makeRestaurant({ id: '1', name: 'Tsan The' });
 const desvioVeg = makeRestaurant({ id: '2', name: 'Desvio Veg' });
@@ -53,5 +68,69 @@ describe('InMemoryRestaurantRepository', () => {
     const repository = new InMemoryRestaurantRepository([tsanThe]);
 
     expect(await repository.findById('999')).toBeNull();
+  });
+
+  it('creates a restaurant with a new id and timestamps', async () => {
+    const repository = new InMemoryRestaurantRepository([tsanThe]);
+
+    const created = await repository.create(data);
+
+    expect(created).toEqual({
+      ...data,
+      id: expect.any(String),
+      createdAt: expect.any(Date),
+      updatedAt: created.createdAt,
+    });
+    expect(created.id).not.toBe(tsanThe.id);
+    expect(await repository.findById(created.id)).toEqual(created);
+  });
+
+  it('updates a restaurant keeping its id and createdAt', async () => {
+    const repository = new InMemoryRestaurantRepository([tsanThe, kairu]);
+
+    const updated = await repository.update('3', data);
+
+    expect(updated).toEqual({
+      ...data,
+      id: '3',
+      createdAt: kairu.createdAt,
+      updatedAt: expect.any(Date),
+    });
+    expect(updated?.updatedAt.getTime()).toBeGreaterThan(
+      kairu.updatedAt.getTime(),
+    );
+    expect(await repository.findById('3')).toEqual(updated);
+    expect(await repository.findById('1')).toEqual(tsanThe);
+  });
+
+  it('returns null when updating an unknown id', async () => {
+    const repository = new InMemoryRestaurantRepository([tsanThe]);
+
+    expect(await repository.update('999', data)).toBeNull();
+    expect(await repository.findAll({})).toEqual([tsanThe]);
+  });
+
+  it('deletes a restaurant', async () => {
+    const repository = new InMemoryRestaurantRepository([tsanThe, kairu]);
+
+    expect(await repository.delete('3')).toBe(true);
+    expect(await repository.findAll({})).toEqual([tsanThe]);
+  });
+
+  it('returns false when deleting an unknown id', async () => {
+    const repository = new InMemoryRestaurantRepository([tsanThe]);
+
+    expect(await repository.delete('999')).toBe(false);
+    expect(await repository.findAll({})).toEqual([tsanThe]);
+  });
+
+  it('does not change the list it was given', async () => {
+    const restaurants = [tsanThe];
+    const repository = new InMemoryRestaurantRepository(restaurants);
+
+    await repository.create(data);
+    await repository.delete('1');
+
+    expect(restaurants).toEqual([tsanThe]);
   });
 });
