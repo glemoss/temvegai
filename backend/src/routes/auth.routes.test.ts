@@ -26,6 +26,7 @@ async function setup() {
     },
     jwtSecret: 'a'.repeat(32),
     cookieSecure: false,
+    corsOrigin: 'http://localhost:5173',
   });
   await app.ready();
   return { admin };

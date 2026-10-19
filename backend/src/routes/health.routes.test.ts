@@ -14,6 +14,7 @@ function dependencies(checkDatabase: () => Promise<boolean>): AppDependencies {
     },
     jwtSecret: 'a'.repeat(32),
     cookieSecure: false,
+    corsOrigin: 'http://localhost:5173',
   };
 }
 

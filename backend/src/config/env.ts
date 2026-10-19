@@ -5,6 +5,11 @@ const envSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   JWT_SECRET: z.string().min(32),
   NODE_ENV: z.enum(['development', 'production']).default('development'),
+  // Origin of the frontend allowed by CORS. Reduced to scheme, host and port,
+  // which is what the browser sends in the Origin header.
+  CORS_ORIGIN: z
+    .url({ protocol: /^https?$/ })
+    .transform((value) => new URL(value).origin),
 });
 
 export type Env = z.infer<typeof envSchema>;

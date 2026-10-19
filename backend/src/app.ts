@@ -1,4 +1,5 @@
 import fastifyCookie from '@fastify/cookie';
+import fastifyCors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
 import Fastify, {
@@ -40,6 +41,7 @@ export interface AppDependencies {
   passwordHasher: PasswordHasher;
   jwtSecret: string;
   cookieSecure: boolean;
+  corsOrigin: string;
 }
 
 export function buildApp(
@@ -50,6 +52,7 @@ export function buildApp(
     passwordHasher,
     jwtSecret,
     cookieSecure,
+    corsOrigin,
   }: AppDependencies,
   options: FastifyServerOptions = {},
 ): FastifyInstance {
@@ -86,6 +89,12 @@ export function buildApp(
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);
 
+  // credentials lets the browser send the session cookie from the frontend.
+  app.register(fastifyCors, {
+    origin: corsOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  });
   app.register(fastifyCookie);
   app.register(fastifyJwt, {
     secret: jwtSecret,

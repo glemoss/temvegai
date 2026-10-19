@@ -3,7 +3,12 @@ import { InvalidEnvError, loadEnv } from './env.js';
 
 const databaseUrl = 'postgres://user:secret@localhost:5432/veganos';
 const jwtSecret = 'a'.repeat(32);
-const required = { DATABASE_URL: databaseUrl, JWT_SECRET: jwtSecret };
+const corsOrigin = 'http://localhost:5173';
+const required = {
+  DATABASE_URL: databaseUrl,
+  JWT_SECRET: jwtSecret,
+  CORS_ORIGIN: corsOrigin,
+};
 
 describe('loadEnv', () => {
   it('returns the parsed variables', () => {
@@ -14,6 +19,7 @@ describe('loadEnv', () => {
       DATABASE_URL: databaseUrl,
       JWT_SECRET: jwtSecret,
       NODE_ENV: 'production',
+      CORS_ORIGIN: corsOrigin,
     });
   });
 
@@ -33,6 +39,7 @@ describe('loadEnv', () => {
     expect(() => loadEnv({})).toThrow(InvalidEnvError);
     expect(() => loadEnv({})).toThrow(/DATABASE_URL/);
     expect(() => loadEnv({})).toThrow(/JWT_SECRET/);
+    expect(() => loadEnv({})).toThrow(/CORS_ORIGIN/);
   });
 
   it('rejects a DATABASE_URL that is not a postgres url', () => {
@@ -55,6 +62,18 @@ describe('loadEnv', () => {
     expect(() => loadEnv({ ...required, NODE_ENV: 'staging' })).toThrow(
       /NODE_ENV/,
     );
+  });
+
+  it('reduces CORS_ORIGIN to its origin', () => {
+    const env = loadEnv({ ...required, CORS_ORIGIN: 'http://localhost:5173/' });
+
+    expect(env.CORS_ORIGIN).toBe('http://localhost:5173');
+  });
+
+  it('rejects a CORS_ORIGIN that is not an http url', () => {
+    expect(() =>
+      loadEnv({ ...required, CORS_ORIGIN: 'localhost:5173' }),
+    ).toThrow(/CORS_ORIGIN/);
   });
 
   it('does not leak variable values in the error message', () => {

@@ -16,6 +16,7 @@ const app = buildApp(
     passwordHasher: new Argon2PasswordHasher(),
     jwtSecret: env.JWT_SECRET,
     cookieSecure: env.NODE_ENV === 'production',
+    corsOrigin: env.CORS_ORIGIN,
   },
   { logger: true },
 );
