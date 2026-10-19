@@ -58,7 +58,7 @@ Migration da tabela `users` conforme o `SPEC.md`, interface `UserRepository` com
 `POST /restaurants`, `PUT /restaurants/:id` e `DELETE /restaurants/:id`, um use case para cada, usando o hook de autenticação da B8.
 **Pronto quando:** sem login devolve 401, com login as três operações funcionam e validam a entrada, e as rotas de leitura continuam públicas. Com testes.
 
-### [ ] B10 — Acabamento da API
+### [x] B10 — Acabamento da API
 CORS para o frontend com envio de cookies habilitado, documentação OpenAPI gerada a partir dos schemas, README com passo a passo para rodar o projeto.
 **Pronto quando:** a documentação abre no navegador listando todas as rotas, e alguém consegue rodar o projeto seguindo só o README.
 
