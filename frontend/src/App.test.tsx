@@ -132,10 +132,16 @@ afterEach(() => {
 });
 
 describe('App', () => {
-  it('shows the project title', () => {
-    const html = renderToString(<App />);
+  it('shows the project title with the leaf as the accent', () => {
+    render(<App />);
 
-    expect(html).toContain('Tem Veg Aí?</h1>');
+    const title = screen.getByRole('heading', { level: 1 });
+    expect(title.querySelector('.visually-hidden')?.textContent).toBe(
+      'Tem Veg Aí?',
+    );
+    expect(
+      title.querySelector('.app-title-i .app-title-accent'),
+    ).not.toBeNull();
   });
 
   it('centers the map on Florianópolis', () => {

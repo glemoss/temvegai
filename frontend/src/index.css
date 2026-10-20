@@ -133,6 +133,8 @@ select {
   justify-content: center;
   gap: 0.4rem;
   margin: 0 0 0.5rem;
+  /* Room for the leaf drawn as the accent, so it stays inside the box. */
+  padding-top: 0.15em;
   color: var(--color-green-900);
   font-family: var(--font-brand);
   font-size: 2.25rem;
@@ -141,9 +143,19 @@ select {
   letter-spacing: 0.02em;
 }
 
-.app-title-leaf {
-  width: 1.75rem;
-  height: 1.75rem;
+.app-title-i {
+  position: relative;
+}
+
+.app-title-accent {
+  position: absolute;
+  /* Just above the top of the capital I, which sits a little below the top
+     of the line box in Bebas Neue. */
+  top: -0.26em;
+  left: 50%;
+  width: 0.42em;
+  height: 0.42em;
+  transform: translateX(-30%) rotate(-10deg);
 }
 
 .restaurant-filters {
@@ -449,11 +461,6 @@ select {
 
   .app-title {
     font-size: 1.75rem;
-  }
-
-  .app-title-leaf {
-    width: 1.4rem;
-    height: 1.4rem;
   }
 
   .restaurant-details {

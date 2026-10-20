@@ -81,9 +81,17 @@ export function App() {
     <main>
       <div className="app-top">
         <header className="app-header">
+          {/* The accent on "Aí" is drawn as the leaf, so screen readers get
+            the real spelling from the hidden text instead. */}
           <h1 className="app-title">
-            <LeafIcon type="fully_vegan" className="app-title-leaf" />
-            Tem Veg Aí?
+            <span className="visually-hidden">Tem Veg Aí?</span>
+            <span aria-hidden="true">
+              Tem Veg A
+              <span className="app-title-i">
+                I<LeafIcon type="fully_vegan" className="app-title-accent" />
+              </span>
+              ?
+            </span>
           </h1>
           <RestaurantFilters
             type={type}
