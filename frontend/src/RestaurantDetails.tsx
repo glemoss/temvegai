@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Restaurant } from './api/restaurants';
 import { LeafIcon } from './leaf';
+import { OpeningHours } from './OpeningHours';
 import { TYPE_LABELS } from './restaurantTypeLabels';
 
 interface RestaurantDetailsProps {
@@ -76,7 +77,9 @@ export function RestaurantDetails({
         {restaurant.openingHours && (
           <>
             <dt>Horário</dt>
-            <dd>{restaurant.openingHours}</dd>
+            <dd>
+              <OpeningHours text={restaurant.openingHours} />
+            </dd>
           </>
         )}
         {restaurant.phone && (

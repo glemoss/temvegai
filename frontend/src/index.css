@@ -430,6 +430,77 @@ select {
   overflow-wrap: anywhere;
 }
 
+/* "Aberto agora" or "Fechado agora", with the arrow that shows the hours */
+.opening-hours-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.opening-hours-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.opening-hours-status::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  content: '';
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.opening-hours-status.is-open {
+  color: var(--color-green-700);
+}
+
+.opening-hours-status.is-closed {
+  color: var(--color-error);
+}
+
+.opening-hours-arrow {
+  width: 0.75rem;
+  height: 0.5rem;
+  color: var(--color-text-muted);
+  transition: transform 0.15s;
+}
+
+.opening-hours-toggle[aria-expanded='true'] .opening-hours-arrow {
+  transform: rotate(180deg);
+}
+
+.opening-hours {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 1rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each line puts its days and hours in the two columns of the list; a line
+   written without the "Days: hours" shape spans both. */
+.opening-hours[hidden] {
+  display: none;
+}
+
+.opening-hours li {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+}
+
+.opening-hours li:not(:has(span)) {
+  display: block;
+}
+
 .restaurant-details a {
   color: var(--color-green-700);
   font-weight: 600;

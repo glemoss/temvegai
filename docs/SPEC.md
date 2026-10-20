@@ -14,7 +14,7 @@ Um aplicativo mobile virá depois e vai consumir a mesma API. Por isso a API é 
 ## Escopo da v1
 
 - Listar restaurantes no mapa.
-- Ver detalhes de um restaurante (nome, descrição, endereço, bairro, tipo, contato, horário).
+- Ver detalhes de um restaurante (nome, descrição, endereço, bairro, tipo, contato, horário), com a indicação de aberto ou fechado no momento, pelo horário de Florianópolis.
 - Filtrar por tipo, por bairro e por nome.
 - Buscar apenas os restaurantes dentro da área visível do mapa.
 - Login de admin com e-mail e senha (entrar, sair, consultar a sessão atual).

@@ -15,7 +15,7 @@ const restaurant: Restaurant = {
   phone: '(48) 3333-4444',
   website: 'https://mandarina.com.br',
   instagram: 'mandarinafloripa',
-  openingHours: 'Seg a sex, 10h30–14h30',
+  openingHours: 'Segunda a sexta: 10h30–14h30',
 };
 
 function render(overrides: Partial<Restaurant> = {}) {
@@ -35,7 +35,9 @@ describe('RestaurantDetails', () => {
     expect(html).toContain('100% vegano');
     expect(html).toContain('Comida caseira vegana.');
     expect(html).toContain('Rua das Flores, 100 — Centro');
-    expect(html).toContain('Seg a sex, 10h30–14h30');
+    expect(html).toContain(
+      '<span>Segunda a sexta</span><span>10h30–14h30</span>',
+    );
     expect(html).toContain('href="tel:(48) 3333-4444"');
     expect(html).toContain('href="https://mandarina.com.br"');
     expect(html).toContain('href="https://www.instagram.com/mandarinafloripa"');
