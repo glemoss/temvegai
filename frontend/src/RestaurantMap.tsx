@@ -22,9 +22,10 @@ const markerIcon = icon({
 
 interface RestaurantMapProps {
   restaurants: Restaurant[];
+  onSelect: (id: string) => void;
 }
 
-export function RestaurantMap({ restaurants }: RestaurantMapProps) {
+export function RestaurantMap({ restaurants, onSelect }: RestaurantMapProps) {
   return (
     <MapContainer
       center={FLORIANOPOLIS_CENTER}
@@ -40,6 +41,8 @@ export function RestaurantMap({ restaurants }: RestaurantMapProps) {
           key={restaurant.id}
           position={[restaurant.latitude, restaurant.longitude]}
           icon={markerIcon}
+          title={restaurant.name}
+          eventHandlers={{ click: () => onSelect(restaurant.id) }}
         />
       ))}
     </MapContainer>

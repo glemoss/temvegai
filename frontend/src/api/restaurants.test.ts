@@ -1,12 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchRestaurants } from './restaurants';
+import { fetchRestaurants, type Restaurant } from './restaurants';
 
 vi.mock('../config', () => ({ config: { apiUrl: 'http://api.test' } }));
 
-const restaurant = {
+const restaurant: Restaurant = {
   id: '6a2e5bcb-a4ae-4450-b16d-38e999a29c59',
+  name: 'Mandarina',
+  description: null,
+  type: 'fully_vegan',
+  address: 'Rua das Flores, 100',
+  neighborhood: 'Centro',
   latitude: -27.661458,
   longitude: -48.499222,
+  phone: null,
+  website: null,
+  instagram: 'mandarinafloripa',
+  openingHours: null,
 };
 
 function stubFetch(response: Response | Error) {

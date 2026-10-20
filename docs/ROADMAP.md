@@ -80,7 +80,7 @@ Mapa em tela cheia centrado em Florianópolis, com zoom e arraste. Sem dados ain
 Cliente da API e marcadores dos restaurantes vindos de `GET /restaurants`, com estados de carregando e de erro.
 **Pronto quando:** os restaurantes do seed aparecem no lugar certo, e derrubar a API mostra a mensagem de erro.
 
-### [ ] F3 — Detalhes do restaurante
+### [x] F3 — Detalhes do restaurante
 Clicar em um marcador abre um painel com os dados do restaurante.
 **Pronto quando:** o painel abre, fecha e troca de restaurante corretamente, no desktop e no celular.
 

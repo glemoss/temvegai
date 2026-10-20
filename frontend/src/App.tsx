@@ -1,8 +1,14 @@
+import { useState } from 'react';
+import { RestaurantDetails } from './RestaurantDetails';
 import { RestaurantMap } from './RestaurantMap';
 import { useRestaurants } from './useRestaurants';
 
 export function App() {
   const state = useRestaurants();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const restaurants = state.status === 'success' ? state.restaurants : [];
+  const selected = restaurants.find(({ id }) => id === selectedId);
 
   return (
     <main>
@@ -17,9 +23,16 @@ export function App() {
           Não foi possível carregar os restaurantes.
         </p>
       )}
-      <RestaurantMap
-        restaurants={state.status === 'success' ? state.restaurants : []}
-      />
+      <RestaurantMap restaurants={restaurants} onSelect={setSelectedId} />
+      {selected && (
+        <RestaurantDetails
+          // A new key per restaurant resets the panel, so switching
+          // restaurants starts with the content scrolled to the top.
+          key={selected.id}
+          restaurant={selected}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </main>
   );
 }
