@@ -1,17 +1,16 @@
 import 'leaflet/dist/leaflet.css';
-import markerIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
-import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
-import { icon, type LatLngBounds, type LatLngTuple } from 'leaflet';
+import { divIcon, type LatLngBounds, type LatLngTuple } from 'leaflet';
 import { useEffect, useRef } from 'react';
 import {
   MapContainer,
   Marker,
   TileLayer,
+  ZoomControl,
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import type { MapBounds, Restaurant } from './api/restaurants';
+import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
+import { leafSvg } from './leaf';
 
 const FLORIANOPOLIS_CENTER: LatLngTuple = [-27.5954, -48.548];
 const INITIAL_ZOOM = 12;
@@ -20,16 +19,28 @@ const INITIAL_ZOOM = 12;
 // would zoom the map all the way in.
 const FOCUS_MAX_ZOOM = 16;
 
-// Leaflet finds its default marker images through a path in its CSS, which
-// breaks once Vite bundles the files, so the images are imported directly.
-const markerIcon = icon({
-  iconUrl: markerIconUrl,
-  iconRetinaUrl: markerIconRetinaUrl,
-  shadowUrl: markerShadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  shadowSize: [41, 41],
-});
+// One leaf per restaurant type, anchored at the tip of its stem.
+const markerIcons: Record<RestaurantType, ReturnType<typeof divIcon>> = {
+  fully_vegan: leafIcon('fully_vegan'),
+  vegan_options: leafIcon('vegan_options'),
+};
+
+function leafIcon(type: RestaurantType) {
+  return divIcon({
+    html: leafSvg(type),
+    className: 'leaf-marker',
+    iconSize: [32, 40],
+    iconAnchor: [16, 40],
+  });
+}
+
+// Skips the map's zoom and pan animations for people who ask the system
+// for less motion.
+function prefersReducedMotion(): boolean {
+  return (
+    window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
+  );
+}
 
 // Zoomed far out, Leaflet reports longitudes past ±180 as the world
 // repeats, which the API rejects.
@@ -72,10 +83,16 @@ function FocusBounds({ bounds }: { bounds: MapBounds | undefined }) {
           [bounds.minLat, bounds.minLng],
           [bounds.maxLat, bounds.maxLng],
         ],
-        { maxZoom: FOCUS_MAX_ZOOM, padding: [32, 32] },
+        {
+          maxZoom: FOCUS_MAX_ZOOM,
+          padding: [32, 32],
+          animate: !prefersReducedMotion(),
+        },
       );
     } else if (hadBounds.current) {
-      map.setView(FLORIANOPOLIS_CENTER, INITIAL_ZOOM);
+      map.setView(FLORIANOPOLIS_CENTER, INITIAL_ZOOM, {
+        animate: !prefersReducedMotion(),
+      });
     }
     hadBounds.current = bounds !== undefined;
   }, [map, bounds]);
@@ -86,7 +103,7 @@ function FocusBounds({ bounds }: { bounds: MapBounds | undefined }) {
 interface RestaurantMapProps {
   restaurants: Restaurant[];
   focusBounds: MapBounds | undefined;
-  onSelect: (id: string) => void;
+  onSelect: (restaurant: Restaurant) => void;
   onBoundsChange: (bounds: MapBounds) => void;
 }
 
@@ -96,12 +113,26 @@ export function RestaurantMap({
   onSelect,
   onBoundsChange,
 }: RestaurantMapProps) {
+  const animate = !prefersReducedMotion();
+
   return (
     <MapContainer
       center={FLORIANOPOLIS_CENTER}
       zoom={INITIAL_ZOOM}
       className="restaurant-map"
+      // On narrow screens the header spans the top of the map, where
+      // Leaflet puts the zoom buttons by default, and the legend takes the
+      // bottom right corner.
+      zoomControl={false}
+      zoomAnimation={animate}
+      fadeAnimation={animate}
+      markerZoomAnimation={animate}
     >
+      <ZoomControl
+        position="bottomleft"
+        zoomInTitle="Aproximar"
+        zoomOutTitle="Afastar"
+      />
       <TileLayer
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -112,9 +143,9 @@ export function RestaurantMap({
         <Marker
           key={restaurant.id}
           position={[restaurant.latitude, restaurant.longitude]}
-          icon={markerIcon}
+          icon={markerIcons[restaurant.type]}
           title={restaurant.name}
-          eventHandlers={{ click: () => onSelect(restaurant.id) }}
+          eventHandlers={{ click: () => onSelect(restaurant) }}
         />
       ))}
     </MapContainer>

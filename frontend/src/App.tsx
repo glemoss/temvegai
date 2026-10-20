@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import type { MapBounds, RestaurantType } from './api/restaurants';
+import { useCallback, useState } from 'react';
+import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
+import { LeafIcon } from './leaf';
+import { MapLegend } from './MapLegend';
 import { RestaurantDetails } from './RestaurantDetails';
 import { RestaurantFilters } from './RestaurantFilters';
 import { RestaurantMap } from './RestaurantMap';
@@ -16,7 +18,9 @@ export function App() {
   const [neighborhood, setNeighborhood] = useState<string>();
   const [name, setName] = useState('');
   const [bounds, setBounds] = useState<MapBounds | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The restaurant itself, not its id, so the panel stays open when the
+  // restaurant leaves the results, for example after dragging the map.
+  const [selected, setSelected] = useState<Restaurant | null>(null);
 
   const debouncedName = useDebouncedValue(name, NAME_SEARCH_DELAY_MS);
   const state = useRestaurants({
@@ -28,7 +32,6 @@ export function App() {
   const neighborhoodsState = useNeighborhoods();
 
   const restaurants = state.status === 'success' ? state.restaurants : [];
-  const selected = restaurants.find(({ id }) => id === selectedId);
   const neighborhoods =
     neighborhoodsState.status === 'success'
       ? neighborhoodsState.neighborhoods
@@ -36,33 +39,68 @@ export function App() {
   const focusBounds = neighborhoods?.find(
     ({ name }) => name === neighborhood,
   )?.bounds;
+  const hasFilters = Boolean(type || neighborhood || name.trim());
+
+  const closeDetails = useCallback(() => setSelected(null), []);
+
+  function clearFilters() {
+    setType(undefined);
+    setNeighborhood(undefined);
+    setName('');
+  }
 
   return (
     <main>
-      <h1 className="app-title">Tem Veg Aí?</h1>
-      <RestaurantFilters
-        type={type}
-        neighborhood={neighborhood}
-        name={name}
-        neighborhoods={neighborhoods}
-        onTypeChange={setType}
-        onNeighborhoodChange={setNeighborhood}
-        onNameChange={setName}
-      />
-      {state.status === 'loading' && (
-        <p className="map-status" role="status">
-          Carregando restaurantes…
-        </p>
-      )}
-      {state.status === 'error' && (
-        <p className="map-status" role="alert">
-          Não foi possível carregar os restaurantes.
-        </p>
-      )}
+      <div className="app-top">
+        <header className="app-header">
+          <h1 className="app-title">
+            <LeafIcon type="fully_vegan" className="app-title-leaf" />
+            Tem Veg Aí?
+          </h1>
+          <RestaurantFilters
+            type={type}
+            neighborhood={neighborhood}
+            name={name}
+            neighborhoods={neighborhoods}
+            onTypeChange={setType}
+            onNeighborhoodChange={setNeighborhood}
+            onNameChange={setName}
+          />
+        </header>
+        {/* Always present, so screen readers announce the messages that
+          appear inside it. */}
+        <div className="map-status" role="status">
+          {state.status === 'loading' && (
+            <p className="map-status-message">Carregando restaurantes…</p>
+          )}
+          {state.status === 'error' && (
+            <p className="map-status-message map-status-error">
+              Não foi possível carregar os restaurantes.
+            </p>
+          )}
+          {state.status === 'success' && restaurants.length === 0 && (
+            <p className="map-status-message">
+              {hasFilters
+                ? 'Nenhum restaurante nesta área com esses filtros.'
+                : 'Nenhum restaurante nesta área. Afaste o mapa para ver mais.'}
+              {hasFilters && (
+                <button
+                  type="button"
+                  className="map-status-action"
+                  onClick={clearFilters}
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </p>
+          )}
+        </div>
+      </div>
+      <MapLegend />
       <RestaurantMap
         restaurants={restaurants}
         focusBounds={focusBounds}
-        onSelect={setSelectedId}
+        onSelect={setSelected}
         onBoundsChange={setBounds}
       />
       {selected && (
@@ -71,7 +109,7 @@ export function App() {
           // restaurants starts with the content scrolled to the top.
           key={selected.id}
           restaurant={selected}
-          onClose={() => setSelectedId(null)}
+          onClose={closeDetails}
         />
       )}
     </main>

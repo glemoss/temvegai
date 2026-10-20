@@ -92,9 +92,13 @@ Clicar em um marcador abre um painel com os dados do restaurante.
 Filtro por tipo e bairro, busca por nome, e recarga dos marcadores conforme a área visível do mapa.
 **Pronto quando:** os filtros atualizam o mapa, e mover o mapa busca só os restaurantes da área visível.
 
-### [ ] F5 — Acabamento visual
+### [x] F5 — Acabamento visual
 Identidade visual, responsividade, estado vazio (nenhum resultado) e acessibilidade básica.
 **Pronto quando:** aprovado visualmente pelo dono no desktop e no celular.
+
+### [ ] F6 — Busca com sugestões
+Ao digitar no campo de busca, uma lista abaixo dele sugere restaurantes de toda a cidade pelo nome. Escolher uma sugestão move o mapa até o restaurante e abre o painel. A busca no mapa por nome passa a ser aplicada só no Enter. Etapa criada durante a revisão da F5.
+**Pronto quando:** as sugestões aparecem ao digitar e podem ser escolhidas com mouse e teclado (setas, Enter, Esc); escolher uma move o mapa e abre o painel; o mapa só filtra por nome depois do Enter, e apagar o campo remove o filtro. Com testes.
 
 ---
 
@@ -148,4 +152,6 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (B11) `GET /neighborhoods` agrupa os bairros sem diferenciar maiúsculas, como o filtro `neighborhood`, mas não ignora acentos: "Conceicao" e "Conceição" aparecem como bairros separados. Quando a mesma grafia varia só nas maiúsculas, o nome exibido é o menor (`min`). Decidir se o filtro e o agrupamento devem passar a ignorar acentos, ou se o painel admin deve evitar grafias diferentes.
 - (B11) Um bairro com um só restaurante tem área de um ponto (mínimo igual ao máximo). A F4 precisa limitar o zoom ao mover o mapa até ele.
 - (F0) No frontend, o `fsevents` (dependência opcional do Vite no macOS) tem script de instalação fora do `allowScripts`. Mesmo aviso do `esbuild` (B0) e do `argon2` (B7); entra na mesma decisão.
-- (F4) O painel de detalhes fecha quando o restaurante aberto sai do resultado, inclusive quando a pessoa arrasta o mapa e ele sai da área visível. No celular isso pode surpreender. Decidir na F5 se o painel deve continuar aberto até ser fechado.
+- (F4) ~~O painel de detalhes fecha quando o restaurante aberto sai do resultado, inclusive quando a pessoa arrasta o mapa e ele sai da área visível. No celular isso pode surpreender. Decidir na F5 se o painel deve continuar aberto até ser fechado.~~ Resolvido na F5: o dono decidiu que o painel continua aberto até ser fechado pelo botão ou pelo Esc.
+- (F5) A fonte Bebas Neue (título) vem do Google Fonts por `<link>`, sem pacote npm. Cada visita faz uma requisição a servidores do Google, que recebem o IP do visitante. Decidir no deploy se mantém, se hospeda a fonte junto com o site ou se avisa na política de privacidade (LGPD).
+- (F5) Os 5 restaurantes do seed são todos `fully_vegan`, então a folha de contorno (opções veganas) nunca aparece no mapa de desenvolvimento. Decidir se o seed deve ganhar restaurantes `vegan_options`.

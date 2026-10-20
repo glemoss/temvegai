@@ -31,7 +31,7 @@ const fakeMap = vi.hoisted(() => ({
 // Leaflet needs a real browser to lay out the map, so the map components
 // are replaced by plain elements that expose the props they receive. Each
 // marker is a button that triggers its click handler.
-vi.mock('leaflet', () => ({ icon: () => ({}) }));
+vi.mock('leaflet', () => ({ divIcon: () => ({}) }));
 vi.mock('react-leaflet', () => ({
   useMap: () => fakeMap,
   useMapEvents: () => fakeMap,
@@ -55,6 +55,7 @@ vi.mock('react-leaflet', () => ({
       data-attribution={props.attribution}
     />
   ),
+  ZoomControl: () => null,
   Marker: (props: {
     position: [number, number];
     title: string;
@@ -229,6 +230,52 @@ describe('App restaurant details', () => {
     expect(screen.queryByRole('complementary')).toBeNull();
   });
 
+  it('closes the panel with the Escape key', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByRole('complementary')).toBeNull();
+  });
+
+  it('moves the focus into the panel when it opens', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('complementary', { name: 'Mandarina' }),
+    );
+  });
+
+  it('gives the focus back to the marker when the panel closes', () => {
+    render(<App />);
+
+    const marker = screen.getByRole('button', { name: 'Mandarina' });
+    marker.focus();
+    fireEvent.click(marker);
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(document.activeElement).toBe(marker);
+  });
+
+  it('keeps the panel open when the restaurant leaves the results', () => {
+    const { rerender } = render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants: [restaurants[1]],
+    });
+    rerender(<App />);
+
+    expect(screen.queryByRole('button', { name: 'Mandarina' })).toBeNull();
+    expect(
+      screen.getByRole('complementary', { name: 'Mandarina' }),
+    ).toBeDefined();
+  });
+
   it('opens the panel again after closing it', () => {
     render(<App />);
 
@@ -328,7 +375,9 @@ describe('App filters', () => {
 
     expect(lastFilters()?.neighborhood).toBeUndefined();
     expect(fakeMap.fitBounds).toHaveBeenCalledTimes(1);
-    expect(fakeMap.setView).toHaveBeenCalledWith([-27.5954, -48.548], 12);
+    expect(fakeMap.setView).toHaveBeenCalledWith([-27.5954, -48.548], 12, {
+      animate: true,
+    });
   });
 
   it('disables the neighborhood filter when the neighborhoods fail to load', () => {
@@ -344,6 +393,24 @@ describe('App filters', () => {
     );
   });
 
+  it('shows how many of the collapsible filters are active', () => {
+    render(<App />);
+
+    const toggle = screen.getByRole('button', { name: 'Filtros' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    fireEvent.click(toggle);
+    fireEvent.change(screen.getByLabelText('Tipo'), {
+      target: { value: 'fully_vegan' },
+    });
+
+    expect(
+      screen
+        .getByRole('button', { name: 'Filtros (1)' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true');
+  });
+
   it('searches by name after a pause in typing', async () => {
     render(<App />);
 
@@ -353,5 +420,63 @@ describe('App filters', () => {
 
     expect(lastFilters()?.name).toBe('');
     await waitFor(() => expect(lastFilters()?.name).toBe('mandarina'));
+  });
+});
+
+describe('App empty state', () => {
+  beforeEach(() => {
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants: [],
+    });
+  });
+
+  function lastFilters() {
+    return vi.mocked(useRestaurants).mock.lastCall?.[0];
+  }
+
+  it('suggests zooming out when there are no restaurants and no filters', () => {
+    render(<App />);
+
+    expect(screen.getByRole('status').textContent).toContain(
+      'Nenhum restaurante nesta área. Afaste o mapa para ver mais.',
+    );
+    expect(screen.queryByRole('button', { name: 'Limpar filtros' })).toBeNull();
+  });
+
+  it('offers to clear the filters when they leave no restaurants', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Tipo'), {
+      target: { value: 'fully_vegan' },
+    });
+    fireEvent.change(screen.getByLabelText('Bairro'), {
+      target: { value: 'Campeche' },
+    });
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'mandarina' },
+    });
+
+    expect(screen.getByRole('status').textContent).toContain(
+      'Nenhum restaurante nesta área com esses filtros.',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }));
+
+    expect(screen.getByLabelText<HTMLSelectElement>('Tipo').value).toBe('');
+    expect(screen.getByLabelText<HTMLSelectElement>('Bairro').value).toBe('');
+    expect(screen.getByLabelText<HTMLInputElement>('Nome').value).toBe('');
+    expect(lastFilters()?.type).toBeUndefined();
+    expect(lastFilters()?.neighborhood).toBeUndefined();
+  });
+
+  it('does not show the empty message while loading or after an error', () => {
+    vi.mocked(useRestaurants).mockReturnValue({ status: 'error' });
+
+    render(<App />);
+
+    expect(screen.getByRole('status').textContent).not.toContain(
+      'Nenhum restaurante',
+    );
   });
 });
