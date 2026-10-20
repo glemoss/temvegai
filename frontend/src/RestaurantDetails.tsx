@@ -1,9 +1,5 @@
-import type { Restaurant, RestaurantType } from './api/restaurants';
-
-const TYPE_LABELS: Record<RestaurantType, string> = {
-  fully_vegan: '100% vegano',
-  vegan_options: 'Opções veganas',
-};
+import type { Restaurant } from './api/restaurants';
+import { TYPE_LABELS } from './restaurantTypeLabels';
 
 interface RestaurantDetailsProps {
   restaurant: Restaurant;

@@ -19,7 +19,7 @@ const restaurant: Restaurant = {
 };
 
 function stubFetch(response: Response | Error) {
-  const fetchMock = vi.fn(() =>
+  const fetchMock = vi.fn<typeof fetch>(() =>
     response instanceof Error
       ? Promise.reject(response)
       : Promise.resolve(response),
@@ -37,10 +37,43 @@ describe('fetchRestaurants', () => {
     const fetchMock = stubFetch(Response.json({ restaurants: [] }));
     const controller = new AbortController();
 
-    await fetchRestaurants(controller.signal);
+    await fetchRestaurants({}, controller.signal);
 
     expect(fetchMock).toHaveBeenCalledWith('http://api.test/restaurants', {
       signal: controller.signal,
+    });
+  });
+
+  it('sends each filter as a query parameter', async () => {
+    const fetchMock = stubFetch(Response.json({ restaurants: [] }));
+
+    await fetchRestaurants({
+      type: 'fully_vegan',
+      neighborhood: 'Lagoa da Conceição',
+      name: ' mandarina ',
+      bounds: { minLat: -27.7, maxLat: -27.5, minLng: -48.6, maxLng: -48.4 },
+    });
+
+    const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
+    expect(url.pathname).toBe('/restaurants');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      type: 'fully_vegan',
+      neighborhood: 'Lagoa da Conceição',
+      q: 'mandarina',
+      minLat: '-27.7',
+      maxLat: '-27.5',
+      minLng: '-48.6',
+      maxLng: '-48.4',
+    });
+  });
+
+  it('leaves out empty filters', async () => {
+    const fetchMock = stubFetch(Response.json({ restaurants: [] }));
+
+    await fetchRestaurants({ neighborhood: '', name: '   ' });
+
+    expect(fetchMock).toHaveBeenCalledWith('http://api.test/restaurants', {
+      signal: undefined,
     });
   });
 

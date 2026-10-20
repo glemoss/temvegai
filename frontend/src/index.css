@@ -18,6 +18,31 @@ body,
   margin: 0;
 }
 
+.restaurant-filters {
+  position: absolute;
+  top: 3rem;
+  left: 3.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 0.25rem;
+}
+
+.restaurant-filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+}
+
+.restaurant-filters input,
+.restaurant-filters select {
+  min-height: 2rem;
+  font-size: 1rem;
+}
+
 .map-status {
   position: absolute;
   bottom: 1.5rem;
@@ -78,6 +103,14 @@ body,
 /* On narrow screens the panel becomes a sheet at the bottom, leaving the
    upper half of the map visible. */
 @media (max-width: 640px) {
+  .restaurant-filters {
+    right: 0.5rem;
+  }
+
+  .restaurant-filters label {
+    flex: 1 1 8rem;
+  }
+
   .restaurant-details {
     top: auto;
     bottom: 0;

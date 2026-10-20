@@ -1,17 +1,40 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
+import type { Neighborhood } from './api/neighborhoods';
 import type { Restaurant } from './api/restaurants';
+import { useNeighborhoods } from './useNeighborhoods';
 import { useRestaurants } from './useRestaurants';
+
+// The map handed to the components that read the visible area and move the
+// map, with the area of the initial view.
+const fakeMap = vi.hoisted(() => ({
+  getBounds: () => ({
+    getSouth: () => -27.7,
+    getNorth: () => -27.5,
+    getWest: () => -48.6,
+    getEast: () => -48.4,
+  }),
+  fitBounds: vi.fn(),
+  setView: vi.fn(),
+}));
 
 // Leaflet needs a real browser to lay out the map, so the map components
 // are replaced by plain elements that expose the props they receive. Each
 // marker is a button that triggers its click handler.
 vi.mock('leaflet', () => ({ icon: () => ({}) }));
 vi.mock('react-leaflet', () => ({
+  useMap: () => fakeMap,
+  useMapEvents: () => fakeMap,
   MapContainer: (props: {
     center: [number, number];
     zoom: number;
@@ -48,8 +71,20 @@ vi.mock('react-leaflet', () => ({
   ),
 }));
 
-// Each test sets the state the hook returns instead of making a request.
+// Each test sets the state the hooks return instead of making a request.
 vi.mock('./useRestaurants', () => ({ useRestaurants: vi.fn() }));
+vi.mock('./useNeighborhoods', () => ({ useNeighborhoods: vi.fn() }));
+
+const neighborhoods: Neighborhood[] = [
+  {
+    name: 'Campeche',
+    bounds: { minLat: -27.68, maxLat: -27.66, minLng: -48.5, maxLng: -48.48 },
+  },
+  {
+    name: 'Centro',
+    bounds: { minLat: -27.6, maxLat: -27.59, minLng: -48.56, maxLng: -48.54 },
+  },
+];
 
 const restaurants: Restaurant[] = [
   {
@@ -84,6 +119,12 @@ const restaurants: Restaurant[] = [
 
 beforeEach(() => {
   vi.mocked(useRestaurants).mockReturnValue({ status: 'loading' });
+  vi.mocked(useNeighborhoods).mockReturnValue({
+    status: 'success',
+    neighborhoods,
+  });
+  fakeMap.fitBounds.mockClear();
+  fakeMap.setView.mockClear();
 });
 
 afterEach(() => {
@@ -198,5 +239,119 @@ describe('App restaurant details', () => {
     expect(
       screen.getByRole('complementary', { name: 'Mandarina' }),
     ).toBeDefined();
+  });
+});
+
+describe('App filters', () => {
+  beforeEach(() => {
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants,
+    });
+  });
+
+  function lastFilters() {
+    return vi.mocked(useRestaurants).mock.lastCall?.[0];
+  }
+
+  it('requests only the restaurants in the visible area of the map', () => {
+    render(<App />);
+
+    expect(lastFilters()).toEqual({
+      type: undefined,
+      neighborhood: undefined,
+      name: '',
+      bounds: { minLat: -27.7, maxLat: -27.5, minLng: -48.6, maxLng: -48.4 },
+    });
+  });
+
+  it('filters by type', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Tipo'), {
+      target: { value: 'vegan_options' },
+    });
+
+    expect(lastFilters()?.type).toBe('vegan_options');
+
+    fireEvent.change(screen.getByLabelText('Tipo'), {
+      target: { value: '' },
+    });
+
+    expect(lastFilters()?.type).toBeUndefined();
+  });
+
+  it('lists the neighborhoods from the API', () => {
+    render(<App />);
+
+    const options = screen
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+    expect(options).toEqual(
+      expect.arrayContaining(['Todos os bairros', 'Campeche', 'Centro']),
+    );
+  });
+
+  it('filters by neighborhood and moves the map to it', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Bairro'), {
+      target: { value: 'Campeche' },
+    });
+
+    expect(lastFilters()?.neighborhood).toBe('Campeche');
+    expect(fakeMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [-27.68, -48.5],
+        [-27.66, -48.48],
+      ],
+      expect.objectContaining({ maxZoom: 16 }),
+    );
+  });
+
+  it('does not move the map before a neighborhood is selected', () => {
+    render(<App />);
+
+    expect(fakeMap.fitBounds).not.toHaveBeenCalled();
+    expect(fakeMap.setView).not.toHaveBeenCalled();
+  });
+
+  it('moves the map back to the initial view when all neighborhoods are selected again', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Bairro'), {
+      target: { value: 'Campeche' },
+    });
+    fireEvent.change(screen.getByLabelText('Bairro'), {
+      target: { value: '' },
+    });
+
+    expect(lastFilters()?.neighborhood).toBeUndefined();
+    expect(fakeMap.fitBounds).toHaveBeenCalledTimes(1);
+    expect(fakeMap.setView).toHaveBeenCalledWith([-27.5954, -48.548], 12);
+  });
+
+  it('disables the neighborhood filter when the neighborhoods fail to load', () => {
+    vi.mocked(useNeighborhoods).mockReturnValue({ status: 'error' });
+
+    render(<App />);
+
+    expect(screen.getByLabelText<HTMLSelectElement>('Bairro').disabled).toBe(
+      true,
+    );
+    expect(screen.getByLabelText<HTMLSelectElement>('Tipo').disabled).toBe(
+      false,
+    );
+  });
+
+  it('searches by name after a pause in typing', async () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'mandarina' },
+    });
+
+    expect(lastFilters()?.name).toBe('');
+    await waitFor(() => expect(lastFilters()?.name).toBe('mandarina'));
   });
 });
