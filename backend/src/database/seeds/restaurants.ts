@@ -56,6 +56,50 @@ const restaurants = [
     instagram: 'restaurantenaturaltsanthe',
     opening_hours: 'Seg a sex, 11h–14h',
   },
+  {
+    name: 'Bugio Centro',
+    type: 'vegan_options',
+    address: 'Rua Victor Meirelles, 112',
+    neighborhood: 'Centro',
+    latitude: -27.598471,
+    longitude: -48.548734,
+    phone: '(48) 99618-4851',
+    instagram: 'bugiocentro',
+    opening_hours:
+      'Seg a qua, 18h–2h; qui e sex, 18h–4h; sáb, 12h–4h; dom, 11h30–2h',
+  },
+  {
+    name: 'Bugio Trindade',
+    type: 'vegan_options',
+    address: 'Servidão Cristiano Wanderley Faria, 25',
+    neighborhood: 'Trindade',
+    latitude: -27.596398,
+    longitude: -48.522447,
+    instagram: 'bugiotrindade',
+    opening_hours: 'Seg a sex, 17h–23h55; sáb, 18h–23h55; fecha dom',
+  },
+  {
+    name: 'Janela Bar',
+    type: 'vegan_options',
+    address: 'Rua Nunes Machado, 93',
+    neighborhood: 'Centro',
+    latitude: -27.598632,
+    longitude: -48.549069,
+    phone: '(48) 99144-6859',
+    instagram: 'janelabar.floripacentro',
+    opening_hours:
+      'Ter, 17h–23h; qua, qui e dom, 17h–0h; sex e sáb, 17h–2h; fecha seg',
+  },
+  {
+    name: 'Dona Jovem',
+    type: 'vegan_options',
+    address: 'Avenida Hercílio Luz, 636',
+    neighborhood: 'Centro',
+    latitude: -27.597772,
+    longitude: -48.547638,
+    instagram: 'dona.jovem',
+    opening_hours: 'Qua e qui, 17h30–0h; sex e sáb, 17h30–1h; fecha dom a ter',
+  },
 ];
 
 export async function seed(knex: Knex): Promise<void> {
