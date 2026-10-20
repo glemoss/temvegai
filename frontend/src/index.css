@@ -17,3 +17,15 @@ body,
   z-index: 1000;
   margin: 0;
 }
+
+.map-status {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: white;
+  border-radius: 0.25rem;
+}

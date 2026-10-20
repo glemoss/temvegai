@@ -76,7 +76,7 @@ Pasta `/frontend` com Vite, React, TypeScript, ESLint e Vitest. Uma página com 
 Mapa em tela cheia centrado em Florianópolis, com zoom e arraste. Sem dados ainda.
 **Pronto quando:** o mapa carrega e é navegável no desktop e no celular.
 
-### [ ] F2 — Marcadores
+### [x] F2 — Marcadores
 Cliente da API e marcadores dos restaurantes vindos de `GET /restaurants`, com estados de carregando e de erro.
 **Pronto quando:** os restaurantes do seed aparecem no lugar certo, e derrubar a API mostra a mensagem de erro.
 

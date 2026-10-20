@@ -82,10 +82,17 @@ Em outro terminal, a partir da raiz do repositório:
 nvm use
 cd frontend
 npm install
+cp .env.example .env
 npm run dev
 ```
 
-O site fica em `http://localhost:5173`. Ainda não chama a API, então não precisa dela no ar.
+O `.env` do frontend tem uma variável:
+
+| Variável | Para que serve |
+|---|---|
+| `VITE_API_URL` | Endereço da API (padrão: `http://localhost:3000`). O site não abre se ela estiver faltando |
+
+O site fica em `http://localhost:5173` e busca os restaurantes na API, então a API precisa estar no ar. Sem ela, o mapa abre com uma mensagem de erro.
 
 ## Conferindo se funcionou
 
