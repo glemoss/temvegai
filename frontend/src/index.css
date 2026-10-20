@@ -63,13 +63,13 @@ select {
   font-family: var(--font-body);
 }
 
-.leaf-marker {
+.pin-marker {
   background: none;
   border: none;
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
 }
 
-.leaf-marker svg {
+.pin-marker svg {
   display: block;
   width: 100%;
   height: 100%;
@@ -77,14 +77,20 @@ select {
   transform-origin: 50% 100%;
 }
 
-.leaf-marker:hover svg,
-.leaf-marker:focus-visible svg {
+.pin-marker:hover svg,
+.pin-marker:focus-visible svg {
   transform: scale(1.15);
 }
 
 .leaf-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.pin-icon {
   width: 1rem;
-  height: 1.25rem;
+  height: 1.3125rem;
   flex-shrink: 0;
 }
 
@@ -136,8 +142,8 @@ select {
 }
 
 .app-title-leaf {
-  width: 1.5rem;
-  height: 1.875rem;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .restaurant-filters {
@@ -446,8 +452,8 @@ select {
   }
 
   .app-title-leaf {
-    width: 1.2rem;
-    height: 1.5rem;
+    width: 1.4rem;
+    height: 1.4rem;
   }
 
   .restaurant-details {
@@ -462,7 +468,7 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .leaf-marker svg {
+  .pin-marker svg {
     transition: none;
   }
 }

@@ -1,68 +1,80 @@
 import type { RestaurantType } from './api/restaurants';
 
-// A plain leaf in the style of the usual vegan symbol, standing almost
-// upright, with its stem tip at the bottom center of the 32×40 box, so the
-// tip can sit exactly on the restaurant's coordinates.
-const VIEW_BOX = '0 0 32 40';
-const STEM = 'M16 39.5C16 36 15.5 33.5 14.5 31';
-const BLADE = 'M14.5 31C5.5 25 6 8.5 25.5 1.5C30.5 17 25 28.5 14.5 31Z';
-const MIDRIB = 'M14.5 31C17.5 22.5 20.5 13.5 24.5 5';
+// A leaf with its midrib cut out, tip at the top right, in a 24×24 box.
+const LEAF_VIEW_BOX = '0 0 24 24';
+const LEAF = 'M5 20C3 12 9 4.5 20.5 4C21 14 15.5 20.5 5 20Z';
+const MIDRIB = 'M5.5 19.5C8 14 11.5 10 16 7.5';
+
+// A map pin with the leaf in a white circle, in a 32×42 box, with the tip
+// of the pin at the bottom center so it sits exactly on the restaurant's
+// coordinates.
+const PIN_VIEW_BOX = '0 0 32 42';
+const PIN = 'M16 41C16 41 3 27 3 15.5A13 13 0 0 1 29 15.5C29 27 16 41 16 41Z';
+const PIN_CIRCLE = { cx: 16, cy: 15.5, r: 9.5 };
+// Fits the 24×24 leaf into a 15×15 square centered in the circle.
+const PIN_LEAF_TRANSFORM = 'translate(8.5 8) scale(0.625)';
+
+const GREEN = '#2f6b3a';
+const DARK_GREEN = '#1f4d2b';
+const WHITE = '#ffffff';
 
 // Fully vegan places get a solid leaf; places with vegan options get an
-// outlined one, so the two differ by shape and not only by color.
-const STYLES: Record<
-  RestaurantType,
-  { fill: string; stroke: string; midrib: string }
-> = {
-  fully_vegan: { fill: '#2f6b3a', stroke: '#1f4d2b', midrib: '#e3f1dc' },
-  vegan_options: { fill: '#e3f1dc', stroke: '#2f6b3a', midrib: '#2f6b3a' },
-};
-
-// The leaf as an SVG string, for Leaflet markers, which take plain HTML.
-export function leafSvg(type: RestaurantType): string {
-  const { fill, stroke, midrib } = STYLES[type];
+// outlined one, so the two differ by shape and not only by color. The pin
+// around the leaf is the same for both.
+function leafMarkup(type: RestaurantType): string {
+  if (type === 'fully_vegan') {
+    return (
+      `<path d="${LEAF}" fill="${GREEN}"/>` +
+      `<path d="${MIDRIB}" fill="none" stroke="${WHITE}" stroke-width="1.8" stroke-linecap="round"/>`
+    );
+  }
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEW_BOX}" aria-hidden="true">` +
-    `<path d="${STEM}" fill="none" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round"/>` +
-    `<path d="${BLADE}" fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-linejoin="round"/>` +
-    `<path d="${MIDRIB}" fill="none" stroke="${midrib}" stroke-width="1.6" stroke-linecap="round"/>` +
-    `</svg>`
+    `<path d="${LEAF}" fill="${WHITE}" stroke="${GREEN}" stroke-width="2" stroke-linejoin="round"/>` +
+    `<path d="${MIDRIB}" fill="none" stroke="${GREEN}" stroke-width="1.8" stroke-linecap="round"/>`
   );
 }
 
-// The same leaf as a React element, for the legend, the details panel and
-// the title. Decorative: the text next to it carries the meaning.
-export function LeafIcon({
-  type,
-  className,
-}: {
+function pinMarkup(type: RestaurantType): string {
+  const { cx, cy, r } = PIN_CIRCLE;
+  return (
+    `<path d="${PIN}" fill="${GREEN}" stroke="${DARK_GREEN}" stroke-width="1.5" stroke-linejoin="round"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${WHITE}"/>` +
+    `<g transform="${PIN_LEAF_TRANSFORM}">${leafMarkup(type)}</g>`
+  );
+}
+
+// The pin as an SVG string, for Leaflet markers, which take plain HTML.
+export function pinSvg(type: RestaurantType): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${PIN_VIEW_BOX}" aria-hidden="true">${pinMarkup(type)}</svg>`;
+}
+
+// React versions, for the legend, the details panel and the title. They
+// reuse the markup above, which is fixed and holds no outside data, so the
+// shapes are written only once. Decorative: the text next to them carries
+// the meaning.
+interface IconProps {
   type: RestaurantType;
   className?: string;
-}) {
-  const { fill, stroke, midrib } = STYLES[type];
+}
+
+export function PinIcon({ type, className }: IconProps) {
   return (
-    <svg className={className} viewBox={VIEW_BOX} aria-hidden="true">
-      <path
-        d={STEM}
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d={BLADE}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path
-        d={MIDRIB}
-        fill="none"
-        stroke={midrib}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
+    <svg
+      className={className}
+      viewBox={PIN_VIEW_BOX}
+      aria-hidden="true"
+      dangerouslySetInnerHTML={{ __html: pinMarkup(type) }}
+    />
+  );
+}
+
+export function LeafIcon({ type, className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox={LEAF_VIEW_BOX}
+      aria-hidden="true"
+      dangerouslySetInnerHTML={{ __html: leafMarkup(type) }}
+    />
   );
 }

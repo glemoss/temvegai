@@ -1,5 +1,5 @@
 import type { RestaurantType } from './api/restaurants';
-import { LeafIcon } from './leaf';
+import { PinIcon } from './leaf';
 import { TYPE_LABELS } from './restaurantTypeLabels';
 
 const TYPES = Object.keys(TYPE_LABELS) as RestaurantType[];
@@ -9,7 +9,7 @@ export function MapLegend() {
     <ul className="map-legend" aria-label="Legenda do mapa">
       {TYPES.map((type) => (
         <li key={type}>
-          <LeafIcon type={type} className="leaf-icon" />
+          <PinIcon type={type} className="pin-icon" />
           {TYPE_LABELS[type]}
         </li>
       ))}

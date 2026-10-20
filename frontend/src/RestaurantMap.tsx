@@ -10,7 +10,7 @@ import {
   useMapEvents,
 } from 'react-leaflet';
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
-import { leafSvg } from './leaf';
+import { pinSvg } from './leaf';
 
 const FLORIANOPOLIS_CENTER: LatLngTuple = [-27.5954, -48.548];
 const INITIAL_ZOOM = 12;
@@ -20,18 +20,18 @@ const INITIAL_ZOOM = 12;
 // the way in.
 const FOCUS_MAX_ZOOM = 16;
 
-// One leaf per restaurant type, anchored at the tip of its stem.
+// One pin per restaurant type, anchored at its tip.
 const markerIcons: Record<RestaurantType, ReturnType<typeof divIcon>> = {
-  fully_vegan: leafIcon('fully_vegan'),
-  vegan_options: leafIcon('vegan_options'),
+  fully_vegan: pinIcon('fully_vegan'),
+  vegan_options: pinIcon('vegan_options'),
 };
 
-function leafIcon(type: RestaurantType) {
+function pinIcon(type: RestaurantType) {
   return divIcon({
-    html: leafSvg(type),
-    className: 'leaf-marker',
-    iconSize: [32, 40],
-    iconAnchor: [16, 40],
+    html: pinSvg(type),
+    className: 'pin-marker',
+    iconSize: [32, 42],
+    iconAnchor: [16, 41],
   });
 }
 
