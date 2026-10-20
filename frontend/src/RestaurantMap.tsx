@@ -15,8 +15,9 @@ import { leafSvg } from './leaf';
 const FLORIANOPOLIS_CENTER: LatLngTuple = [-27.5954, -48.548];
 const INITIAL_ZOOM = 12;
 
-// A neighborhood with a single restaurant has an area of one point, which
-// would zoom the map all the way in.
+// A neighborhood with a single restaurant, or a single restaurant chosen
+// in the search, has an area of one point, which would zoom the map all
+// the way in.
 const FOCUS_MAX_ZOOM = 16;
 
 // One leaf per restaurant type, anchored at the tip of its stem.

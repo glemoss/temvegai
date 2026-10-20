@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import type { Neighborhood } from './api/neighborhoods';
-import type { RestaurantType } from './api/restaurants';
+import type { Restaurant, RestaurantType } from './api/restaurants';
+import { RestaurantSearch } from './RestaurantSearch';
 import { TYPE_LABELS } from './restaurantTypeLabels';
 
 const TYPES = Object.keys(TYPE_LABELS) as RestaurantType[];
@@ -35,6 +36,8 @@ interface RestaurantFiltersProps {
   onTypeChange: (type: RestaurantType | undefined) => void;
   onNeighborhoodChange: (neighborhood: string | undefined) => void;
   onNameChange: (name: string) => void;
+  onNameSubmit: () => void;
+  onRestaurantSelect: (restaurant: Restaurant) => void;
 }
 
 export function RestaurantFilters({
@@ -45,6 +48,8 @@ export function RestaurantFilters({
   onTypeChange,
   onNeighborhoodChange,
   onNameChange,
+  onNameSubmit,
+  onRestaurantSelect,
 }: RestaurantFiltersProps) {
   // Type and neighborhood start hidden behind a toggle, so the header
   // covers as little of the map as possible.
@@ -60,17 +65,12 @@ export function RestaurantFilters({
       onSubmit={(event) => event.preventDefault()}
     >
       <div className="restaurant-filters-main">
-        <label>
-          {/* The placeholder already says what the field is for; the label
-              stays for screen readers. */}
-          <span className="visually-hidden">Nome</span>
-          <input
-            type="search"
-            value={name}
-            placeholder="Buscar restaurante"
-            onChange={(event) => onNameChange(event.target.value)}
-          />
-        </label>
+        <RestaurantSearch
+          value={name}
+          onChange={onNameChange}
+          onSubmit={onNameSubmit}
+          onSelect={onRestaurantSelect}
+        />
         <button
           type="button"
           className="restaurant-filters-toggle"

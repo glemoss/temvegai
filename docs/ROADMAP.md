@@ -96,7 +96,7 @@ Filtro por tipo e bairro, busca por nome, e recarga dos marcadores conforme a á
 Identidade visual, responsividade, estado vazio (nenhum resultado) e acessibilidade básica.
 **Pronto quando:** aprovado visualmente pelo dono no desktop e no celular.
 
-### [ ] F6 — Busca com sugestões
+### [x] F6 — Busca com sugestões
 Ao digitar no campo de busca, uma lista abaixo dele sugere restaurantes de toda a cidade pelo nome. Escolher uma sugestão move o mapa até o restaurante e abre o painel. A busca no mapa por nome passa a ser aplicada só no Enter. Etapa criada durante a revisão da F5.
 **Pronto quando:** as sugestões aparecem ao digitar e podem ser escolhidas com mouse e teclado (setas, Enter, Esc); escolher uma move o mapa e abre o painel; o mapa só filtra por nome depois do Enter, e apagar o campo remove o filtro. Com testes.
 
@@ -155,3 +155,5 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (F4) ~~O painel de detalhes fecha quando o restaurante aberto sai do resultado, inclusive quando a pessoa arrasta o mapa e ele sai da área visível. No celular isso pode surpreender. Decidir na F5 se o painel deve continuar aberto até ser fechado.~~ Resolvido na F5: o dono decidiu que o painel continua aberto até ser fechado pelo botão ou pelo Esc.
 - (F5) A fonte Bebas Neue (título) vem do Google Fonts por `<link>`, sem pacote npm. Cada visita faz uma requisição a servidores do Google, que recebem o IP do visitante. Decidir no deploy se mantém, se hospeda a fonte junto com o site ou se avisa na política de privacidade (LGPD).
 - (F5) Os 5 restaurantes do seed são todos `fully_vegan`, então a folha de contorno (opções veganas) nunca aparece no mapa de desenvolvimento. Decidir se o seed deve ganhar restaurantes `vegan_options`.
+- (F6) A API não tem parâmetro de limite: as sugestões recebem todos os restaurantes que combinam com o nome e o frontend mostra só os 8 primeiros. Basta com poucos dados; decidir se `GET /restaurants` deve ganhar um `limit` quando a base crescer.
+- (F6) No celular, escolher uma sugestão centraliza o restaurante na tela, mas o painel de detalhes ocupa a parte de baixo (até 60% da altura) e pode cobrir o marcador. Decidir se o mapa deve deslocar o restaurante para a parte visível acima do painel.

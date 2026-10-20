@@ -5,30 +5,26 @@ import { MapLegend } from './MapLegend';
 import { RestaurantDetails } from './RestaurantDetails';
 import { RestaurantFilters } from './RestaurantFilters';
 import { RestaurantMap } from './RestaurantMap';
-import { useDebouncedValue } from './useDebouncedValue';
 import { useNeighborhoods } from './useNeighborhoods';
 import { useRestaurants } from './useRestaurants';
-
-// Waits for a pause in typing before searching, instead of one request
-// per key.
-const NAME_SEARCH_DELAY_MS = 300;
 
 export function App() {
   const [type, setType] = useState<RestaurantType>();
   const [neighborhood, setNeighborhood] = useState<string>();
+  // What is typed in the search field, and the name the map is filtered
+  // by, which only changes on Enter or when the field is cleared.
+  const [query, setQuery] = useState('');
   const [name, setName] = useState('');
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   // The restaurant itself, not its id, so the panel stays open when the
   // restaurant leaves the results, for example after dragging the map.
   const [selected, setSelected] = useState<Restaurant | null>(null);
+  // The area of the restaurant chosen in the search, which the map moves
+  // to. A new object on every choice, so choosing the same restaurant
+  // again moves the map back to it.
+  const [chosenBounds, setChosenBounds] = useState<MapBounds>();
 
-  const debouncedName = useDebouncedValue(name, NAME_SEARCH_DELAY_MS);
-  const state = useRestaurants({
-    type,
-    neighborhood,
-    name: debouncedName,
-    bounds,
-  });
+  const state = useRestaurants({ type, neighborhood, name, bounds });
   const neighborhoodsState = useNeighborhoods();
 
   const restaurants = state.status === 'success' ? state.restaurants : [];
@@ -36,9 +32,11 @@ export function App() {
     neighborhoodsState.status === 'success'
       ? neighborhoodsState.neighborhoods
       : null;
-  const focusBounds = neighborhoods?.find(
-    ({ name }) => name === neighborhood,
-  )?.bounds;
+  // Without a chosen restaurant, the map goes back to the neighborhood,
+  // or to the initial view when there is none.
+  const focusBounds =
+    chosenBounds ??
+    neighborhoods?.find(({ name }) => name === neighborhood)?.bounds;
   const hasFilters = Boolean(type || neighborhood || name.trim());
 
   const closeDetails = useCallback(() => setSelected(null), []);
@@ -46,7 +44,37 @@ export function App() {
   function clearFilters() {
     setType(undefined);
     setNeighborhood(undefined);
+    setQuery('');
     setName('');
+    setChosenBounds(undefined);
+  }
+
+  function changeNeighborhood(value: string | undefined) {
+    setNeighborhood(value);
+    setChosenBounds(undefined);
+  }
+
+  // Clearing the field also takes the map away from the chosen restaurant.
+  function changeQuery(value: string) {
+    setQuery(value);
+    if (!value.trim()) {
+      setName('');
+      setChosenBounds(undefined);
+    }
+  }
+
+  // The field shows the chosen name, and an older name filter is removed so
+  // the map is not filtered by something the field no longer says.
+  function selectSuggestion(restaurant: Restaurant) {
+    setQuery(restaurant.name);
+    setName('');
+    setSelected(restaurant);
+    setChosenBounds({
+      minLat: restaurant.latitude,
+      maxLat: restaurant.latitude,
+      minLng: restaurant.longitude,
+      maxLng: restaurant.longitude,
+    });
   }
 
   return (
@@ -60,11 +88,13 @@ export function App() {
           <RestaurantFilters
             type={type}
             neighborhood={neighborhood}
-            name={name}
+            name={query}
             neighborhoods={neighborhoods}
             onTypeChange={setType}
-            onNeighborhoodChange={setNeighborhood}
-            onNameChange={setName}
+            onNeighborhoodChange={changeNeighborhood}
+            onNameChange={changeQuery}
+            onNameSubmit={() => setName(query)}
+            onRestaurantSelect={selectSuggestion}
           />
         </header>
         {/* Always present, so screen readers announce the messages that

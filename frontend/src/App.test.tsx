@@ -1,11 +1,5 @@
 // @vitest-environment jsdom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -13,6 +7,7 @@ import { App } from './App';
 import type { Neighborhood } from './api/neighborhoods';
 import type { Restaurant } from './api/restaurants';
 import { useNeighborhoods } from './useNeighborhoods';
+import { useRestaurantSuggestions } from './useRestaurantSuggestions';
 import { useRestaurants } from './useRestaurants';
 
 // The map handed to the components that read the visible area and move the
@@ -75,6 +70,9 @@ vi.mock('react-leaflet', () => ({
 // Each test sets the state the hooks return instead of making a request.
 vi.mock('./useRestaurants', () => ({ useRestaurants: vi.fn() }));
 vi.mock('./useNeighborhoods', () => ({ useNeighborhoods: vi.fn() }));
+vi.mock('./useRestaurantSuggestions', () => ({
+  useRestaurantSuggestions: vi.fn(),
+}));
 
 const neighborhoods: Neighborhood[] = [
   {
@@ -124,6 +122,7 @@ beforeEach(() => {
     status: 'success',
     neighborhoods,
   });
+  vi.mocked(useRestaurantSuggestions).mockReturnValue({ status: 'idle' });
   fakeMap.fitBounds.mockClear();
   fakeMap.setView.mockClear();
 });
@@ -411,7 +410,7 @@ describe('App filters', () => {
     ).toBe('true');
   });
 
-  it('searches by name after a pause in typing', async () => {
+  it('filters the map by name only after Enter', () => {
     render(<App />);
 
     fireEvent.change(screen.getByLabelText('Nome'), {
@@ -419,7 +418,164 @@ describe('App filters', () => {
     });
 
     expect(lastFilters()?.name).toBe('');
-    await waitFor(() => expect(lastFilters()?.name).toBe('mandarina'));
+
+    fireEvent.keyDown(screen.getByLabelText('Nome'), { key: 'Enter' });
+
+    expect(lastFilters()?.name).toBe('mandarina');
+  });
+
+  it('removes the name filter when the field is cleared', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'mandarina' },
+    });
+    fireEvent.keyDown(screen.getByLabelText('Nome'), { key: 'Enter' });
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: '' },
+    });
+
+    expect(lastFilters()?.name).toBe('');
+  });
+});
+
+describe('App search suggestions', () => {
+  beforeEach(() => {
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants,
+    });
+    vi.mocked(useRestaurantSuggestions).mockReturnValue({
+      status: 'success',
+      restaurants: [restaurants[1]!],
+    });
+  });
+
+  function lastFilters() {
+    return vi.mocked(useRestaurants).mock.lastCall?.[0];
+  }
+
+  it('moves the map to the chosen restaurant and opens its panel', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'gira' },
+    });
+    fireEvent.click(screen.getByRole('option', { name: /Girassol/ }));
+
+    expect(fakeMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [-27.5969, -48.5495],
+        [-27.5969, -48.5495],
+      ],
+      expect.objectContaining({ maxZoom: 16 }),
+    );
+    expect(screen.getByRole('heading', { name: 'Girassol' })).toBeTruthy();
+    expect(screen.getByLabelText<HTMLInputElement>('Nome').value).toBe(
+      'Girassol',
+    );
+  });
+
+  it('removes an older name filter when a suggestion is chosen', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'mandarina' },
+    });
+    fireEvent.keyDown(screen.getByLabelText('Nome'), { key: 'Enter' });
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'gira' },
+    });
+    fireEvent.keyDown(screen.getByLabelText('Nome'), { key: 'ArrowDown' });
+    fireEvent.keyDown(screen.getByLabelText('Nome'), { key: 'Enter' });
+
+    expect(lastFilters()?.name).toBe('');
+    expect(screen.getByRole('heading', { name: 'Girassol' })).toBeTruthy();
+  });
+
+  it('moves the map again when the same restaurant is chosen again', () => {
+    render(<App />);
+
+    for (let i = 0; i < 2; i++) {
+      fireEvent.change(screen.getByLabelText('Nome'), {
+        target: { value: 'gira' },
+      });
+      fireEvent.click(screen.getByRole('option', { name: /Girassol/ }));
+    }
+
+    expect(fakeMap.fitBounds).toHaveBeenCalledTimes(2);
+  });
+
+  function chooseGirassol() {
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'gira' },
+    });
+    fireEvent.click(screen.getByRole('option', { name: /Girassol/ }));
+  }
+
+  it('moves the map back to the initial view when the field is cleared', () => {
+    render(<App />);
+
+    chooseGirassol();
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: '' },
+    });
+
+    expect(fakeMap.setView).toHaveBeenCalledWith([-27.5954, -48.548], 12, {
+      animate: true,
+    });
+  });
+
+  it('moves the map back to the selected neighborhood when the field is cleared', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Bairro'), {
+      target: { value: 'Campeche' },
+    });
+    chooseGirassol();
+    fakeMap.fitBounds.mockClear();
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: '' },
+    });
+
+    expect(fakeMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [-27.68, -48.5],
+        [-27.66, -48.48],
+      ],
+      expect.objectContaining({ maxZoom: 16 }),
+    );
+    expect(fakeMap.setView).not.toHaveBeenCalled();
+  });
+
+  it('moves the map to a neighborhood selected after a suggestion', () => {
+    render(<App />);
+
+    chooseGirassol();
+    fireEvent.change(screen.getByLabelText('Bairro'), {
+      target: { value: 'Campeche' },
+    });
+
+    expect(fakeMap.fitBounds).toHaveBeenLastCalledWith(
+      [
+        [-27.68, -48.5],
+        [-27.66, -48.48],
+      ],
+      expect.objectContaining({ maxZoom: 16 }),
+    );
+  });
+
+  it('does not move the map when the field is cleared without a chosen restaurant', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'gira' },
+    });
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: '' },
+    });
+
+    expect(fakeMap.setView).not.toHaveBeenCalled();
   });
 });
 

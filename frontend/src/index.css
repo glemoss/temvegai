@@ -215,6 +215,63 @@ select {
   border-radius: 999px;
 }
 
+/* Search field and its suggestions, which open over the map below it */
+
+.restaurant-search {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.restaurant-search-popup {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  left: 0;
+  z-index: 1;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  box-shadow: var(--shadow);
+}
+
+.restaurant-search-popup ul {
+  max-height: 50dvh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+}
+
+.restaurant-search-option {
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+.restaurant-search-option[aria-selected='true'] {
+  background: var(--color-green-100);
+}
+
+.restaurant-search-name {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.restaurant-search-neighborhood {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.restaurant-search-message {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  color: var(--color-text-muted);
+}
+
 /* Legend: bottom right corner, above the map attribution */
 
 .map-legend {
