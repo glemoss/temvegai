@@ -15,6 +15,9 @@ import { useCurrentAdmin } from './useCurrentAdmin';
 
 vi.mock('../api/auth', () => ({ logout: vi.fn() }));
 vi.mock('./useCurrentAdmin', () => ({ useCurrentAdmin: vi.fn() }));
+vi.mock('./useAdminRestaurants', () => ({
+  useAdminRestaurants: () => ({ status: 'success', restaurants: [] }),
+}));
 
 function renderHome() {
   render(

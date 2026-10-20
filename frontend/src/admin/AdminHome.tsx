@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { logout } from '../api/auth';
+import { RestaurantList } from './RestaurantList';
 import { useAdminSession } from './RequireAdmin';
 
 export function AdminHome() {
@@ -39,6 +40,7 @@ export function AdminHome() {
       <p role="alert" className="admin-error">
         {error && 'Não foi possível sair. Tente novamente.'}
       </p>
+      <RestaurantList />
     </main>
   );
 }

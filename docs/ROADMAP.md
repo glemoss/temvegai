@@ -110,7 +110,7 @@ Fica dentro do `/frontend`, na rota `/admin`. Só começa com a fase F concluíd
 React Router separando o site público (`/`) do painel (`/admin`). Tela de login com e-mail e senha usando `POST /auth/login`, verificação de sessão com `GET /auth/me` ao abrir o painel, botão de sair.
 **Pronto quando:** credenciais erradas mostram erro, credenciais certas abrem uma página do painel ainda vazia, recarregar a página mantém o login, acessar `/admin` sem estar logado leva para a tela de login, sair encerra a sessão, e o site público continua funcionando igual.
 
-### [ ] A1 — Lista de restaurantes
+### [x] A1 — Lista de restaurantes
 Tabela com nome, tipo e bairro, busca por nome, estados de carregando, erro e lista vazia.
 **Pronto quando:** a tabela mostra todos os restaurantes da API e a busca filtra a lista.
 

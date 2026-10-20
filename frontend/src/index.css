@@ -670,3 +670,73 @@ select {
   color: var(--color-text-muted);
   overflow-wrap: anywhere;
 }
+
+.admin-restaurants {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin: 1.5rem auto 0;
+  max-width: 60rem;
+}
+
+.admin-subtitle {
+  margin: 0;
+  color: var(--color-green-900);
+  font-size: 1.25rem;
+}
+
+.admin-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 22rem;
+  font-weight: 600;
+}
+
+.admin-search input {
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  font-weight: 400;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+}
+
+.admin-message {
+  margin: 1.5rem auto 0;
+  max-width: 60rem;
+}
+
+.admin-restaurants .admin-message {
+  margin: 0;
+}
+
+/* On narrow screens the table scrolls inside its box, not the page. */
+.admin-table-wrapper {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-table th {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
