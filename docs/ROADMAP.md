@@ -72,7 +72,7 @@ Só começa com a fase B inteira concluída.
 Pasta `/frontend` com Vite, React, TypeScript, ESLint e Vitest. Uma página com o título do projeto.
 **Pronto quando:** `npm run dev` abre a página, e `lint`, `typecheck` e `test` passam.
 
-### [ ] F1 — Mapa
+### [x] F1 — Mapa
 Mapa em tela cheia centrado em Florianópolis, com zoom e arraste. Sem dados ainda.
 **Pronto quando:** o mapa carrega e é navegável no desktop e no celular.
 

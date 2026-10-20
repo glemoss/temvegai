@@ -1,0 +1,19 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.restaurant-map {
+  height: 100dvh;
+  width: 100%;
+}
+
+.app-title {
+  position: absolute;
+  top: 0.5rem;
+  left: 3.5rem;
+  z-index: 1000;
+  margin: 0;
+}

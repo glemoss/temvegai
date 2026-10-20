@@ -1,8 +1,10 @@
+import { RestaurantMap } from './RestaurantMap';
+
 export function App() {
   return (
     <main>
-      <h1>Tem Veg Aí?</h1>
-      <p>Mapa de restaurantes veganos de Florianópolis</p>
+      <h1 className="app-title">Tem Veg Aí?</h1>
+      <RestaurantMap />
     </main>
   );
 }
