@@ -79,7 +79,7 @@ Não crie abstrações sem uso concreto: nada de classes base genéricas, reposi
 
 ## Comandos
 
-Rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`). O banco sobe com `docker compose up -d` na raiz, e o `/backend/.env` é uma cópia do `.env.example`.
+Backend: rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`). O banco sobe com `docker compose up -d` na raiz, e o `/backend/.env` é uma cópia do `.env.example`.
 
 | Comando | O que faz |
 |---|---|
@@ -92,3 +92,13 @@ Rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmrc`). O ba
 | `npm run migrate:rollback` | Desfaz o último lote de migrations |
 | `npm run seed` | Apaga e recria os dados de exemplo (só desenvolvimento) |
 | `npm run create-admin` | Cria uma conta de admin (pede e-mail e senha no terminal) |
+
+Frontend: rodar dentro de `/frontend`, com o mesmo Node 24.
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Sobe o site em `http://localhost:5173` com recarga automática |
+| `npm test` | Roda os testes com Vitest |
+| `npm run lint` | ESLint e verificação de formatação do Prettier |
+| `npm run typecheck` | Checagem de tipos com `tsc --noEmit` |
+| `npm run format` | Formata o código com Prettier |

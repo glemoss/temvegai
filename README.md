@@ -1,6 +1,6 @@
 # Veganos
 
-Mapa de restaurantes veganos de Florianópolis. Este repositório tem a API (`/backend`); o site (`/frontend`) vem depois.
+Mapa de restaurantes veganos de Florianópolis. Este repositório tem a API (`/backend`) e o site (`/frontend`), que ainda está em construção.
 
 O que o produto faz e o que está fora do escopo: [`docs/SPEC.md`](docs/SPEC.md). Etapas de construção: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
@@ -74,6 +74,19 @@ Todos os comandos partem da raiz do repositório.
 
    A API fica em `http://localhost:3000` e recarrega sozinha quando o código muda.
 
+## Rodando o site
+
+Em outro terminal, a partir da raiz do repositório:
+
+```sh
+nvm use
+cd frontend
+npm install
+npm run dev
+```
+
+O site fica em `http://localhost:5173`. Ainda não chama a API, então não precisa dela no ar.
+
 ## Conferindo se funcionou
 
 - `http://localhost:3000/health` deve responder `{"status":"ok","database":"up"}`. Se aparecer `"database":"down"`, o Postgres não está no ar (passo 2).
@@ -85,6 +98,8 @@ Todos os comandos partem da raiz do repositório.
 Em `/docs`, abra `POST /auth/login`, clique em **Try it out** e envie o e-mail e a senha criados no passo 5. O navegador guarda o cookie de sessão, e as rotas de criar, editar e remover restaurante passam a funcionar na mesma página.
 
 ## Comandos
+
+### API
 
 Rodar dentro de `backend`:
 
@@ -99,6 +114,18 @@ Rodar dentro de `backend`:
 | `npm run migrate:rollback` | Desfaz o último lote de migrations |
 | `npm run seed` | Apaga e recria os dados de exemplo |
 | `npm run create-admin` | Cria uma conta de admin |
+
+### Site
+
+Rodar dentro de `frontend`:
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Sobe o site em `http://localhost:5173` com recarga automática |
+| `npm test` | Roda os testes |
+| `npm run lint` | ESLint e verificação de formatação do Prettier |
+| `npm run typecheck` | Checagem de tipos |
+| `npm run format` | Formata o código com Prettier |
 
 ## Problemas comuns
 

@@ -68,7 +68,7 @@ CORS para o frontend com envio de cookies habilitado, documentação OpenAPI ger
 
 Só começa com a fase B inteira concluída.
 
-### [ ] F0 — Esqueleto do frontend
+### [x] F0 — Esqueleto do frontend
 Pasta `/frontend` com Vite, React, TypeScript, ESLint e Vitest. Uma página com o título do projeto.
 **Pronto quando:** `npm run dev` abre a página, e `lint`, `typecheck` e `test` passam.
 
@@ -139,3 +139,6 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (B9) Um campo desconhecido no corpo de `POST`/`PUT /restaurants` gera um item em `details` com `field` vazio, porque o Zod põe o nome do campo na mensagem e não no caminho. O error handler poderia usar o nome do campo como `field`; decidir se vale ajustar.
 - (B10) A documentação em `/docs` fica aberta também em produção. Decidir na etapa de deploy se esconde ou protege.
 - (B10) Como a documentação descreve o que o cliente envia, campos com transformação aparecem só pelo tipo de entrada: `website` e `instagram` aparecem como texto livre, sem o formato de URL nem o padrão de usuário, e os parâmetros de área do mapa aparecem como texto em vez de número. A validação real continua igual; decidir se vale completar a descrição à mão.
+- (F0) O app passa a se chamar **Tem Veg Aí?** (domínio pretendido: `temveg.ai`). Só o frontend usa o nome novo; README, título do `SPEC.md`, `veganos-backend` no `package.json` e o nome do banco continuam "veganos". Decidir se e quando renomear.
+- (F0) Com o domínio `temveg.ai`, a decisão 5 do `SPEC.md` (site e API no mesmo domínio por causa do cookie) leva a algo como `temveg.ai` e `api.temveg.ai`. Entra na etapa de deploy.
+- (F0) No frontend, o `fsevents` (dependência opcional do Vite no macOS) tem script de instalação fora do `allowScripts`. Mesmo aviso do `esbuild` (B0) e do `argon2` (B7); entra na mesma decisão.
