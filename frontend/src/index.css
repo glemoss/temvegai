@@ -566,3 +566,107 @@ select {
     transition: none;
   }
 }
+
+/* Admin panel */
+
+.admin-page {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 1.5rem 1rem;
+  background: var(--color-green-100);
+}
+
+.admin-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-title {
+  margin: 0;
+  color: var(--color-green-900);
+  font-family: var(--font-brand);
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.admin-login {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  width: 100%;
+  max-width: 22rem;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.admin-login label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.admin-login input {
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  font-weight: 400;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+}
+
+.admin-error {
+  margin: 0;
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.admin-error:empty {
+  display: none;
+}
+
+/* The login keeps two lines for the error even when there is none, so the
+   box does not grow when it appears; the longest messages take two lines. */
+.admin-login .admin-error {
+  display: block;
+  min-height: 2.8em;
+}
+
+.admin-button {
+  min-height: 2.5rem;
+  padding: 0 1.25rem;
+  color: var(--color-surface);
+  font-weight: 600;
+  background: var(--color-green-700);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.admin-button:hover {
+  background: var(--color-green-900);
+}
+
+.admin-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.admin-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+  margin: 0 auto;
+  max-width: 60rem;
+}
+
+.admin-user {
+  margin: 0 0 0 auto;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}

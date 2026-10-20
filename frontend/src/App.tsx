@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
-import { LeafIcon } from './leaf';
+import { AppTitle } from './AppTitle';
 import { MapLegend } from './MapLegend';
 import { RestaurantDetails } from './RestaurantDetails';
 import { RestaurantFilters } from './RestaurantFilters';
@@ -81,18 +81,7 @@ export function App() {
     <main>
       <div className="app-top">
         <header className="app-header">
-          {/* The accent on "Aí" is drawn as the leaf, so screen readers get
-            the real spelling from the hidden text instead. */}
-          <h1 className="app-title">
-            <span className="visually-hidden">Tem Veg Aí?</span>
-            <span aria-hidden="true">
-              Tem Veg A
-              <span className="app-title-i">
-                I<LeafIcon type="fully_vegan" className="app-title-accent" />
-              </span>
-              ?
-            </span>
-          </h1>
+          <AppTitle />
           <RestaurantFilters
             type={type}
             neighborhood={neighborhood}

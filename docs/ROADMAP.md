@@ -106,7 +106,7 @@ Ao digitar no campo de busca, uma lista abaixo dele sugere restaurantes de toda 
 
 Fica dentro do `/frontend`, na rota `/admin`. Só começa com a fase F concluída.
 
-### [ ] A0 — Rotas e login do admin
+### [x] A0 — Rotas e login do admin
 React Router separando o site público (`/`) do painel (`/admin`). Tela de login com e-mail e senha usando `POST /auth/login`, verificação de sessão com `GET /auth/me` ao abrir o painel, botão de sair.
 **Pronto quando:** credenciais erradas mostram erro, credenciais certas abrem uma página do painel ainda vazia, recarregar a página mantém o login, acessar `/admin` sem estar logado leva para a tela de login, sair encerra a sessão, e o site público continua funcionando igual.
 
@@ -159,3 +159,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (F6) A API não tem parâmetro de limite: as sugestões recebem todos os restaurantes que combinam com o nome e o frontend mostra só os 8 primeiros. Basta com poucos dados; decidir se `GET /restaurants` deve ganhar um `limit` quando a base crescer.
 - (F6) No celular, escolher uma sugestão centraliza o restaurante na tela, mas o painel de detalhes ocupa a parte de baixo (até 60% da altura) e pode cobrir o marcador. Decidir se o mapa deve deslocar o restaurante para a parte visível acima do painel.
 - (F6) Ao escolher um restaurante nas sugestões da busca, destacar o pin dele no mapa, para ficar claro qual é entre os marcadores próximos. Decidir como será o destaque (tamanho, cor, animação) e se ele também vale para o pin clicado direto no mapa.
+- (A0) Abrir `/admin/login` já estando logado mostra o formulário de novo, em vez de levar direto ao painel. Decidir se a tela de login deve verificar a sessão antes.
