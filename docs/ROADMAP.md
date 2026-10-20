@@ -62,6 +62,10 @@ Migration da tabela `users` conforme o `SPEC.md`, interface `UserRepository` com
 CORS para o frontend com envio de cookies habilitado, documentação OpenAPI gerada a partir dos schemas, README com passo a passo para rodar o projeto.
 **Pronto quando:** a documentação abre no navegador listando todas as rotas, e alguém consegue rodar o projeto seguindo só o README.
 
+### [x] B11 — Bairros
+`ListNeighborhoodsUseCase` e `GET /neighborhoods`, que devolve cada bairro com a área que cobre os seus restaurantes, para o frontend montar o filtro de bairro e mover o mapa até ele. Etapa criada durante o planejamento da F4.
+**Pronto quando:** `GET /neighborhoods` devolve os bairros do seed em ordem alfabética, cada um com a sua área; bairros escritos com maiúsculas diferentes aparecem uma vez só; a rota é pública e aparece em `/docs`. Com testes do use case e da rota.
+
 ---
 
 ## Fase F — Frontend
@@ -141,4 +145,6 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (B10) Como a documentação descreve o que o cliente envia, campos com transformação aparecem só pelo tipo de entrada: `website` e `instagram` aparecem como texto livre, sem o formato de URL nem o padrão de usuário, e os parâmetros de área do mapa aparecem como texto em vez de número. A validação real continua igual; decidir se vale completar a descrição à mão.
 - (F0) O app passa a se chamar **Tem Veg Aí?** (domínio pretendido: `temveg.ai`). Só o frontend usa o nome novo; README, título do `SPEC.md`, `veganos-backend` no `package.json` e o nome do banco continuam "veganos". Decidir se e quando renomear.
 - (F0) Com o domínio `temveg.ai`, a decisão 5 do `SPEC.md` (site e API no mesmo domínio por causa do cookie) leva a algo como `temveg.ai` e `api.temveg.ai`. Entra na etapa de deploy.
+- (B11) `GET /neighborhoods` agrupa os bairros sem diferenciar maiúsculas, como o filtro `neighborhood`, mas não ignora acentos: "Conceicao" e "Conceição" aparecem como bairros separados. Quando a mesma grafia varia só nas maiúsculas, o nome exibido é o menor (`min`). Decidir se o filtro e o agrupamento devem passar a ignorar acentos, ou se o painel admin deve evitar grafias diferentes.
+- (B11) Um bairro com um só restaurante tem área de um ponto (mínimo igual ao máximo). A F4 precisa limitar o zoom ao mover o mapa até ele.
 - (F0) No frontend, o `fsevents` (dependência opcional do Vite no macOS) tem script de instalação fora do `allowScripts`. Mesmo aviso do `esbuild` (B0) e do `argon2` (B7); entra na mesma decisão.

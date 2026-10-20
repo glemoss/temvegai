@@ -72,6 +72,7 @@ export const openApiDocument: OpenApiDocument = {
   },
   tags: [
     { name: 'restaurants', description: 'Restaurantes' },
+    { name: 'neighborhoods', description: 'Bairros' },
     { name: 'auth', description: 'Sessão do admin' },
     { name: 'health', description: 'Estado da API' },
   ],
@@ -141,6 +142,15 @@ export const openApiDocument: OpenApiDocument = {
           204: { description: 'Restaurante removido' },
           ...errorResponses,
         },
+      },
+    },
+    '/neighborhoods': {
+      get: {
+        tags: ['neighborhoods'],
+        summary: 'Lista os bairros com restaurantes',
+        description:
+          'Cada bairro vem uma vez só, sem diferenciar maiúsculas, com a área (`bounds`) que cobre os seus restaurantes. O nome serve para o filtro `neighborhood` de `GET /restaurants`.',
+        responses: { 200: { description: 'Lista de bairros' } },
       },
     },
     '/auth/login': {

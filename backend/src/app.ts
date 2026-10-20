@@ -12,6 +12,7 @@ import { CreateRestaurantController } from './controllers/create-restaurant.cont
 import { DeleteRestaurantController } from './controllers/delete-restaurant.controller.js';
 import { GetCurrentAdminController } from './controllers/get-current-admin.controller.js';
 import { GetRestaurantController } from './controllers/get-restaurant.controller.js';
+import { ListNeighborhoodsController } from './controllers/list-neighborhoods.controller.js';
 import { ListRestaurantsController } from './controllers/list-restaurants.controller.js';
 import { LoginController } from './controllers/login.controller.js';
 import { LogoutController } from './controllers/logout.controller.js';
@@ -26,6 +27,7 @@ import type { RestaurantRepository } from './repositories/restaurant.repository.
 import type { UserRepository } from './repositories/user.repository.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { healthRoutes, type DatabaseCheck } from './routes/health.routes.js';
+import { neighborhoodsRoutes } from './routes/neighborhoods.routes.js';
 import { restaurantsRoutes } from './routes/restaurants.routes.js';
 import { FastifyJwtTokenIssuer } from './services/fastify-jwt-token-issuer.js';
 import type { PasswordHasher } from './services/password-hasher.js';
@@ -33,6 +35,7 @@ import { CreateRestaurantUseCase } from './use-cases/create-restaurant.use-case.
 import { DeleteRestaurantUseCase } from './use-cases/delete-restaurant.use-case.js';
 import { GetCurrentAdminUseCase } from './use-cases/get-current-admin.use-case.js';
 import { GetRestaurantUseCase } from './use-cases/get-restaurant.use-case.js';
+import { ListNeighborhoodsUseCase } from './use-cases/list-neighborhoods.use-case.js';
 import { ListRestaurantsUseCase } from './use-cases/list-restaurants.use-case.js';
 import { LoginUseCase } from './use-cases/login.use-case.js';
 import { UpdateRestaurantUseCase } from './use-cases/update-restaurant.use-case.js';
@@ -75,6 +78,9 @@ export function buildApp(
   );
   const deleteRestaurantController = new DeleteRestaurantController(
     new DeleteRestaurantUseCase(restaurantRepository),
+  );
+  const listNeighborhoodsController = new ListNeighborhoodsController(
+    new ListNeighborhoodsUseCase(restaurantRepository),
   );
   const loginController = new LoginController(
     new LoginUseCase(
@@ -123,6 +129,7 @@ export function buildApp(
     updateRestaurantController,
     deleteRestaurantController,
   });
+  app.register(neighborhoodsRoutes, { listNeighborhoodsController });
   app.register(authRoutes, {
     loginController,
     logoutController,

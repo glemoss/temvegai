@@ -1,4 +1,5 @@
 import type { Knex } from 'knex';
+import type { Neighborhood } from '../../entities/neighborhood.js';
 import type { Restaurant, RestaurantType } from '../../entities/restaurant.js';
 import type {
   RestaurantData,
@@ -41,6 +42,15 @@ export function toRestaurant(row: RestaurantRow): Restaurant {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+// Aggregates of numeric columns also come back as strings.
+interface NeighborhoodRow {
+  name: string;
+  min_lat: string;
+  max_lat: string;
+  min_lng: string;
+  max_lng: string;
 }
 
 type RestaurantDataRow = Omit<
@@ -106,6 +116,29 @@ export class KnexRestaurantRepository implements RestaurantRepository {
       .where({ id })
       .first();
     return row ? toRestaurant(row) : null;
+  }
+
+  async findNeighborhoods(): Promise<Neighborhood[]> {
+    const rows = await this.db('restaurants')
+      .select<NeighborhoodRow[]>(
+        this.db.raw('min(neighborhood) as name'),
+        this.db.raw('min(latitude) as min_lat'),
+        this.db.raw('max(latitude) as max_lat'),
+        this.db.raw('min(longitude) as min_lng'),
+        this.db.raw('max(longitude) as max_lng'),
+      )
+      .groupByRaw('lower(neighborhood)')
+      .orderBy('name');
+
+    return rows.map((row) => ({
+      name: row.name,
+      bounds: {
+        minLat: Number(row.min_lat),
+        maxLat: Number(row.max_lat),
+        minLng: Number(row.min_lng),
+        maxLng: Number(row.max_lng),
+      },
+    }));
   }
 
   async create(data: RestaurantData): Promise<Restaurant> {

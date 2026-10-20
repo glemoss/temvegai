@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { Neighborhood } from '../../entities/neighborhood.js';
 import type { Restaurant } from '../../entities/restaurant.js';
 import type {
   RestaurantData,
@@ -52,6 +53,40 @@ export class InMemoryRestaurantRepository implements RestaurantRepository {
 
   async findById(id: string): Promise<Restaurant | null> {
     return this.restaurants.find((restaurant) => restaurant.id === id) ?? null;
+  }
+
+  // Mirrors the Knex repository: groups by lower(neighborhood) and keeps the
+  // smallest spelling as the name, like min().
+  async findNeighborhoods(): Promise<Neighborhood[]> {
+    const groups = new Map<string, Neighborhood>();
+
+    for (const { neighborhood, latitude, longitude } of this.restaurants) {
+      const key = neighborhood.toLowerCase();
+      const group = groups.get(key);
+
+      if (!group) {
+        groups.set(key, {
+          name: neighborhood,
+          bounds: {
+            minLat: latitude,
+            maxLat: latitude,
+            minLng: longitude,
+            maxLng: longitude,
+          },
+        });
+        continue;
+      }
+
+      if (neighborhood < group.name) {
+        group.name = neighborhood;
+      }
+      group.bounds.minLat = Math.min(group.bounds.minLat, latitude);
+      group.bounds.maxLat = Math.max(group.bounds.maxLat, latitude);
+      group.bounds.minLng = Math.min(group.bounds.minLng, longitude);
+      group.bounds.maxLng = Math.max(group.bounds.maxLng, longitude);
+    }
+
+    return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async create(data: RestaurantData): Promise<Restaurant> {
