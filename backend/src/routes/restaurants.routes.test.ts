@@ -5,7 +5,7 @@ import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memor
 import { InMemoryUserRepository } from '../repositories/in-memory/in-memory-user.repository.js';
 import type { FastifyInstance, InjectOptions } from 'fastify';
 
-const email = 'admin@veganos.com';
+const email = 'admin@temveg.ai';
 const password = 'correct-horse-battery';
 const unknownId = '00000000-0000-0000-0000-000000000000';
 

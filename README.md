@@ -1,4 +1,4 @@
-# Veganos
+# Tem Veg Aí?
 
 Mapa de restaurantes veganos de Florianópolis. Este repositório tem a API (`/backend`) e o site (`/frontend`), que ainda está em construção.
 

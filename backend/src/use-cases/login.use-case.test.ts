@@ -5,7 +5,7 @@ import type { TokenIssuer } from '../services/token-issuer.js';
 import { InvalidCredentialsError } from './errors/invalid-credentials.error.js';
 import { LoginUseCase } from './login.use-case.js';
 
-const email = 'admin@veganos.com';
+const email = 'admin@temveg.ai';
 const password = 'correct-horse-battery';
 
 async function setup() {
@@ -53,7 +53,7 @@ describe('LoginUseCase', () => {
     const { admin, useCase } = await setup();
 
     const { user } = await useCase.execute({
-      email: '  Admin@Veganos.COM ',
+      email: '  Admin@TemVeg.AI ',
       password,
     });
 
@@ -75,7 +75,7 @@ describe('LoginUseCase', () => {
       .execute({ email, password: 'wrong-horse-battery' })
       .catch((error: unknown) => error);
     const unknownEmail = useCase
-      .execute({ email: 'nobody@veganos.com', password })
+      .execute({ email: 'nobody@temveg.ai', password })
       .catch((error: unknown) => error);
 
     const [wrongPasswordError, unknownEmailError] = await Promise.all([
@@ -90,7 +90,7 @@ describe('LoginUseCase', () => {
     const { passwordHasher, useCase } = await setup();
 
     await expect(
-      useCase.execute({ email: 'nobody@veganos.com', password }),
+      useCase.execute({ email: 'nobody@temveg.ai', password }),
     ).rejects.toThrow();
 
     expect(passwordHasher.verify).toHaveBeenCalledOnce();
@@ -103,7 +103,7 @@ describe('LoginUseCase', () => {
       useCase.execute({ email, password: 'wrong-horse-battery' }),
     ).rejects.toThrow();
     await expect(
-      useCase.execute({ email: 'nobody@veganos.com', password }),
+      useCase.execute({ email: 'nobody@temveg.ai', password }),
     ).rejects.toThrow();
 
     expect(tokenIssuer.issue).not.toHaveBeenCalled();

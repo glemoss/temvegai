@@ -7,7 +7,7 @@ describe('GetCurrentAdminUseCase', () => {
   it('returns the admin with the given id', async () => {
     const userRepository = new InMemoryUserRepository();
     const admin = await userRepository.create({
-      email: 'admin@veganos.com',
+      email: 'admin@temveg.ai',
       passwordHash: 'hash',
     });
     const useCase = new GetCurrentAdminUseCase(userRepository);

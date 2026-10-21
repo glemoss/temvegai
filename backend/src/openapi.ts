@@ -65,7 +65,7 @@ const adminOnly = [{ sessionCookie: [] }];
 export const openApiDocument: OpenApiDocument = {
   openapi: '3.0.3',
   info: {
-    title: 'Veganos API',
+    title: 'Tem Veg Aí? API',
     version: '1.0.0',
     description:
       'API do mapa de restaurantes veganos de Florianópolis. As rotas de escrita exigem um admin logado: faça `POST /auth/login` e o cookie de sessão passa a ser enviado nas próximas chamadas.',

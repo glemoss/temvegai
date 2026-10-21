@@ -4,7 +4,7 @@ import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memor
 import { InMemoryUserRepository } from '../repositories/in-memory/in-memory-user.repository.js';
 import type { FastifyInstance } from 'fastify';
 
-const email = 'admin@veganos.com';
+const email = 'admin@temveg.ai';
 const password = 'correct-horse-battery';
 const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 
@@ -114,7 +114,7 @@ describe('POST /auth/login', () => {
       email,
       password: 'wrong-horse-battery',
     });
-    const unknownEmail = await login({ email: 'nobody@veganos.com', password });
+    const unknownEmail = await login({ email: 'nobody@temveg.ai', password });
 
     expect(wrongPassword.statusCode).toBe(401);
     expect(unknownEmail.statusCode).toBe(401);

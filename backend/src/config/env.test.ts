@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { InvalidEnvError, loadEnv } from './env.js';
 
-const databaseUrl = 'postgres://user:secret@localhost:5432/veganos';
+const databaseUrl = 'postgres://user:secret@localhost:5432/temveg';
 const jwtSecret = 'a'.repeat(32);
 const corsOrigin = 'http://localhost:5173';
 const required = {
@@ -77,7 +77,7 @@ describe('loadEnv', () => {
   });
 
   it('does not leak variable values in the error message', () => {
-    const invalidUrl = 'mysql://user:secret@localhost/veganos';
+    const invalidUrl = 'mysql://user:secret@localhost/temveg';
 
     expect(() => loadEnv({ ...required, DATABASE_URL: invalidUrl })).toThrow(
       expect.not.objectContaining({

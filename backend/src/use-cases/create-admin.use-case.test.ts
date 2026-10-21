@@ -24,12 +24,12 @@ describe('CreateAdminUseCase', () => {
     const { userRepository, useCase } = setup();
 
     const admin = await useCase.execute({
-      email: 'admin@veganos.com',
+      email: 'admin@temveg.ai',
       password,
     });
 
-    expect(admin.email).toBe('admin@veganos.com');
-    expect(userRepository.passwordHashOf('admin@veganos.com')).toBe(
+    expect(admin.email).toBe('admin@temveg.ai');
+    expect(userRepository.passwordHashOf('admin@temveg.ai')).toBe(
       `hashed:${password}`,
     );
   });
@@ -38,7 +38,7 @@ describe('CreateAdminUseCase', () => {
     const { useCase } = setup();
 
     const admin = await useCase.execute({
-      email: 'admin@veganos.com',
+      email: 'admin@temveg.ai',
       password,
     });
 
@@ -54,22 +54,20 @@ describe('CreateAdminUseCase', () => {
     const { userRepository, useCase } = setup();
 
     const admin = await useCase.execute({
-      email: '  Admin@Veganos.COM ',
+      email: '  Admin@TemVeg.AI ',
       password,
     });
 
-    expect(admin.email).toBe('admin@veganos.com');
-    expect(await userRepository.findByEmail('admin@veganos.com')).toEqual(
-      admin,
-    );
+    expect(admin.email).toBe('admin@temveg.ai');
+    expect(await userRepository.findByEmail('admin@temveg.ai')).toEqual(admin);
   });
 
   it('rejects an email that is already in use, ignoring case', async () => {
     const { useCase } = setup();
-    await useCase.execute({ email: 'admin@veganos.com', password });
+    await useCase.execute({ email: 'admin@temveg.ai', password });
 
     await expect(
-      useCase.execute({ email: 'ADMIN@veganos.com', password }),
+      useCase.execute({ email: 'ADMIN@temveg.ai', password }),
     ).rejects.toBeInstanceOf(EmailAlreadyInUseError);
   });
 
@@ -77,7 +75,7 @@ describe('CreateAdminUseCase', () => {
     const { useCase } = setup();
 
     await expect(
-      useCase.execute({ email: 'admin@veganos.com', password: 'a'.repeat(11) }),
+      useCase.execute({ email: 'admin@temveg.ai', password: 'a'.repeat(11) }),
     ).rejects.toBeInstanceOf(PasswordTooShortError);
   });
 
@@ -85,20 +83,20 @@ describe('CreateAdminUseCase', () => {
     const { useCase } = setup();
 
     await expect(
-      useCase.execute({ email: 'admin@veganos.com', password: 'a'.repeat(12) }),
-    ).resolves.toMatchObject({ email: 'admin@veganos.com' });
+      useCase.execute({ email: 'admin@temveg.ai', password: 'a'.repeat(12) }),
+    ).resolves.toMatchObject({ email: 'admin@temveg.ai' });
   });
 
   it('does not hash the password when the creation is rejected', async () => {
     const { passwordHasher, useCase } = setup();
-    await useCase.execute({ email: 'admin@veganos.com', password });
+    await useCase.execute({ email: 'admin@temveg.ai', password });
     vi.mocked(passwordHasher.hash).mockClear();
 
     await expect(
-      useCase.execute({ email: 'other@veganos.com', password: 'short' }),
+      useCase.execute({ email: 'other@temveg.ai', password: 'short' }),
     ).rejects.toThrow();
     await expect(
-      useCase.execute({ email: 'admin@veganos.com', password }),
+      useCase.execute({ email: 'admin@temveg.ai', password }),
     ).rejects.toThrow();
 
     expect(passwordHasher.hash).not.toHaveBeenCalled();
@@ -108,7 +106,7 @@ describe('CreateAdminUseCase', () => {
     const { useCase } = setup();
 
     await expect(
-      useCase.execute({ email: 'admin@veganos.com', password: 'secret-pass' }),
+      useCase.execute({ email: 'admin@temveg.ai', password: 'secret-pass' }),
     ).rejects.not.toThrow(/secret-pass/);
   });
 });

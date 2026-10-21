@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EmailAlreadyInUseError } from '../../use-cases/errors/email-already-in-use.error.js';
 import { InMemoryUserRepository } from './in-memory-user.repository.js';
 
-const data = { email: 'admin@veganos.com', passwordHash: 'hash' };
+const data = { email: 'admin@temveg.ai', passwordHash: 'hash' };
 
 describe('InMemoryUserRepository', () => {
   it('creates a user without exposing the password hash', async () => {
@@ -12,7 +12,7 @@ describe('InMemoryUserRepository', () => {
 
     expect(user).toEqual({
       id: expect.any(String),
-      email: 'admin@veganos.com',
+      email: 'admin@temveg.ai',
       createdAt: expect.any(Date),
       updatedAt: expect.any(Date),
     });
@@ -22,13 +22,13 @@ describe('InMemoryUserRepository', () => {
     const repository = new InMemoryUserRepository();
     const user = await repository.create(data);
 
-    expect(await repository.findByEmail('admin@veganos.com')).toEqual(user);
+    expect(await repository.findByEmail('admin@temveg.ai')).toEqual(user);
   });
 
   it('returns null for an unknown email', async () => {
     const repository = new InMemoryUserRepository();
 
-    expect(await repository.findByEmail('nobody@veganos.com')).toBeNull();
+    expect(await repository.findByEmail('nobody@temveg.ai')).toBeNull();
   });
 
   it('finds a user by id', async () => {
@@ -50,16 +50,17 @@ describe('InMemoryUserRepository', () => {
     const repository = new InMemoryUserRepository();
     const user = await repository.create(data);
 
-    expect(
-      await repository.findCredentialsByEmail('admin@veganos.com'),
-    ).toEqual({ user, passwordHash: 'hash' });
+    expect(await repository.findCredentialsByEmail('admin@temveg.ai')).toEqual({
+      user,
+      passwordHash: 'hash',
+    });
   });
 
   it('returns null credentials for an unknown email', async () => {
     const repository = new InMemoryUserRepository();
 
     expect(
-      await repository.findCredentialsByEmail('nobody@veganos.com'),
+      await repository.findCredentialsByEmail('nobody@temveg.ai'),
     ).toBeNull();
   });
 
