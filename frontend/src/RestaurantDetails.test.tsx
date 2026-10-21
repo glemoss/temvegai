@@ -15,7 +15,15 @@ const restaurant: Restaurant = {
   phone: '(48) 3333-4444',
   website: 'https://mandarina.com.br',
   instagram: 'mandarinafloripa',
-  openingHours: 'Segunda a sexta: 10h30–14h30',
+  openingHours: {
+    monday: [{ opens: '10:30', closes: '14:30' }],
+    tuesday: [{ opens: '10:30', closes: '14:30' }],
+    wednesday: [{ opens: '10:30', closes: '14:30' }],
+    thursday: [{ opens: '10:30', closes: '14:30' }],
+    friday: [{ opens: '10:30', closes: '14:30' }],
+    saturday: [],
+    sunday: [],
+  },
 };
 
 function render(overrides: Partial<Restaurant> = {}) {

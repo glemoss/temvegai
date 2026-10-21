@@ -84,8 +84,10 @@ Tabela `restaurants`:
 | phone | text | opcional |
 | website | text | opcional |
 | instagram | text | opcional |
-| opening_hours | text | texto livre na v1 |
+| opening_hours | jsonb | opcional; horário semanal estruturado (ver abaixo) |
 | created_at / updated_at | timestamptz | |
+
+O horário (`opening_hours`) tem os sete dias, de `monday` a `sunday`, cada um com uma lista de intervalos `{ "opens": "HH:MM", "closes": "HH:MM" }` em ordem e sem sobreposição. Lista vazia é dia fechado. Um fechamento igual ou anterior à abertura (ex.: `18:00`–`02:00`) termina no dia seguinte, e só o último intervalo do dia pode passar da meia-noite.
 
 Tabela `users` (só admins):
 

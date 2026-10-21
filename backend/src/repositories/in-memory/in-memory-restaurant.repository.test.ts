@@ -34,7 +34,15 @@ const data: RestaurantData = {
   phone: '(48) 3333-4444',
   website: 'https://novoveg.com',
   instagram: 'novoveg',
-  openingHours: 'Seg a sex, 11h–15h',
+  openingHours: {
+    monday: [{ opens: '11:00', closes: '15:00' }],
+    tuesday: [{ opens: '11:00', closes: '15:00' }],
+    wednesday: [{ opens: '11:00', closes: '15:00' }],
+    thursday: [{ opens: '11:00', closes: '15:00' }],
+    friday: [{ opens: '11:00', closes: '15:00' }],
+    saturday: [],
+    sunday: [],
+  },
 };
 
 const tsanThe = makeRestaurant({ id: '1', name: 'Tsan The' });

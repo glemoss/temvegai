@@ -19,7 +19,15 @@ const row: RestaurantRow = {
   phone: '(48) 99124-2935',
   website: null,
   instagram: 'kairu.veg',
-  opening_hours: 'Seg e qua a dom, 19h–23h; fecha ter',
+  opening_hours: {
+    monday: [{ opens: '19:00', closes: '23:00' }],
+    tuesday: [],
+    wednesday: [{ opens: '19:00', closes: '23:00' }],
+    thursday: [{ opens: '19:00', closes: '23:00' }],
+    friday: [{ opens: '19:00', closes: '23:00' }],
+    saturday: [{ opens: '19:00', closes: '23:00' }],
+    sunday: [{ opens: '19:00', closes: '23:00' }],
+  },
   created_at: createdAt,
   updated_at: updatedAt,
 };
@@ -38,7 +46,8 @@ describe('toRestaurant', () => {
       phone: '(48) 99124-2935',
       website: null,
       instagram: 'kairu.veg',
-      openingHours: 'Seg e qua a dom, 19h–23h; fecha ter',
+      openingHours: row.opening_hours,
+
       createdAt,
       updatedAt,
     });

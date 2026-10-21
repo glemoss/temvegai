@@ -78,7 +78,7 @@ export function RestaurantDetails({
           <>
             <dt>Horário</dt>
             <dd>
-              <OpeningHours text={restaurant.openingHours} />
+              <OpeningHours hours={restaurant.openingHours} />
             </dd>
           </>
         )}

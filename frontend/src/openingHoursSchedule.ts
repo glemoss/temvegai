@@ -1,24 +1,32 @@
-// Opening hours are stored as free text that follows one convention:
-// "Days: hours" parts separated by semicolons, such as
-// "Segunda a sexta: 11h–14h; Sábado e domingo: fechado". This module reads
-// that text so the details panel can list it and tell whether the
-// restaurant is open right now.
+// Reads the weekly opening hours so the details panel can list them and
+// tell whether the restaurant is open right now.
+import type { TimeInterval, Weekday, WeeklyHours } from './api/restaurants';
 
 export interface OpeningHoursLine {
   days: string;
   hours: string;
 }
 
-// Days in the order the text uses them, Monday first.
-const WEEK = [
-  'segunda',
-  'terça',
-  'quarta',
-  'quinta',
-  'sexta',
-  'sábado',
-  'domingo',
+// Monday first, as the hours are listed.
+const WEEK: Weekday[] = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
 ];
+
+const DAY_NAMES: Record<Weekday, string> = {
+  monday: 'segunda',
+  tuesday: 'terça',
+  wednesday: 'quarta',
+  thursday: 'quinta',
+  friday: 'sexta',
+  saturday: 'sábado',
+  sunday: 'domingo',
+};
 
 const MINUTES_IN_A_DAY = 24 * 60;
 
@@ -26,108 +34,81 @@ const MINUTES_IN_A_DAY = 24 * 60;
 // whatever the time zone of the visitor.
 const TIME_ZONE = 'America/Sao_Paulo';
 
-// Opening and closing, in minutes from the start of the day. A closing
-// past midnight, as in "18h–2h", is past 24 hours.
-interface Interval {
-  opens: number;
-  closes: number;
-}
+// One line per run of consecutive days with the same hours, such as
+// "Segunda a sexta" / "11h–15h, 18h–23h" or "Sábado e domingo" / "fechado".
+export function openingHoursLines(hours: WeeklyHours): OpeningHoursLine[] {
+  const lines: OpeningHoursLine[] = [];
+  let start = 0;
 
-// One entry per day of the week, Monday first; null when closed.
-type WeekSchedule = (Interval | null)[];
-
-export function openingHoursLines(text: string): OpeningHoursLine[] {
-  return text
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => {
-      const colon = part.indexOf(':');
-      return colon === -1
-        ? { days: '', hours: part }
-        : {
-            days: part.slice(0, colon).trim(),
-            hours: part.slice(colon + 1).trim(),
-          };
-    });
-}
-
-// Whether the restaurant is open at the given moment, or null when the
-// text does not follow the convention and the answer is unknown.
-export function isOpenAt(text: string, date: Date): boolean | null {
-  const schedule = parseSchedule(text);
-  if (!schedule) {
-    return null;
+  while (start < WEEK.length) {
+    const text = formatDay(hours[WEEK[start]]);
+    let end = start;
+    while (end + 1 < WEEK.length && formatDay(hours[WEEK[end + 1]]) === text) {
+      end += 1;
+    }
+    lines.push({ days: formatDays(start, end), hours: text });
+    start = end + 1;
   }
+  return lines;
+}
 
+export function isOpenAt(hours: WeeklyHours, date: Date): boolean {
   const { day, minutes } = timeInFlorianopolis(date);
-  const today = schedule[day];
-  const yesterday = schedule[(day + 6) % 7];
+  const today = hours[WEEK[day]].map(toMinutes);
+  const yesterday = hours[WEEK[(day + 6) % 7]].map(toMinutes);
 
-  if (today && today.opens <= minutes && minutes < today.closes) {
-    return true;
-  }
-  // Still open from the day before, as at 1h for "18h–2h".
   return (
-    !!yesterday &&
-    yesterday.closes > MINUTES_IN_A_DAY &&
-    minutes < yesterday.closes - MINUTES_IN_A_DAY
+    today.some(({ opens, closes }) => opens <= minutes && minutes < closes) ||
+    // Still open from the day before, as at 1h for 18h–2h.
+    yesterday.some(
+      ({ closes }) =>
+        closes > MINUTES_IN_A_DAY && minutes < closes - MINUTES_IN_A_DAY,
+    )
   );
 }
 
-function parseSchedule(text: string): WeekSchedule | null {
-  const schedule: WeekSchedule = Array<Interval | null>(7).fill(null);
-
-  for (const { days, hours } of openingHoursLines(text)) {
-    const dayIndexes = parseDays(days);
-    const interval = parseHours(hours);
-    if (!dayIndexes || interval === undefined) {
-      return null;
-    }
-    for (const day of dayIndexes) {
-      schedule[day] = interval;
-    }
-  }
-  return schedule;
+// "Segunda", "Sábado e domingo" or "Segunda a sexta".
+function formatDays(start: number, end: number): string {
+  const first = DAY_NAMES[WEEK[start]];
+  const last = DAY_NAMES[WEEK[end]];
+  const days =
+    start === end
+      ? first
+      : end === start + 1
+        ? `${first} e ${last}`
+        : `${first} a ${last}`;
+  return days.charAt(0).toUpperCase() + days.slice(1);
 }
 
-// "Segunda a sexta", "Sábado e domingo" or "Terça, quinta e sábado".
-function parseDays(text: string): number[] | null {
-  const items = text.toLowerCase().split(/\s*,\s*|\s+e\s+/);
-  const days: number[] = [];
-
-  for (const item of items) {
-    const [first, last, ...rest] = item.split(/\s+a\s+/);
-    const start = WEEK.indexOf(first ?? '');
-    const end = last === undefined ? start : WEEK.indexOf(last);
-    if (start === -1 || end === -1 || rest.length > 0) {
-      return null;
-    }
-    for (let day = start; ; day = (day + 1) % 7) {
-      days.push(day);
-      if (day === end) {
-        break;
-      }
-    }
+function formatDay(intervals: TimeInterval[]): string {
+  if (intervals.length === 0) {
+    return 'fechado';
   }
-  return days;
+  return intervals
+    .map(({ opens, closes }) => `${formatTime(opens)}–${formatTime(closes)}`)
+    .join(', ');
 }
 
-// "11h30–14h" or "fechado"; undefined when it is neither.
-function parseHours(text: string): Interval | null | undefined {
-  if (text.toLowerCase() === 'fechado') {
-    return null;
-  }
-  const match = /^(\d{1,2})h(\d{2})?\s*[–-]\s*(\d{1,2})h(\d{2})?$/.exec(text);
-  if (!match) {
-    return undefined;
-  }
-  const opens = Number(match[1]) * 60 + Number(match[2] ?? 0);
-  let closes = Number(match[3]) * 60 + Number(match[4] ?? 0);
-  if (closes <= opens) {
-    closes += MINUTES_IN_A_DAY;
-  }
-  return { opens, closes };
+// "11:30" as "11h30" and "00:00" as "0h".
+function formatTime(time: string): string {
+  const [hours, minutes] = time.split(':');
+  return `${Number(hours)}h${minutes === '00' ? '' : minutes}`;
+}
+
+// Opening and closing in minutes from the start of the day. A closing at
+// or before the opening, as in 18:00–02:00, is past 24 hours.
+function toMinutes({ opens, closes }: TimeInterval): {
+  opens: number;
+  closes: number;
+} {
+  const start = minutesOf(opens);
+  const end = minutesOf(closes);
+  return { opens: start, closes: end <= start ? end + MINUTES_IN_A_DAY : end };
+}
+
+function minutesOf(time: string): number {
+  const [hours, minutes] = time.split(':');
+  return Number(hours) * 60 + Number(minutes);
 }
 
 const clockFormat = new Intl.DateTimeFormat('en-US', {

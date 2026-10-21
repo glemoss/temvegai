@@ -1,9 +1,19 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { WeeklyHours } from './api/restaurants';
 import { OpeningHours } from './OpeningHours';
 
-const HOURS = 'Segunda a sexta: 11h–14h; Sábado e domingo: fechado';
+const weekday = [{ opens: '11:00', closes: '14:00' }];
+const HOURS: WeeklyHours = {
+  monday: weekday,
+  tuesday: weekday,
+  wednesday: weekday,
+  thursday: weekday,
+  friday: weekday,
+  saturday: [],
+  sunday: [],
+};
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -22,21 +32,21 @@ function setNow(time: string) {
 describe('OpeningHours', () => {
   it('shows that the restaurant is open now', () => {
     setNow('12:00');
-    render(<OpeningHours text={HOURS} />);
+    render(<OpeningHours hours={HOURS} />);
 
     expect(screen.getByRole('button', { name: 'Aberto agora' })).toBeTruthy();
   });
 
   it('shows that the restaurant is closed now', () => {
     setNow('20:00');
-    render(<OpeningHours text={HOURS} />);
+    render(<OpeningHours hours={HOURS} />);
 
     expect(screen.getByRole('button', { name: 'Fechado agora' })).toBeTruthy();
   });
 
   it('hides the full hours until the arrow is clicked', () => {
     setNow('12:00');
-    render(<OpeningHours text={HOURS} />);
+    render(<OpeningHours hours={HOURS} />);
     const toggle = screen.getByRole('button', { name: 'Aberto agora' });
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
@@ -54,15 +64,5 @@ describe('OpeningHours', () => {
     fireEvent.click(toggle);
 
     expect(screen.queryByRole('list')).toBeNull();
-  });
-
-  it('lists text outside the convention right away, without a state', () => {
-    setNow('12:00');
-    render(<OpeningHours text="Consultar no Instagram" />);
-
-    expect(screen.queryByRole('button')).toBeNull();
-    expect(screen.getByRole('listitem').textContent).toBe(
-      'Consultar no Instagram',
-    );
   });
 });

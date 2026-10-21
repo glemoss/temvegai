@@ -1,6 +1,10 @@
 import type { Knex } from 'knex';
 import type { Neighborhood } from '../../entities/neighborhood.js';
-import type { Restaurant, RestaurantType } from '../../entities/restaurant.js';
+import type {
+  Restaurant,
+  RestaurantType,
+  WeeklyHours,
+} from '../../entities/restaurant.js';
 import type {
   RestaurantData,
   RestaurantFilters,
@@ -20,7 +24,8 @@ export interface RestaurantRow {
   phone: string | null;
   website: string | null;
   instagram: string | null;
-  opening_hours: string | null;
+  // The pg driver parses jsonb columns.
+  opening_hours: WeeklyHours | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -53,10 +58,12 @@ interface NeighborhoodRow {
   max_lng: string;
 }
 
+// jsonb is written as JSON text, so the driver does not have to guess how
+// to serialize the object.
 type RestaurantDataRow = Omit<
   RestaurantRow,
-  'id' | 'created_at' | 'updated_at'
->;
+  'id' | 'opening_hours' | 'created_at' | 'updated_at'
+> & { opening_hours: string | null };
 
 function toRestaurantDataRow(data: RestaurantData): RestaurantDataRow {
   return {
@@ -70,7 +77,7 @@ function toRestaurantDataRow(data: RestaurantData): RestaurantDataRow {
     phone: data.phone,
     website: data.website,
     instagram: data.instagram,
-    opening_hours: data.openingHours,
+    opening_hours: data.openingHours && JSON.stringify(data.openingHours),
   };
 }
 
@@ -142,17 +149,17 @@ export class KnexRestaurantRepository implements RestaurantRepository {
   }
 
   async create(data: RestaurantData): Promise<Restaurant> {
-    const [row] = await this.db<RestaurantRow>('restaurants')
+    const [row] = await this.db('restaurants')
       .insert(toRestaurantDataRow(data))
-      .returning('*');
+      .returning<RestaurantRow[]>('*');
     return toRestaurant(row as RestaurantRow);
   }
 
   async update(id: string, data: RestaurantData): Promise<Restaurant | null> {
-    const [row] = await this.db<RestaurantRow>('restaurants')
+    const [row] = await this.db('restaurants')
       .where({ id })
       .update({ ...toRestaurantDataRow(data), updated_at: this.db.fn.now() })
-      .returning('*');
+      .returning<RestaurantRow[]>('*');
     return row ? toRestaurant(row as RestaurantRow) : null;
   }
 

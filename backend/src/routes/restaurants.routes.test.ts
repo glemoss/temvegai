@@ -21,7 +21,15 @@ const kairu: Restaurant = {
   phone: '(48) 99124-2935',
   website: null,
   instagram: 'kairu.veg',
-  openingHours: 'Seg e qua a dom, 19h–23h; fecha ter',
+  openingHours: {
+    monday: [{ opens: '19:00', closes: '23:00' }],
+    tuesday: [],
+    wednesday: [{ opens: '19:00', closes: '23:00' }],
+    thursday: [{ opens: '19:00', closes: '23:00' }],
+    friday: [{ opens: '19:00', closes: '23:00' }],
+    saturday: [{ opens: '19:00', closes: '23:00' }],
+    sunday: [{ opens: '19:00', closes: '23:00' }],
+  },
   createdAt: new Date('2026-10-14T12:00:00Z'),
   updatedAt: new Date('2026-10-14T12:00:00Z'),
 };
@@ -37,8 +45,20 @@ const body = {
   phone: '(48) 3333-4444',
   website: 'https://novoveg.com',
   instagram: 'novoveg',
-  openingHours: 'Seg a sex, 11h–15h',
+  openingHours: {
+    monday: [{ opens: '11:00', closes: '15:00' }],
+    tuesday: [{ opens: '11:00', closes: '15:00' }],
+    wednesday: [{ opens: '11:00', closes: '15:00' }],
+    thursday: [{ opens: '11:00', closes: '15:00' }],
+    friday: [{ opens: '11:00', closes: '15:00' }],
+    saturday: [],
+    sunday: [],
+  },
 };
+
+function withMonday(monday: { opens: string; closes: string }[]) {
+  return { ...body, openingHours: { ...body.openingHours, monday } };
+}
 
 let app: FastifyInstance;
 let token: string;
@@ -170,6 +190,27 @@ describe('POST /restaurants', () => {
     });
   });
 
+  it('accepts several intervals a day and one past midnight', async () => {
+    await setup();
+    const openingHours = {
+      ...body.openingHours,
+      friday: [
+        { opens: '11:00', closes: '15:00' },
+        { opens: '18:00', closes: '02:00' },
+      ],
+      saturday: [{ opens: '17:00', closes: '00:00' }],
+    };
+
+    const response = await asAdmin({
+      method: 'POST',
+      url: '/restaurants',
+      payload: { ...body, openingHours },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({ restaurant: { openingHours } });
+  });
+
   it('stores the Instagram username without the @', async () => {
     await setup();
 
@@ -196,6 +237,47 @@ describe('POST /restaurants', () => {
       field: 'instagram',
       payload: { ...body, instagram: 'https://instagram.com/novoveg' },
     },
+    {
+      field: 'openingHours.monday.0.opens',
+      payload: withMonday([{ opens: '25:00', closes: '15:00' }]),
+    },
+    {
+      field: 'openingHours.monday.0.closes',
+      payload: withMonday([{ opens: '11:00', closes: '15h' }]),
+    },
+    {
+      field: 'openingHours.monday.0',
+      payload: withMonday([{ opens: '11:00', closes: '11:00' }]),
+    },
+    {
+      field: 'openingHours.monday.1',
+      payload: withMonday([
+        { opens: '11:00', closes: '15:00' },
+        { opens: '14:00', closes: '18:00' },
+      ]),
+    },
+    {
+      field: 'openingHours.monday.0',
+      payload: withMonday([
+        { opens: '18:00', closes: '02:00' },
+        { opens: '19:00', closes: '23:00' },
+      ]),
+    },
+    {
+      field: 'openingHours.sunday',
+      payload: {
+        ...body,
+        openingHours: { ...body.openingHours, sunday: undefined },
+      },
+    },
+    {
+      field: 'openingHours',
+      payload: {
+        ...body,
+        openingHours: { ...body.openingHours, holiday: [] },
+      },
+    },
+    { field: 'openingHours', payload: { ...body, openingHours: 'Seg a sex' } },
   ])('responds 400 for an invalid $field', async ({ field, payload }) => {
     await setup();
 

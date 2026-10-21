@@ -1,40 +1,17 @@
 import { useId, useState } from 'react';
+import type { WeeklyHours } from './api/restaurants';
 import { isOpenAt, openingHoursLines } from './openingHoursSchedule';
 
 interface OpeningHoursProps {
-  text: string;
+  hours: WeeklyHours;
 }
 
 // Whether the restaurant is open now, with an arrow that shows the full
-// hours, one line per "Days: hours" part. Text that does not follow the
-// convention has no known state, so it is listed right away.
-export function OpeningHours({ text }: OpeningHoursProps) {
+// hours, one line per run of days with the same hours.
+export function OpeningHours({ hours }: OpeningHoursProps) {
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
-  const open = isOpenAt(text, new Date());
-
-  const list = (
-    <ul
-      id={listId}
-      className="opening-hours"
-      hidden={open !== null && !expanded}
-    >
-      {openingHoursLines(text).map(({ days, hours }, index) =>
-        days ? (
-          <li key={index}>
-            <span>{days}</span>
-            <span>{hours}</span>
-          </li>
-        ) : (
-          <li key={index}>{hours}</li>
-        ),
-      )}
-    </ul>
-  );
-
-  if (open === null) {
-    return list;
-  }
+  const open = isOpenAt(hours, new Date());
 
   return (
     <>
@@ -65,7 +42,14 @@ export function OpeningHours({ text }: OpeningHoursProps) {
           />
         </svg>
       </button>
-      {list}
+      <ul id={listId} className="opening-hours" hidden={!expanded}>
+        {openingHoursLines(hours).map((line) => (
+          <li key={line.days}>
+            <span>{line.days}</span>
+            <span>{line.hours}</span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

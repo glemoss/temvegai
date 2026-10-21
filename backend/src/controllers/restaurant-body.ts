@@ -27,6 +27,48 @@ const instagramUsername = z
     z.string().regex(/^[A-Za-z0-9._]{1,30}$/, 'Invalid Instagram username'),
   );
 
+const time = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected a time as HH:MM');
+
+const timeInterval = z
+  .strictObject({ opens: time, closes: time })
+  .refine(({ opens, closes }) => opens !== closes, {
+    message: 'Opening and closing times must differ',
+  });
+
+// Intervals of a day must be in order and must not overlap. Only the last
+// one may end after midnight, since nothing can come after it that day.
+const dayHours = z.array(timeInterval).superRefine((intervals, context) => {
+  intervals.forEach((interval, index) => {
+    const previous = intervals[index - 1];
+    if (previous && interval.opens < previous.closes) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Intervals must be in order and must not overlap',
+        path: [index],
+      });
+    }
+    if (interval.closes < interval.opens && index < intervals.length - 1) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Only the last interval of a day may end after midnight',
+        path: [index],
+      });
+    }
+  });
+});
+
+const weeklyHours = z.strictObject({
+  monday: dayHours,
+  tuesday: dayHours,
+  wednesday: dayHours,
+  thursday: dayHours,
+  friday: dayHours,
+  saturday: dayHours,
+  sunday: dayHours,
+});
+
 // Body of POST and PUT /restaurants. Unknown fields are rejected so a
 // misspelled field fails instead of being treated as missing.
 export const restaurantBodySchema = z.strictObject({
@@ -40,5 +82,5 @@ export const restaurantBodySchema = z.strictObject({
   phone: optionalText(),
   website: optionalText(website),
   instagram: optionalText(instagramUsername),
-  openingHours: optionalText(),
+  openingHours: weeklyHours.nullish().transform((value) => value ?? null),
 });
