@@ -8,7 +8,7 @@ export interface OpeningHoursLine {
 }
 
 // Monday first, as the hours are listed.
-const WEEK: Weekday[] = [
+export const WEEK: Weekday[] = [
   'monday',
   'tuesday',
   'wednesday',
@@ -18,7 +18,7 @@ const WEEK: Weekday[] = [
   'sunday',
 ];
 
-const DAY_NAMES: Record<Weekday, string> = {
+export const DAY_NAMES: Record<Weekday, string> = {
   monday: 'segunda',
   tuesday: 'terça',
   wednesday: 'quarta',

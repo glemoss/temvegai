@@ -86,3 +86,53 @@ export async function fetchRestaurants(
   const body = (await response.json()) as { restaurants: Restaurant[] };
   return body.restaurants;
 }
+
+// Everything a restaurant has but the id, which the API generates.
+export type RestaurantInput = Omit<Restaurant, 'id'>;
+
+export interface FieldError {
+  field: string;
+  message: string;
+}
+
+// The session expired or the admin logged out in another tab.
+export class UnauthenticatedError extends Error {
+  constructor() {
+    super('Sessão expirada.');
+    this.name = 'UnauthenticatedError';
+  }
+}
+
+// The API refused the data; `details` says which field and why, with the
+// field as a dotted path such as "openingHours.monday.0".
+export class ValidationError extends Error {
+  constructor(readonly details: FieldError[]) {
+    super('Dados inválidos.');
+    this.name = 'ValidationError';
+  }
+}
+
+export async function createRestaurant(
+  input: RestaurantInput,
+): Promise<Restaurant> {
+  const response = await fetch(`${config.apiUrl}/restaurants`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+    credentials: 'include',
+  });
+
+  if (response.status === 401) throw new UnauthenticatedError();
+  if (response.status === 400) {
+    const body = (await response.json()) as {
+      error: { details?: FieldError[] };
+    };
+    throw new ValidationError(body.error.details ?? []);
+  }
+  if (!response.ok) {
+    throw new Error(`POST /restaurants respondeu ${response.status}`);
+  }
+
+  const body = (await response.json()) as { restaurant: Restaurant };
+  return body.restaurant;
+}

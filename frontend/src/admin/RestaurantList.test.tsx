@@ -1,11 +1,10 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { Restaurant } from '../api/restaurants';
 import { RestaurantList } from './RestaurantList';
-import { useAdminRestaurants } from './useAdminRestaurants';
-
-vi.mock('./useAdminRestaurants', () => ({ useAdminRestaurants: vi.fn() }));
+import type { AdminRestaurantsState } from './useAdminRestaurants';
 
 function restaurant(overrides: Partial<Restaurant>): Restaurant {
   return {
@@ -49,12 +48,19 @@ function typeSearch(value: string) {
   });
 }
 
-beforeEach(() => {
-  vi.mocked(useAdminRestaurants).mockReturnValue({
-    status: 'success',
-    restaurants,
-  });
-});
+function renderList(
+  state: AdminRestaurantsState = { status: 'success', restaurants },
+) {
+  render(
+    <MemoryRouter>
+      <RestaurantList state={state} />
+    </MemoryRouter>,
+  );
+}
+
+function addLink() {
+  return screen.getByRole('link', { name: 'Novo restaurante' });
+}
 
 afterEach(() => {
   cleanup();
@@ -62,17 +68,14 @@ afterEach(() => {
 
 describe('RestaurantList', () => {
   it('shows a loading message', () => {
-    vi.mocked(useAdminRestaurants).mockReturnValue({ status: 'loading' });
-    render(<RestaurantList />);
+    renderList({ status: 'loading' });
 
-    expect(screen.getByRole('status').textContent).toBe(
-      'Carregando restaurantes…',
-    );
+    expect(screen.getByText('Carregando restaurantes…')).toBeTruthy();
+    expect(addLink()).toBeTruthy();
   });
 
   it('shows an error message', () => {
-    vi.mocked(useAdminRestaurants).mockReturnValue({ status: 'error' });
-    render(<RestaurantList />);
+    renderList({ status: 'error' });
 
     expect(screen.getByRole('alert').textContent).toBe(
       'Não foi possível carregar os restaurantes. Tente novamente mais tarde.',
@@ -80,20 +83,16 @@ describe('RestaurantList', () => {
   });
 
   it('shows a message when there are no restaurants', () => {
-    vi.mocked(useAdminRestaurants).mockReturnValue({
-      status: 'success',
-      restaurants: [],
-    });
-    render(<RestaurantList />);
+    renderList({ status: 'success', restaurants: [] });
 
-    expect(screen.getByRole('status').textContent).toBe(
-      'Nenhum restaurante cadastrado.',
-    );
+    expect(screen.getByText('Nenhum restaurante cadastrado.')).toBeTruthy();
     expect(screen.queryByRole('table')).toBeNull();
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(addLink().getAttribute('href')).toBe('/restaurants/new');
   });
 
   it('shows name, type and neighborhood of every restaurant', () => {
-    render(<RestaurantList />);
+    renderList();
 
     const headers = screen
       .getAllByRole('columnheader')
@@ -110,7 +109,7 @@ describe('RestaurantList', () => {
   });
 
   it('filters by name ignoring case and accents', () => {
-    render(<RestaurantList />);
+    renderList();
 
     typeSearch('  CAFE conceicao ');
 
@@ -118,22 +117,27 @@ describe('RestaurantList', () => {
   });
 
   it('shows a message when no name matches', () => {
-    render(<RestaurantList />);
+    renderList();
 
     typeSearch('pizzaria');
 
-    expect(screen.getByRole('status').textContent).toBe(
-      'Nenhum restaurante com esse nome.',
-    );
+    expect(screen.getByText('Nenhum restaurante com esse nome.')).toBeTruthy();
     expect(screen.queryByRole('table')).toBeNull();
   });
 
   it('shows every restaurant again when the search is cleared', () => {
-    render(<RestaurantList />);
+    renderList();
 
     typeSearch('janela');
     typeSearch('');
 
     expect(rowNames()).toEqual(['Café Conceição', 'Janela Bar', 'Mandarina']);
+  });
+
+  it('puts the add button on the line of the search', () => {
+    renderList();
+
+    const toolbar = screen.getByRole('searchbox').closest('.admin-toolbar');
+    expect(toolbar?.contains(addLink())).toBe(true);
   });
 });

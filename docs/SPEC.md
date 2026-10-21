@@ -23,7 +23,7 @@ Um aplicativo mobile virá depois e vai consumir a mesma API. Por isso a API é 
 - Painel admin em `/admin`, dentro do mesmo frontend:
   - tela de login com e-mail e senha;
   - lista de restaurantes com busca por nome;
-  - formulário de criar e editar, com a localização escolhida clicando no mapa;
+  - formulário de criar e editar, em modal sobre a lista, com a localização marcada pelo endereço ou escolhida clicando no mapa;
   - remoção com confirmação.
 
 ## Fora da v1
@@ -56,6 +56,7 @@ Não implementar, nem deixar "preparado":
 | Frontend | React + Vite |
 | Rotas do frontend | React Router (site público em `/`, painel em `/admin`) |
 | Mapa | Leaflet (react-leaflet) com tiles do OpenStreetMap |
+| Geocodificação | Nominatim (OpenStreetMap), chamado pelo painel admin para marcar o endereço no mapa e preencher o endereço do ponto clicado |
 | Gerenciador de pacotes | npm |
 
 ## Estrutura do repositório

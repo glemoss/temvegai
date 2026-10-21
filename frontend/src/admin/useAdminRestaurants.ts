@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { fetchRestaurants, type Restaurant } from '../api/restaurants';
 
 export type AdminRestaurantsState =
@@ -7,11 +7,14 @@ export type AdminRestaurantsState =
   | { status: 'success'; restaurants: Restaurant[] };
 
 // Every restaurant of the API, without filters; the panel searches the list
-// by itself.
-export function useAdminRestaurants(): AdminRestaurantsState {
+// by itself. `reload` requests the list again, keeping the current one on
+// screen until the new one arrives.
+export function useAdminRestaurants(): [AdminRestaurantsState, () => void] {
   const [state, setState] = useState<AdminRestaurantsState>({
     status: 'loading',
   });
+  const [version, setVersion] = useState(0);
+  const reload = useCallback(() => setVersion((value) => value + 1), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -26,7 +29,7 @@ export function useAdminRestaurants(): AdminRestaurantsState {
     );
 
     return () => controller.abort();
-  }, []);
+  }, [version]);
 
-  return state;
+  return [state, reload];
 }

@@ -740,3 +740,389 @@ select {
 .admin-table tbody tr:last-child td {
   border-bottom: none;
 }
+
+.admin-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-title a:hover {
+  text-decoration: underline;
+}
+
+.admin-header-error {
+  margin: 0.5rem auto 0;
+  max-width: 60rem;
+}
+
+/* The search on the left and the add button at the right end. */
+.admin-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--gap);
+}
+
+.admin-toolbar .admin-search {
+  flex: 1;
+}
+
+.admin-add {
+  margin-left: auto;
+}
+
+/* Toast: at the bottom right, or bottom center on narrow screens. */
+.admin-toast-region {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: var(--z-overlay);
+}
+
+.admin-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 24rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  color: var(--color-surface);
+  background: var(--color-green-900);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  animation: admin-toast-in 0.2s ease-out;
+}
+
+.admin-toast p {
+  flex: 1;
+  margin: 0;
+  font-weight: 600;
+}
+
+.admin-toast-close {
+  background: none;
+}
+
+.admin-toast-close:hover {
+  background: rgb(255 255 255 / 0.15);
+}
+
+@keyframes admin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-toast-region {
+    right: 1rem;
+    left: 1rem;
+  }
+
+  .admin-toast {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-toast {
+    animation: none;
+  }
+}
+
+/* Round buttons that only show an icon; their names are in aria-label. */
+.admin-icon-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--color-surface);
+  background: var(--color-green-700);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.admin-icon-button:hover {
+  background: var(--color-green-900);
+}
+
+.admin-icon-button-small {
+  width: 2rem;
+  height: 2rem;
+}
+
+.admin-icon-button-quiet {
+  color: var(--color-text-muted);
+  background: none;
+}
+
+.admin-icon-button-quiet:hover {
+  color: var(--color-text);
+  background: var(--color-green-100);
+}
+
+.admin-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.admin-icon-button-small .admin-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Modal */
+
+.admin-modal {
+  box-sizing: border-box;
+  width: min(48rem, 100% - 2rem);
+  max-height: calc(100% - 2rem);
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.admin-modal::backdrop {
+  background: rgb(29 38 31 / 0.5);
+}
+
+/* The title and the close button stay in view while the form scrolls. */
+.admin-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 1rem 1.5rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (max-width: 640px) {
+  .admin-modal {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .admin-modal-header {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Restaurant form */
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .admin-form {
+    padding: 1rem;
+  }
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.admin-field > label,
+.admin-field > legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.admin-form input[type='text'],
+.admin-form input[type='tel'],
+.admin-form input[type='url'],
+.admin-form input[type='time'],
+.admin-form textarea {
+  box-sizing: border-box;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  font: inherit;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+}
+
+.admin-form textarea {
+  padding: 0.5rem 0.75rem;
+  resize: vertical;
+}
+
+.admin-form [aria-invalid='true']:is(input, textarea) {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+/* The asterisk of required fields; screen readers get aria-required
+   instead of reading it. */
+.admin-required::after {
+  content: ' *' / '';
+  color: var(--color-error);
+}
+
+.admin-hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+/* Every field keeps a line for its error, empty or not, so the form does
+   not change size when errors appear. */
+.admin-field-error {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.admin-radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+
+.admin-location-map {
+  height: 18rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  cursor: crosshair;
+}
+
+.admin-geocode-status {
+  min-height: 1.4em;
+  line-height: 1.4;
+}
+
+.admin-location-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--gap);
+}
+
+.admin-location-fields label {
+  font-weight: 400;
+}
+
+.admin-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.admin-hours-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+}
+
+/* One column per day: the opening above the closing, then the button to
+   remove the interval. */
+.admin-hours-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 42rem;
+}
+
+.admin-hours-table th,
+.admin-hours-table td {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  vertical-align: top;
+}
+
+.admin-hours-table th {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-hours-table th + th,
+.admin-hours-table td + td {
+  border-left: 1px solid var(--color-border);
+}
+
+.admin-hours-table tbody tr + tr td {
+  border-top: 1px dashed var(--color-border);
+}
+
+.admin-hours-closed {
+  display: block;
+  padding: 0.5rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.admin-hours-interval {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.admin-form .admin-hours-interval input[type='time'] {
+  width: 100%;
+  text-align: center;
+  min-height: 2rem;
+  padding: 0 0.25rem;
+  font-size: 0.875rem;
+}
+
+.admin-link {
+  min-height: 2.5rem;
+  padding: 0;
+  color: var(--color-green-700);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+/* Kept even when empty, beside the buttons or, on narrow screens, on a
+   line of its own below them. */
+.admin-form-message,
+.admin-form-message:empty {
+  display: flex;
+  flex: 1 1 14rem;
+  align-items: center;
+  min-height: 2.5rem;
+}

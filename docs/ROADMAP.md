@@ -118,7 +118,7 @@ React Router separando o site público (`/`) do painel (`/admin`). Tela de login
 Tabela com nome, tipo e bairro, busca por nome, estados de carregando, erro e lista vazia.
 **Pronto quando:** a tabela mostra todos os restaurantes da API e a busca filtra a lista.
 
-### [ ] A2 — Criar restaurante
+### [x] A2 — Criar restaurante
 Formulário com todos os campos do modelo, validação antes de enviar e localização escolhida clicando em um mapa (preenche latitude e longitude).
 **Pronto quando:** criar um restaurante pelo painel faz ele aparecer na lista e no mapa público, erros de validação da API aparecem no formulário, e sessão expirada leva de volta ao login.
 
@@ -164,6 +164,11 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (F6) No celular, escolher uma sugestão centraliza o restaurante na tela, mas o painel de detalhes ocupa a parte de baixo (até 60% da altura) e pode cobrir o marcador. Decidir se o mapa deve deslocar o restaurante para a parte visível acima do painel.
 - (F6) Ao escolher um restaurante nas sugestões da busca, destacar o pin dele no mapa, para ficar claro qual é entre os marcadores próximos. Decidir como será o destaque (tamanho, cor, animação) e se ele também vale para o pin clicado direto no mapa.
 - (A2) Decidido no planejamento: o formulário valida com Zod (dependência nova no `/frontend`, já na tabela de stack) e o campo de bairro sugere os bairros existentes com `<datalist>` vindo de `GET /neighborhoods`.
+- (A2) As mensagens de validação da API estão em inglês. O formulário repete as regras em português e só mostra uma mensagem da API quando ela recusa algo que passou pela validação do formulário. Decidir se a API deve passar a responder em português.
+- (A2) Hoje o horário é preenchido dia a dia. Um botão para "copiar para os outros dias" economizaria trabalho no cadastro. Decidir se vale fazer.
+- (A2) A localização pelo endereço, e o endereço pelo clique no mapa, usam o Nominatim direto do navegador do admin: o endereço digitado e os pontos clicados vão para os servidores do OpenStreetMap, e a política de uso dele limita a 1 busca por segundo e pede identificação da aplicação (hoje vai só o `Referer` do navegador). Basta para poucos admins; entra na conversa de deploy (política de privacidade, ou passar a busca pela API).
+- (A2) O bairro preenchido pelo endereço vem com o nome oficial do OpenStreetMap ("Trindade Sul", "Trindade Norte", "Lagoa da Conceição"), que pode não bater com o nome já usado ("Trindade"). Só um nome igual, sem contar maiúsculas e acentos, é trocado pelo nome já cadastrado; os outros ficam como vieram, e o admin corrige antes de salvar. Entra na mesma decisão da (B11) sobre grafias diferentes do mesmo bairro.
+- (A2) Com o cabeçalho do painel no `RequireAdmin`, o `useAdminSession` deixou de ser usado pelas páginas (só o teste do `RequireAdmin` o usa). Decidir se remove ou se a A3 vai precisar dele.
 - (B12) O "Aberto agora" é calculado no frontend. Quando vier o app mobile, decidir se o cálculo passa para a API ou se é duplicado no app.
 - (B12) O Postgres guarda as chaves de um `jsonb` na ordem dele, então os dias de `openingHours` voltam da API fora da ordem da semana (`friday`, `monday`, `sunday`...). Os clientes leem pelo nome do dia, então nada quebra; decidir se o repositório deve devolver os dias de segunda a domingo.
 - (A0) Abrir `/admin/login` já estando logado mostra o formulário de novo, em vez de levar direto ao painel. Decidir se a tela de login deve verificar a sessão antes.

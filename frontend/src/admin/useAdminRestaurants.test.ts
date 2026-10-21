@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchRestaurants, type Restaurant } from '../api/restaurants';
 import { useAdminRestaurants } from './useAdminRestaurants';
@@ -35,9 +35,9 @@ describe('useAdminRestaurants', () => {
 
     const { result } = renderHook(() => useAdminRestaurants());
 
-    expect(result.current).toEqual({ status: 'loading' });
+    expect(result.current[0]).toEqual({ status: 'loading' });
     await waitFor(() =>
-      expect(result.current).toEqual({
+      expect(result.current[0]).toEqual({
         status: 'success',
         restaurants: [restaurant],
       }),
@@ -59,6 +59,26 @@ describe('useAdminRestaurants', () => {
 
     const { result } = renderHook(() => useAdminRestaurants());
 
-    await waitFor(() => expect(result.current).toEqual({ status: 'error' }));
+    await waitFor(() => expect(result.current[0]).toEqual({ status: 'error' }));
+  });
+
+  it('requests the list again on reload, keeping the current one meanwhile', async () => {
+    vi.mocked(fetchRestaurants).mockResolvedValueOnce([]);
+    const { result } = renderHook(() => useAdminRestaurants());
+    await waitFor(() =>
+      expect(result.current[0]).toEqual({ status: 'success', restaurants: [] }),
+    );
+
+    vi.mocked(fetchRestaurants).mockResolvedValueOnce([restaurant]);
+    act(() => result.current[1]());
+
+    expect(result.current[0]).toEqual({ status: 'success', restaurants: [] });
+    await waitFor(() =>
+      expect(result.current[0]).toEqual({
+        status: 'success',
+        restaurants: [restaurant],
+      }),
+    );
+    expect(fetchRestaurants).toHaveBeenCalledTimes(2);
   });
 });

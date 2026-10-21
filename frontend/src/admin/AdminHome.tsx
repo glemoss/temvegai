@@ -1,46 +1,41 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { logout } from '../api/auth';
+import { useCallback, useState } from 'react';
+import { Outlet, useOutletContext } from 'react-router';
+import type { Restaurant } from '../api/restaurants';
 import { RestaurantList } from './RestaurantList';
-import { useAdminSession } from './RequireAdmin';
+import { Toast, type ToastMessage } from './Toast';
+import { useAdminRestaurants } from './useAdminRestaurants';
 
+interface AdminHomeContext {
+  onCreated: (restaurant: Restaurant) => void;
+}
+
+// The list of restaurants, with the forms opening over it as modals in
+// child routes.
 export function AdminHome() {
-  const { admin } = useAdminSession();
-  const navigate = useNavigate();
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [error, setError] = useState(false);
+  const [restaurants, reload] = useAdminRestaurants();
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const dismissToast = useCallback(() => setToast(null), []);
 
-  async function exit() {
-    setLoggingOut(true);
-    setError(false);
-
-    try {
-      await logout();
-      navigate('/admin/login', { replace: true });
-    } catch {
-      setError(true);
-      setLoggingOut(false);
-    }
-  }
+  const context: AdminHomeContext = {
+    onCreated: (restaurant) => {
+      setToast({
+        id: Date.now(),
+        text: `Restaurante “${restaurant.name}” adicionado.`,
+      });
+      reload();
+    },
+  };
 
   return (
-    <main className="admin-page">
-      <header className="admin-header">
-        <h1 className="admin-title">Painel admin</h1>
-        <p className="admin-user">{admin.email}</p>
-        <button
-          type="button"
-          className="admin-button"
-          disabled={loggingOut}
-          onClick={exit}
-        >
-          {loggingOut ? 'Saindo…' : 'Sair'}
-        </button>
-      </header>
-      <p role="alert" className="admin-error">
-        {error && 'Não foi possível sair. Tente novamente.'}
-      </p>
-      <RestaurantList />
-    </main>
+    <>
+      <RestaurantList state={restaurants} />
+      <Outlet context={context} />
+      <Toast message={toast} onDismiss={dismissToast} />
+    </>
   );
+}
+
+// For the modals opened over the list.
+export function useAdminHome(): AdminHomeContext {
+  return useOutletContext<AdminHomeContext>();
 }

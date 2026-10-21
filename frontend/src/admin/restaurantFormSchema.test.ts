@@ -1,0 +1,162 @@
+import { describe, expect, it } from 'vitest';
+import {
+  emptyRestaurantForm,
+  emptyWeek,
+  parseRestaurantForm,
+  toFormErrors,
+  type RestaurantFormValues,
+} from './restaurantFormSchema';
+
+const valid: RestaurantFormValues = {
+  ...emptyRestaurantForm,
+  name: ' Mandarina ',
+  type: 'fully_vegan',
+  address: 'Rua das Flores, 100',
+  neighborhood: 'Campeche',
+  latitude: '-27.661458',
+  longitude: '-48.499222',
+};
+
+function errorsOf(values: RestaurantFormValues) {
+  const result = parseRestaurantForm(values);
+  if (result.success) throw new Error('expected errors');
+  return result.errors;
+}
+
+describe('parseRestaurantForm', () => {
+  it('turns the form into the body of the API', () => {
+    expect(parseRestaurantForm(valid)).toEqual({
+      success: true,
+      input: {
+        name: 'Mandarina',
+        description: null,
+        type: 'fully_vegan',
+        address: 'Rua das Flores, 100',
+        neighborhood: 'Campeche',
+        latitude: -27.661458,
+        longitude: -48.499222,
+        phone: null,
+        website: null,
+        instagram: null,
+        openingHours: null,
+      },
+    });
+  });
+
+  it('keeps the optional fields and drops the @ of the Instagram', () => {
+    const result = parseRestaurantForm({
+      ...valid,
+      description: 'Comida caseira',
+      phone: '(48) 99999-0000',
+      website: 'https://mandarina.com.br',
+      instagram: '@mandarina.floripa',
+    });
+
+    expect(result).toMatchObject({
+      success: true,
+      input: {
+        description: 'Comida caseira',
+        phone: '(48) 99999-0000',
+        website: 'https://mandarina.com.br',
+        instagram: 'mandarina.floripa',
+      },
+    });
+  });
+
+  it('requires name, type, address, neighborhood and location', () => {
+    expect(errorsOf(emptyRestaurantForm)).toEqual({
+      name: 'Informe o nome.',
+      type: 'Escolha o tipo.',
+      address: 'Informe o endereço.',
+      neighborhood: 'Informe o bairro.',
+      latitude: 'Escolha a localização no mapa.',
+      longitude: 'Escolha a localização no mapa.',
+    });
+  });
+
+  it('rejects coordinates that are not numbers or out of range', () => {
+    expect(errorsOf({ ...valid, latitude: 'abc', longitude: '200' })).toEqual({
+      latitude: 'Use só números, como -27.59.',
+      longitude: 'Use um valor entre -180 e 180.',
+    });
+  });
+
+  it('rejects a website without the protocol and an invalid Instagram', () => {
+    expect(
+      errorsOf({ ...valid, website: 'mandarina.com.br', instagram: 'a b' }),
+    ).toEqual({
+      website: 'Site inválido.',
+      instagram: 'Usuário inválido.',
+    });
+  });
+
+  it('sends no hours when every day is empty', () => {
+    expect(parseRestaurantForm(valid)).toMatchObject({
+      success: true,
+      input: { openingHours: null },
+    });
+  });
+
+  it('checks the times of the intervals', () => {
+    expect(
+      errorsOf({
+        ...valid,
+        openingHours: { ...emptyWeek, monday: [{ opens: '', closes: '' }] },
+      }),
+    ).toEqual({
+      'openingHours.monday.0.opens': 'Informe a abertura.',
+      'openingHours.monday.0.closes': 'Informe o fechamento.',
+    });
+  });
+
+  it('accepts several intervals, the last one past midnight', () => {
+    const openingHours = {
+      ...emptyWeek,
+      friday: [
+        { opens: '11:00', closes: '15:00' },
+        { opens: '18:00', closes: '02:00' },
+      ],
+    };
+
+    expect(parseRestaurantForm({ ...valid, openingHours })).toMatchObject({
+      success: true,
+      input: { openingHours },
+    });
+  });
+
+  it('rejects overlapping intervals and one past midnight before another', () => {
+    expect(
+      errorsOf({
+        ...valid,
+        openingHours: {
+          ...emptyWeek,
+          monday: [
+            { opens: '11:00', closes: '15:00' },
+            { opens: '14:00', closes: '18:00' },
+          ],
+          tuesday: [
+            { opens: '22:00', closes: '01:00' },
+            { opens: '23:00', closes: '23:30' },
+          ],
+          wednesday: [{ opens: '10:00', closes: '10:00' }],
+        },
+      }),
+    ).toEqual({
+      'openingHours.monday.1': 'Intervalos fora de ordem ou sobrepostos.',
+      'openingHours.tuesday.0': 'Só o último intervalo passa da meia-noite.',
+      'openingHours.wednesday.0': 'Abertura igual ao fechamento.',
+    });
+  });
+});
+
+describe('toFormErrors', () => {
+  it('keeps the first message of each field', () => {
+    expect(
+      toFormErrors([
+        { field: 'name', message: 'first' },
+        { field: 'name', message: 'second' },
+        { field: '', message: 'unknown' },
+      ]),
+    ).toEqual({ name: 'first', '': 'unknown' });
+  });
+});
