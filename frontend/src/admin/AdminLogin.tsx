@@ -1,5 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   InvalidCredentialsError,
   login,
@@ -13,6 +16,8 @@ export function AdminLogin() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const emailId = useId();
+  const passwordId = useId();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,12 +39,16 @@ export function AdminLogin() {
   }
 
   return (
-    <main className="admin-page admin-centered">
-      <form className="admin-login" onSubmit={submit}>
+    <main className="flex min-h-full items-center justify-center bg-secondary px-4 py-6">
+      <form
+        className="flex w-full max-w-100 flex-col gap-3 rounded-lg bg-card p-6 shadow-(--shadow)"
+        onSubmit={submit}
+      >
         <AppTitle />
-        <label>
-          E-mail
-          <input
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={emailId}>E-mail</Label>
+          <Input
+            id={emailId}
             type="email"
             name="email"
             autoComplete="username"
@@ -47,10 +56,11 @@ export function AdminLogin() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-        </label>
-        <label>
-          Senha
-          <input
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={passwordId}>Senha</Label>
+          <Input
+            id={passwordId}
             type="password"
             name="password"
             autoComplete="current-password"
@@ -58,14 +68,19 @@ export function AdminLogin() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-        </label>
-        {/* Always present, so screen readers announce the error. */}
-        <p role="alert" className="admin-error">
+        </div>
+        {/* Always present, so screen readers announce the error. It keeps
+          two lines even when empty, so the box does not grow when the
+          error appears; the longest messages take two lines. */}
+        <p
+          role="alert"
+          className="min-h-[2.8em] font-semibold text-destructive"
+        >
           {error}
         </p>
-        <button type="submit" className="admin-button" disabled={submitting}>
+        <Button type="submit" size="lg" disabled={submitting}>
           {submitting ? 'Entrando…' : 'Entrar'}
-        </button>
+        </Button>
       </form>
     </main>
   );

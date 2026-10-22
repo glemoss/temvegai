@@ -1,8 +1,19 @@
-import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { useId, useState } from 'react';
 import { Link } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { normalize } from '../normalize';
 import { TYPE_LABELS } from '../restaurantTypeLabels';
-import { PlusIcon } from './icons';
 import type { AdminRestaurantsState } from './useAdminRestaurants';
 
 interface RestaurantListProps {
@@ -11,36 +22,47 @@ interface RestaurantListProps {
 
 export function RestaurantList({ state }: RestaurantListProps) {
   const [search, setSearch] = useState('');
+  const searchId = useId();
   const hasRestaurants =
     state.status === 'success' && state.restaurants.length > 0;
 
   return (
-    <section className="admin-restaurants" aria-labelledby="restaurants-title">
-      <h2 id="restaurants-title" className="admin-subtitle">
+    <section
+      className="mx-auto mt-6 flex max-w-240 flex-col gap-3"
+      aria-labelledby="restaurants-title"
+    >
+      <h2
+        id="restaurants-title"
+        className="text-xl font-bold text-secondary-foreground"
+      >
         Restaurantes
       </h2>
-      {/* The button to add stays even when there is nothing to search. */}
-      <div className="admin-toolbar">
+      {/* The search on the left and the add button at the right end, which
+        stays even when there is nothing to search. */}
+      <div className="flex items-end gap-3">
         {hasRestaurants && (
-          <label className="admin-search">
-            Buscar por nome
-            <input
+          <div className="flex max-w-88 flex-1 flex-col gap-2">
+            <Label htmlFor={searchId}>Buscar por nome</Label>
+            <Input
+              id={searchId}
               type="search"
               name="search"
               autoComplete="off"
+              className="bg-card"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
-          </label>
+          </div>
         )}
-        <Link
-          to="restaurants/new"
-          className="admin-icon-button admin-add"
-          aria-label="Novo restaurante"
-          title="Novo restaurante"
-        >
-          <PlusIcon />
-        </Link>
+        <Button asChild size="icon-lg" className="ml-auto">
+          <Link
+            to="restaurants/new"
+            aria-label="Novo restaurante"
+            title="Novo restaurante"
+          >
+            <Plus className="size-5" />
+          </Link>
+        </Button>
       </div>
       <RestaurantTable state={state} search={search} />
     </section>
@@ -55,27 +77,19 @@ function RestaurantTable({
   search: string;
 }) {
   if (state.status === 'loading') {
-    return (
-      <p role="status" className="admin-message">
-        Carregando restaurantes…
-      </p>
-    );
+    return <p role="status">Carregando restaurantes…</p>;
   }
 
   if (state.status === 'error') {
     return (
-      <p role="alert" className="admin-error admin-message">
+      <p role="alert" className="font-semibold text-destructive">
         Não foi possível carregar os restaurantes. Tente novamente mais tarde.
       </p>
     );
   }
 
   if (state.restaurants.length === 0) {
-    return (
-      <p role="status" className="admin-message">
-        Nenhum restaurante cadastrado.
-      </p>
-    );
+    return <p role="status">Nenhum restaurante cadastrado.</p>;
   }
 
   const term = normalize(search.trim());
@@ -86,33 +100,48 @@ function RestaurantTable({
     : state.restaurants;
 
   if (restaurants.length === 0) {
-    return (
-      <p role="status" className="admin-message">
-        Nenhum restaurante com esse nome.
-      </p>
-    );
+    return <p role="status">Nenhum restaurante com esse nome.</p>;
   }
 
   return (
-    <div className="admin-table-wrapper">
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th scope="col">Nome</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Bairro</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="overflow-hidden rounded-lg bg-card shadow-(--shadow)">
+      <Table className="text-base">
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead
+              scope="col"
+              className="px-4 text-sm text-muted-foreground"
+            >
+              Nome
+            </TableHead>
+            <TableHead
+              scope="col"
+              className="px-4 text-sm text-muted-foreground"
+            >
+              Tipo
+            </TableHead>
+            <TableHead
+              scope="col"
+              className="px-4 text-sm text-muted-foreground"
+            >
+              Bairro
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {restaurants.map((restaurant) => (
-            <tr key={restaurant.id}>
-              <td>{restaurant.name}</td>
-              <td>{TYPE_LABELS[restaurant.type]}</td>
-              <td>{restaurant.neighborhood}</td>
-            </tr>
+            <TableRow key={restaurant.id}>
+              <TableCell className="px-4 py-3">{restaurant.name}</TableCell>
+              <TableCell className="px-4 py-3">
+                {TYPE_LABELS[restaurant.type]}
+              </TableCell>
+              <TableCell className="px-4 py-3">
+                {restaurant.neighborhood}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

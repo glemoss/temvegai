@@ -6,6 +6,12 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import {
   geocodeAddress,
   reverseGeocode,
@@ -13,7 +19,11 @@ import {
   type GeocodedAddress,
   type PlaceDescription,
 } from '../api/geocoding';
-import { ValidationError, type RestaurantInput } from '../api/restaurants';
+import {
+  ValidationError,
+  type RestaurantInput,
+  type RestaurantType,
+} from '../api/restaurants';
 import { normalize } from '../normalize';
 import { TYPE_LABELS } from '../restaurantTypeLabels';
 import { useNeighborhoods } from '../useNeighborhoods';
@@ -48,6 +58,24 @@ const FIELDS = [
   'website',
   'instagram',
 ];
+
+const TYPES: RestaurantType[] = ['fully_vegan', 'vegan_options'];
+
+// The asterisk of required fields; screen readers get aria-required
+// instead of reading it.
+const REQUIRED =
+  "after:text-destructive after:content-['*'_/_''] after:font-normal";
+
+// Every field keeps a line for its error, empty or not, so the form does
+// not change size when errors appear.
+const FIELD_ERROR =
+  'min-h-[1.4em] text-sm leading-[1.4] font-semibold text-destructive';
+
+const HINT = 'text-sm text-muted-foreground';
+
+const FIELDSET = 'flex min-w-0 flex-col gap-1';
+
+const LEGEND = 'p-0 text-sm font-medium';
 
 function isShownByField(field: string): boolean {
   return FIELDS.includes(field) || /^openingHours\.[a-z]+(\.|$)/.test(field);
@@ -90,10 +118,10 @@ function Field({ label, error, hint, required = false, children }: FieldProps) {
     .join(' ');
 
   return (
-    <div className="admin-field">
-      <label htmlFor={id} className={required ? 'admin-required' : undefined}>
+    <div className="flex min-w-0 flex-col gap-1">
+      <Label htmlFor={id} className={required ? REQUIRED : undefined}>
         {label}
-      </label>
+      </Label>
       {children({
         id,
         'aria-invalid': error !== undefined,
@@ -101,11 +129,11 @@ function Field({ label, error, hint, required = false, children }: FieldProps) {
         'aria-required': required,
       })}
       {hint && (
-        <p id={`${id}-hint`} className="admin-hint">
+        <p id={`${id}-hint`} className={HINT}>
           {hint}
         </p>
       )}
-      <p id={`${id}-error`} className="admin-field-error">
+      <p id={`${id}-error`} className={FIELD_ERROR}>
         {error}
       </p>
     </div>
@@ -150,7 +178,7 @@ export function RestaurantForm({
   });
   const neighborhoods = useNeighborhoods();
   const neighborhoodListId = useId();
-  const typeErrorId = useId();
+  const typeId = useId();
 
   // The spelling of a neighborhood already registered when the name
   // matches apart from case and accents.
@@ -380,39 +408,51 @@ export function RestaurantForm({
     (Object.keys(errors).length > 0 ? 'Corrija os campos indicados.' : null);
 
   return (
-    <form className="admin-form" noValidate onSubmit={submit}>
+    <form
+      className="flex flex-col gap-2 p-6 max-sm:p-4"
+      noValidate
+      onSubmit={submit}
+    >
       <Field label="Nome" error={errors.name} required>
-        {(props) => <input type="text" {...props} {...text('name')} />}
+        {(props) => <Input type="text" {...props} {...text('name')} />}
       </Field>
 
-      {/* A radio group, so aria-required is valid on it. */}
-      <fieldset
-        role="radiogroup"
-        className="admin-field admin-radio-group"
-        aria-invalid={errors.type !== undefined}
-        aria-describedby={typeErrorId}
-        aria-required="true"
-      >
-        <legend className="admin-required">Tipo</legend>
-        {(['fully_vegan', 'vegan_options'] as const).map((type) => (
-          <label key={type}>
-            <input
-              type="radio"
-              name="type"
-              value={type}
-              checked={values.type === type}
-              onChange={() => set('type', type)}
-            />
-            {TYPE_LABELS[type]}
-          </label>
-        ))}
-        <p id={typeErrorId} className="admin-field-error">
+      <div className="flex min-w-0 flex-col gap-1">
+        <p
+          id={`${typeId}-label`}
+          className={cn('flex gap-2 text-sm font-medium', REQUIRED)}
+        >
+          Tipo
+        </p>
+        <RadioGroup
+          name="type"
+          required
+          aria-labelledby={`${typeId}-label`}
+          aria-invalid={errors.type !== undefined}
+          aria-describedby={`${typeId}-error`}
+          className="gap-0"
+          value={values.type}
+          onValueChange={(value) => {
+            const type = TYPES.find((item) => item === value);
+            if (type) set('type', type);
+          }}
+        >
+          {TYPES.map((type) => (
+            <div key={type} className="flex min-h-8 items-center gap-2">
+              <RadioGroupItem id={`${typeId}-${type}`} value={type} />
+              <Label htmlFor={`${typeId}-${type}`} className="font-normal">
+                {TYPE_LABELS[type]}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+        <p id={`${typeId}-error`} className={FIELD_ERROR}>
           {errors.type}
         </p>
-      </fieldset>
+      </div>
 
       <Field label="Descrição" error={errors.description}>
-        {(props) => <textarea rows={3} {...props} {...text('description')} />}
+        {(props) => <Textarea rows={3} {...props} {...text('description')} />}
       </Field>
 
       <Field
@@ -422,7 +462,7 @@ export function RestaurantForm({
         hint="O pin é marcado no mapa quando você para de digitar."
       >
         {(props) => (
-          <input
+          <Input
             type="text"
             autoComplete="off"
             {...props}
@@ -435,7 +475,7 @@ export function RestaurantForm({
 
       <Field label="Bairro" error={errors.neighborhood} required>
         {(props) => (
-          <input
+          <Input
             type="text"
             autoComplete="off"
             list={neighborhoodListId}
@@ -455,9 +495,9 @@ export function RestaurantForm({
           ))}
       </datalist>
 
-      <fieldset className="admin-field admin-location">
-        <legend>Localização</legend>
-        <p className="admin-hint">
+      <fieldset className={FIELDSET}>
+        <legend className={LEGEND}>Localização</legend>
+        <p className={HINT}>
           Clique no mapa para marcar o restaurante, ou digite as coordenadas.
         </p>
         <LocationPicker
@@ -471,13 +511,13 @@ export function RestaurantForm({
             )
           }
         />
-        <p role="status" className="admin-hint admin-geocode-status">
+        <p role="status" className={cn(HINT, 'min-h-[1.4em] leading-[1.4]')}>
           {geocodeMessage}
         </p>
-        <div className="admin-location-fields">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3">
           <Field label="Latitude" error={errors.latitude} required>
             {(props) => (
-              <input
+              <Input
                 type="text"
                 inputMode="decimal"
                 {...props}
@@ -491,7 +531,7 @@ export function RestaurantForm({
           </Field>
           <Field label="Longitude" error={errors.longitude} required>
             {(props) => (
-              <input
+              <Input
                 type="text"
                 inputMode="decimal"
                 {...props}
@@ -507,7 +547,7 @@ export function RestaurantForm({
       </fieldset>
 
       <Field label="Telefone" error={errors.phone}>
-        {(props) => <input type="tel" {...props} {...text('phone')} />}
+        {(props) => <Input type="tel" {...props} {...text('phone')} />}
       </Field>
 
       <Field
@@ -515,7 +555,7 @@ export function RestaurantForm({
         error={errors.website}
         hint="Endereço completo, como https://exemplo.com.br."
       >
-        {(props) => <input type="url" {...props} {...text('website')} />}
+        {(props) => <Input type="url" {...props} {...text('website')} />}
       </Field>
 
       <Field
@@ -523,12 +563,12 @@ export function RestaurantForm({
         error={errors.instagram}
         hint="Só o nome de usuário, com ou sem @: letras, números, ponto e sublinhado."
       >
-        {(props) => <input type="text" {...props} {...text('instagram')} />}
+        {(props) => <Input type="text" {...props} {...text('instagram')} />}
       </Field>
 
-      <fieldset className="admin-field">
-        <legend>Horário de funcionamento</legend>
-        <p className="admin-hint">
+      <fieldset className={FIELDSET}>
+        <legend className={LEGEND}>Horário de funcionamento</legend>
+        <p className={HINT}>
           Deixe todos os dias vazios se não souber o horário. Um horário que
           passa da meia-noite fica no dia em que abre, como 18:00 às 02:00.
         </p>
@@ -539,15 +579,25 @@ export function RestaurantForm({
         />
       </fieldset>
 
-      <div className="admin-form-actions">
-        <button type="submit" className="admin-button" disabled={submitting}>
+      <div className="mt-2 flex flex-wrap items-center gap-x-5">
+        <Button type="submit" size="lg" disabled={submitting}>
           {submitting ? submittingLabel : submitLabel}
-        </button>
-        <button type="button" className="admin-link" onClick={onCancel}>
+        </Button>
+        <Button
+          type="button"
+          variant="link"
+          className="px-0 text-base font-semibold underline"
+          onClick={onCancel}
+        >
           Cancelar
-        </button>
-        {/* Always present, so screen readers announce the message. */}
-        <p role="alert" className="admin-error admin-form-message">
+        </Button>
+        {/* Always present, so screen readers announce the message. Beside
+          the buttons or, on narrow screens, on a line of its own below
+          them. */}
+        <p
+          role="alert"
+          className="flex min-h-10 flex-[1_1_14rem] items-center font-semibold text-destructive"
+        >
           {formMessage}
         </p>
       </div>

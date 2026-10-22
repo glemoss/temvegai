@@ -1,8 +1,7 @@
-import { useCallback, useState } from 'react';
 import { Outlet, useOutletContext } from 'react-router';
+import { toast } from 'sonner';
 import type { Restaurant } from '../api/restaurants';
 import { RestaurantList } from './RestaurantList';
-import { Toast, type ToastMessage } from './Toast';
 import { useAdminRestaurants } from './useAdminRestaurants';
 
 interface AdminHomeContext {
@@ -13,15 +12,10 @@ interface AdminHomeContext {
 // child routes.
 export function AdminHome() {
   const [restaurants, reload] = useAdminRestaurants();
-  const [toast, setToast] = useState<ToastMessage | null>(null);
-  const dismissToast = useCallback(() => setToast(null), []);
 
   const context: AdminHomeContext = {
     onCreated: (restaurant) => {
-      setToast({
-        id: Date.now(),
-        text: `Restaurante “${restaurant.name}” adicionado.`,
-      });
+      toast.success(`Restaurante “${restaurant.name}” adicionado.`);
       reload();
     },
   };
@@ -30,7 +24,6 @@ export function AdminHome() {
     <>
       <RestaurantList state={restaurants} />
       <Outlet context={context} />
-      <Toast message={toast} onDismiss={dismissToast} />
     </>
   );
 }

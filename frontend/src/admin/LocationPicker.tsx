@@ -80,7 +80,8 @@ export function LocationPicker({ value, type, onChange }: LocationPickerProps) {
     <MapContainer
       center={FLORIANOPOLIS_CENTER}
       zoom={INITIAL_ZOOM}
-      className="admin-location-map"
+      // Isolated, so the map panes stay below the modal header.
+      className="isolate h-72 cursor-crosshair rounded-md border"
     >
       <TileLayer
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"

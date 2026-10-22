@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { X } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   createRestaurant,
   UnauthenticatedError,
   type RestaurantInput,
 } from '../api/restaurants';
 import { useAdminHome } from './AdminHome';
-import { CloseIcon } from './icons';
 import { RestaurantForm } from './RestaurantForm';
 import { emptyRestaurantForm } from './restaurantFormSchema';
 
@@ -15,9 +21,6 @@ import { emptyRestaurantForm } from './restaurantFormSchema';
 export function NewRestaurant() {
   const navigate = useNavigate();
   const { onCreated } = useAdminHome();
-  // The map inside the form measures itself when created, so the form is
-  // only rendered once the dialog is open and has a size.
-  const [open, setOpen] = useState(false);
 
   function close() {
     navigate('/admin', { replace: true });
@@ -38,35 +41,37 @@ export function NewRestaurant() {
   }
 
   return (
-    <dialog
-      ref={(node) => {
-        if (node && !node.open) {
-          node.showModal();
-          setOpen(true);
-        }
-      }}
-      className="admin-modal"
-      aria-labelledby="new-restaurant-title"
-      onCancel={(event) => {
-        event.preventDefault();
-        close();
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) close();
       }}
     >
-      <header className="admin-modal-header">
-        <h2 id="new-restaurant-title" className="admin-subtitle">
-          Novo restaurante
-        </h2>
-        <button
-          type="button"
-          className="admin-icon-button admin-icon-button-quiet"
-          aria-label="Fechar"
-          title="Fechar"
-          onClick={close}
-        >
-          <CloseIcon />
-        </button>
-      </header>
-      {open && (
+      {/* Full screen on narrow screens. The content scrolls inside the
+        modal, under the header. */}
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        onInteractOutside={(event) => event.preventDefault()}
+        className="block max-h-[calc(100%-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-3xl max-sm:h-full max-sm:max-h-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0"
+      >
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background px-6 py-4 max-sm:px-4 max-sm:py-3">
+          <DialogTitle className="text-xl font-bold text-secondary-foreground">
+            Novo restaurante
+          </DialogTitle>
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              className="text-muted-foreground"
+              aria-label="Fechar"
+              title="Fechar"
+            >
+              <X className="size-5" />
+            </Button>
+          </DialogClose>
+        </header>
         <RestaurantForm
           initialValues={emptyRestaurantForm}
           submitLabel="Adicionar"
@@ -74,7 +79,7 @@ export function NewRestaurant() {
           onSubmit={create}
           onCancel={close}
         />
-      )}
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

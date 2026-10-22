@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
 import { logout, type Admin } from '../api/auth';
 
 // The top of every panel page: the way back to the list, the logged in
@@ -24,21 +25,23 @@ export function AdminHeader({ admin }: { admin: Admin }) {
 
   return (
     <>
-      <header className="admin-header">
-        <h1 className="admin-title">
-          <Link to="/admin">Painel admin</Link>
+      <header className="mx-auto flex max-w-240 flex-wrap items-center gap-3">
+        <h1 className="font-display text-[2rem] tracking-wide text-secondary-foreground">
+          <Link to="/admin" className="hover:underline">
+            Painel admin
+          </Link>
         </h1>
-        <p className="admin-user">{admin.email}</p>
-        <button
-          type="button"
-          className="admin-button"
-          disabled={loggingOut}
-          onClick={exit}
-        >
+        <p className="ml-auto wrap-anywhere text-muted-foreground">
+          {admin.email}
+        </p>
+        <Button type="button" size="lg" disabled={loggingOut} onClick={exit}>
           {loggingOut ? 'Saindo…' : 'Sair'}
-        </button>
+        </Button>
       </header>
-      <p role="alert" className="admin-error admin-header-error">
+      <p
+        role="alert"
+        className="mx-auto mt-2 max-w-240 font-semibold text-destructive empty:hidden"
+      >
         {error && 'Não foi possível sair. Tente novamente.'}
       </p>
     </>

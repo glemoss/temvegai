@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useOutletContext } from 'react-router';
+import { Toaster } from '@/components/ui/sonner';
 import type { Admin } from '../api/auth';
 import { AdminHeader } from './AdminHeader';
 import { useCurrentAdmin } from './useCurrentAdmin';
@@ -9,7 +10,7 @@ interface AdminSession {
 
 // Layout of the panel pages: checks the session when the panel opens,
 // sends visitors without one to the login page and puts the header on top
-// of every page.
+// of every page and the notices at the bottom.
 export function RequireAdmin() {
   const state = useCurrentAdmin();
 
@@ -19,18 +20,23 @@ export function RequireAdmin() {
 
   if (state.status === 'authenticated') {
     return (
-      <main className="admin-page">
+      <main className="min-h-full bg-secondary px-4 py-6">
         <AdminHeader admin={state.admin} />
         <Outlet context={{ admin: state.admin } satisfies AdminSession} />
+        <Toaster closeButton />
       </main>
     );
   }
 
   return (
-    <main className="admin-page admin-centered">
+    <main className="flex min-h-full items-center justify-center bg-secondary px-4 py-6">
       <p
         role="status"
-        className={state.status === 'error' ? 'admin-error' : undefined}
+        className={
+          state.status === 'error'
+            ? 'font-semibold text-destructive'
+            : undefined
+        }
       >
         {state.status === 'loading'
           ? 'Verificando sessão…'

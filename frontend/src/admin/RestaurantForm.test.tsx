@@ -7,7 +7,15 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import {
   geocodeAddress,
   reverseGeocode,
@@ -89,6 +97,18 @@ function submit() {
   fireEvent.click(screen.getByRole('button', { name: 'Adicionar' }));
 }
 
+// jsdom has no ResizeObserver, which the radio buttons use.
+beforeAll(() => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+});
+
 beforeEach(() => {
   vi.mocked(geocodeAddress).mockReset();
   vi.mocked(reverseGeocode).mockReset().mockResolvedValue(null);
@@ -159,7 +179,6 @@ describe('RestaurantForm', () => {
     const errorLine = document.getElementById(
       name.getAttribute('aria-describedby') ?? '',
     );
-    expect(errorLine?.className).toBe('admin-field-error');
     expect(errorLine?.textContent).toBe('');
 
     submit();

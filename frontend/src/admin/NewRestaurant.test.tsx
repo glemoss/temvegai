@@ -68,11 +68,16 @@ const created: Restaurant = {
   openingHours: null,
 };
 
-// jsdom has no modal dialogs.
+// jsdom has no ResizeObserver, which the radio buttons use.
 beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function showModal() {
-    this.open = true;
-  };
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
 });
 
 function renderPanel(path: string) {
@@ -128,7 +133,7 @@ describe('NewRestaurant', () => {
 
     fireEvent.click(screen.getByRole('link', { name: 'Novo restaurante' }));
 
-    expect(modal()?.hasAttribute('open')).toBe(true);
+    expect(modal()?.getAttribute('data-state')).toBe('open');
     expect(screen.getByText('Nenhum restaurante cadastrado.')).toBeTruthy();
     expect(screen.getByText('admin@example.com')).toBeTruthy();
   });
@@ -177,7 +182,7 @@ describe('NewRestaurant', () => {
     renderPanel('/admin/restaurants/new');
     const dialog = modal();
     if (!dialog) throw new Error('modal not open');
-    fireEvent(dialog, new Event('cancel', { cancelable: true }));
+    fireEvent.keyDown(dialog, { key: 'Escape' });
     expect(modal()).toBeNull();
 
     expect(createRestaurant).not.toHaveBeenCalled();

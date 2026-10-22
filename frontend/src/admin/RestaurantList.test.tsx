@@ -137,7 +137,7 @@ describe('RestaurantList', () => {
   it('puts the add button on the line of the search', () => {
     renderList();
 
-    const toolbar = screen.getByRole('searchbox').closest('.admin-toolbar');
-    expect(toolbar?.contains(addLink())).toBe(true);
+    const toolbar = addLink().parentElement;
+    expect(toolbar?.contains(screen.getByRole('searchbox'))).toBe(true);
   });
 });
