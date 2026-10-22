@@ -108,7 +108,7 @@ Ao digitar no campo de busca, uma lista abaixo dele sugere restaurantes de toda 
 
 ## Fase A — Painel admin
 
-Fica dentro do `/frontend`, na rota `/admin`. Só começa com a fase F concluída.
+Fica dentro do `/frontend`, na rota `/admin`. Só começa com a fase F concluída. A A3 e a A4 só começam com a fase U concluída.
 
 ### [x] A0 — Rotas e login do admin
 React Router separando o site público (`/`) do painel (`/admin`). Tela de login com e-mail e senha usando `POST /auth/login`, verificação de sessão com `GET /auth/me` ao abrir o painel, botão de sair.
@@ -129,6 +129,24 @@ Reaproveita o formulário da A2, preenchido com os dados atuais.
 ### [ ] A4 — Remover restaurante
 Botão de remover na lista, com confirmação antes de apagar.
 **Pronto quando:** cancelar não apaga nada, e confirmar remove o restaurante da lista e do mapa público.
+
+---
+
+## Fase U — Interface com shadcn/ui
+
+O frontend passa a usar shadcn/ui sobre Tailwind CSS, mantendo a identidade visual aprovada na F5. Fase criada depois da A2; entra antes da A3, para que a edição e a remoção já nasçam com os componentes novos. O Leaflet continua com o CSS próprio.
+
+### [ ] U0 — Base do Tailwind e do shadcn/ui
+Tailwind CSS no Vite, alias `@/` para `src`, `components.json` do shadcn e as cores, fontes e raios da F5 transformados em variáveis do tema do shadcn. Nenhum componente ainda.
+**Pronto quando:** o site público e o painel continuam com a mesma aparência no desktop e no celular, uma classe do Tailwind funciona na página, e `test`, `lint` e `typecheck` passam.
+
+### [ ] U1 — Painel admin com shadcn/ui
+Login, cabeçalho, lista, formulário em modal e avisos do painel passam a usar os componentes do shadcn/ui (Button, Input, Label, Table, Dialog, Select, Sonner etc.), e os ícones passam a vir do `lucide-react`. O CSS próprio que deixar de ser usado é removido.
+**Pronto quando:** tudo o que a A0, a A1 e a A2 entregaram continua funcionando, com testes, e o painel é aprovado visualmente pelo dono no desktop e no celular.
+
+### [ ] U2 — Site público com shadcn/ui
+Filtros, busca com sugestões, painel de detalhes e legenda passam a usar os componentes do shadcn/ui. O CSS próprio que deixar de ser usado é removido.
+**Pronto quando:** tudo o que a F3 a F6 entregaram continua funcionando, inclusive a navegação das sugestões por teclado, com testes, e o site é aprovado visualmente pelo dono no desktop e no celular.
 
 ---
 

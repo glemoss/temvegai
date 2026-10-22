@@ -54,6 +54,7 @@ Não implementar, nem deixar "preparado":
 | Limite de tentativas | `@fastify/rate-limit`, só na rota de login |
 | Testes | Vitest |
 | Frontend | React + Vite |
+| Interface do frontend | shadcn/ui (componentes copiados para `src/components/ui`) sobre Tailwind CSS (`tailwindcss` + `@tailwindcss/vite`), com `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react` e `tw-animate-css` |
 | Rotas do frontend | React Router (site público em `/`, painel em `/admin`) |
 | Mapa | Leaflet (react-leaflet) com tiles do OpenStreetMap |
 | Geocodificação | Nominatim (OpenStreetMap), chamado pelo painel admin para marcar o endereço no mapa e preencher o endereço do ponto clicado |
