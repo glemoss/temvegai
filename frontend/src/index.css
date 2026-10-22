@@ -1,3 +1,69 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* The shadcn/ui theme, built from the identity tokens below. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-brand);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: var(--color-surface);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-green-700);
+  --primary-foreground: var(--color-surface);
+  --secondary: var(--color-green-100);
+  --secondary-foreground: var(--color-green-900);
+  --muted: var(--color-green-100);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-green-100);
+  --accent-foreground: var(--color-green-900);
+  --destructive: var(--color-error);
+  --input: var(--color-border);
+  --ring: var(--color-focus);
+  /* A literal here, because --color-border, which the current CSS
+     uses, is also Tailwind's name for this token and points back to it. */
+  --border: #c9d4c6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 :root {
   --color-green-900: #1f4d2b;
   --color-green-700: #2f6b3a;
@@ -5,7 +71,7 @@
   --color-surface: #ffffff;
   --color-text: #1d261f;
   --color-text-muted: #55625a;
-  --color-border: #c9d4c6;
+  --color-border: var(--border);
   --color-error: #a3262a;
   --color-focus: #e0a526;
 
@@ -61,6 +127,12 @@ select {
   height: 100dvh;
   width: 100%;
   font-family: var(--font-body);
+}
+
+/* Leaflet sizes its buttons without counting the border, which
+   Tailwind's reset would otherwise include. */
+.leaflet-bar a {
+  box-sizing: content-box;
 }
 
 .pin-marker {
@@ -397,6 +469,7 @@ select {
   margin: 0 2.5rem 0.5rem 0;
   color: var(--color-green-900);
   font-size: 1.5rem;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -504,6 +577,7 @@ select {
 .restaurant-details a {
   color: var(--color-green-700);
   font-weight: 600;
+  text-decoration: underline;
 }
 
 .restaurant-details-close {
@@ -596,7 +670,7 @@ select {
   flex-direction: column;
   gap: var(--gap);
   width: 100%;
-  max-width: 22rem;
+  max-width: 25rem;
   padding: 1.5rem;
   background: var(--color-surface);
   border-radius: var(--radius);
@@ -683,6 +757,7 @@ select {
   margin: 0;
   color: var(--color-green-900);
   font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .admin-search {
@@ -880,6 +955,7 @@ select {
   box-sizing: border-box;
   width: min(48rem, 100% - 2rem);
   max-height: calc(100% - 2rem);
+  margin: auto;
   padding: 0;
   color: var(--color-text);
   background: var(--color-surface);
@@ -1007,6 +1083,11 @@ select {
   min-height: 2rem;
 }
 
+/* The browser's default margin, which Tailwind's reset removes. */
+.admin-radio-group input {
+  margin: 3px 3px 0 5px;
+}
+
 .admin-location-map {
   height: 18rem;
   border: 1px solid var(--color-border);
@@ -1095,6 +1176,17 @@ select {
   min-height: 2rem;
   padding: 0 0.25rem;
   font-size: 0.875rem;
+}
+
+/* Chrome's clock button; the time is typed in the field. */
+.admin-hours-interval input[type='time']::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+/* Tailwind's reset makes the value a flex box, which ignores the
+   field's text-align. */
+.admin-hours-interval input[type='time']::-webkit-datetime-edit {
+  display: inline-block;
 }
 
 .admin-link {

@@ -136,7 +136,7 @@ Botão de remover na lista, com confirmação antes de apagar.
 
 O frontend passa a usar shadcn/ui sobre Tailwind CSS, mantendo a identidade visual aprovada na F5. Fase criada depois da A2; entra antes da A3, para que a edição e a remoção já nasçam com os componentes novos. O Leaflet continua com o CSS próprio.
 
-### [ ] U0 — Base do Tailwind e do shadcn/ui
+### [x] U0 — Base do Tailwind e do shadcn/ui
 Tailwind CSS no Vite, alias `@/` para `src`, `components.json` do shadcn e as cores, fontes e raios da F5 transformados em variáveis do tema do shadcn. Nenhum componente ainda.
 **Pronto quando:** o site público e o painel continuam com a mesma aparência no desktop e no celular, uma classe do Tailwind funciona na página, e `test`, `lint` e `typecheck` passam.
 
@@ -190,3 +190,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (B12) O "Aberto agora" é calculado no frontend. Quando vier o app mobile, decidir se o cálculo passa para a API ou se é duplicado no app.
 - (B12) O Postgres guarda as chaves de um `jsonb` na ordem dele, então os dias de `openingHours` voltam da API fora da ordem da semana (`friday`, `monday`, `sunday`...). Os clientes leem pelo nome do dia, então nada quebra; decidir se o repositório deve devolver os dias de segunda a domingo.
 - (A0) Abrir `/admin/login` já estando logado mostra o formulário de novo, em vez de levar direto ao painel. Decidir se a tela de login deve verificar a sessão antes.
+- (U0) Os tokens da F5 em `index.css` (`--color-green-900`, `--color-green-700`, `--color-green-100`, `--color-border`) têm os mesmos nomes de variáveis do Tailwind. Como ficam fora das camadas do Tailwind, eles vencem: uma classe como `bg-green-700` sai com o verde da F5, e não com o verde padrão do Tailwind. Nos componentes novos, usar as cores do tema (`bg-primary`, `border-border`...). Quando a U1 e a U2 removerem o CSS antigo, decidir se esses tokens somem ou ganham nomes próprios.
