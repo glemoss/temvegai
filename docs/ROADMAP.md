@@ -104,6 +104,10 @@ Identidade visual, responsividade, estado vazio (nenhum resultado) e acessibilid
 Ao digitar no campo de busca, uma lista abaixo dele sugere restaurantes de toda a cidade pelo nome. Escolher uma sugestão move o mapa até o restaurante e abre o painel. A busca no mapa por nome passa a ser aplicada só no Enter. Etapa criada durante a revisão da F5.
 **Pronto quando:** as sugestões aparecem ao digitar e podem ser escolhidas com mouse e teclado (setas, Enter, Esc); escolher uma move o mapa e abre o painel; o mapa só filtra por nome depois do Enter, e apagar o campo remove o filtro. Com testes.
 
+### [ ] F7 — Legenda com folhas
+A legenda do mapa deixa de mostrar o pin e passa a mostrar só a folha de cada tipo (cheia para 100% vegano, contorno para opções veganas), com 24px. Os marcadores do mapa continuam com o pin. Etapa criada depois da A5.
+**Pronto quando:** a legenda mostra as duas folhas sem o pin, os marcadores do mapa continuam iguais, e a legenda é aprovada visualmente pelo dono no desktop e no celular. Com testes.
+
 ---
 
 ## Fase A — Painel admin
