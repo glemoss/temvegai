@@ -1,8 +1,9 @@
-// What the restaurant form holds and how it becomes the body of
-// POST /restaurants. The rules mirror the API, so most mistakes are shown
+// What the restaurant form holds, how a restaurant fills it and how it
+// becomes the body of POST and PUT /restaurants. The rules mirror the API, so most mistakes are shown
 // before sending; the API still has the last word.
 import { z } from 'zod';
 import type {
+  Restaurant,
   RestaurantInput,
   RestaurantType,
   TimeInterval,
@@ -52,6 +53,26 @@ export const emptyRestaurantForm: RestaurantFormValues = {
   instagram: '',
   openingHours: emptyWeek,
 };
+
+// A restaurant as saved, for editing; what the API has as null is an
+// empty field, and hours not known are an empty week.
+export function toRestaurantFormValues(
+  restaurant: Restaurant,
+): RestaurantFormValues {
+  return {
+    name: restaurant.name,
+    description: restaurant.description ?? '',
+    type: restaurant.type,
+    address: restaurant.address,
+    neighborhood: restaurant.neighborhood,
+    latitude: String(restaurant.latitude),
+    longitude: String(restaurant.longitude),
+    phone: restaurant.phone ?? '',
+    website: restaurant.website ?? '',
+    instagram: restaurant.instagram ?? '',
+    openingHours: restaurant.openingHours ?? emptyWeek,
+  };
+}
 
 function requiredText(message: string) {
   return z.string().trim().min(1, message);

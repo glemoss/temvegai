@@ -97,7 +97,7 @@ describe('RestaurantList', () => {
     const headers = screen
       .getAllByRole('columnheader')
       .map((header) => header.textContent);
-    expect(headers).toEqual(['Nome', 'Tipo', 'Bairro']);
+    expect(headers).toEqual(['Nome', 'Tipo', 'Bairro', 'Ações']);
     expect(rowNames()).toEqual(['Café Conceição', 'Janela Bar', 'Mandarina']);
 
     const janela = screen.getByText('Janela Bar').closest('tr');
@@ -105,7 +105,7 @@ describe('RestaurantList', () => {
       [...(janela?.querySelectorAll('td') ?? [])].map(
         (cell) => cell.textContent,
       ),
-    ).toEqual(['Janela Bar', 'Opções veganas', 'Centro']);
+    ).toEqual(['Janela Bar', 'Opções veganas', 'Centro', '']);
   });
 
   it('filters by name ignoring case and accents', () => {
@@ -132,6 +132,16 @@ describe('RestaurantList', () => {
     typeSearch('');
 
     expect(rowNames()).toEqual(['Café Conceição', 'Janela Bar', 'Mandarina']);
+  });
+
+  it('links every restaurant to its edit', () => {
+    renderList();
+
+    expect(
+      screen
+        .getByRole('link', { name: 'Editar Janela Bar' })
+        .getAttribute('href'),
+    ).toBe('/restaurants/2/edit');
   });
 
   it('puts the add button on the line of the search', () => {

@@ -2,15 +2,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { RequireAdmin, useAdminSession } from './RequireAdmin';
+import { RequireAdmin } from './RequireAdmin';
 import { useCurrentAdmin } from './useCurrentAdmin';
 
 vi.mock('./useCurrentAdmin', () => ({ useCurrentAdmin: vi.fn() }));
-
-function PanelPage() {
-  const { admin } = useAdminSession();
-  return <p>Painel de {admin.email}</p>;
-}
 
 function renderPanel() {
   render(
@@ -18,7 +13,7 @@ function renderPanel() {
       <Routes>
         <Route path="/admin/login" element={<p>Tela de login</p>} />
         <Route path="/admin" element={<RequireAdmin />}>
-          <Route index element={<PanelPage />} />
+          <Route index element={<p>Página do painel</p>} />
         </Route>
       </Routes>
     </MemoryRouter>,
@@ -35,7 +30,7 @@ describe('RequireAdmin', () => {
     renderPanel();
 
     expect(screen.getByRole('status').textContent).toBe('Verificando sessão…');
-    expect(screen.queryByText(/Painel de/)).toBeNull();
+    expect(screen.queryByText('Página do painel')).toBeNull();
   });
 
   it('shows the panel page to a logged in admin', () => {
@@ -45,7 +40,8 @@ describe('RequireAdmin', () => {
     });
     renderPanel();
 
-    expect(screen.getByText('Painel de admin@example.com')).toBeTruthy();
+    expect(screen.getByText('Página do painel')).toBeTruthy();
+    expect(screen.getByText('admin@example.com')).toBeTruthy();
   });
 
   it('sends visitors without a session to the login page', () => {

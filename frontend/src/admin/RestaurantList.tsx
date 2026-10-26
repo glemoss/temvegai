@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -126,6 +126,9 @@ function RestaurantTable({
             >
               Bairro
             </TableHead>
+            <TableHead scope="col" className="w-0 px-2">
+              <span className="sr-only">Ações</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -137,6 +140,22 @@ function RestaurantTable({
               </TableCell>
               <TableCell className="px-4 py-3">
                 {restaurant.neighborhood}
+              </TableCell>
+              <TableCell className="px-2 py-1 text-right">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon-lg"
+                  className="text-muted-foreground"
+                >
+                  <Link
+                    to={`restaurants/${restaurant.id}/edit`}
+                    aria-label={`Editar ${restaurant.name}`}
+                    title="Editar"
+                  >
+                    <Pencil className="size-5" />
+                  </Link>
+                </Button>
               </TableCell>
             </TableRow>
           ))}

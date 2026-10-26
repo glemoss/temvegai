@@ -112,11 +112,42 @@ export class ValidationError extends Error {
   }
 }
 
-export async function createRestaurant(
+// The restaurant is not in the API, as when another admin removed it.
+export class RestaurantNotFoundError extends Error {
+  constructor() {
+    super('Restaurante não encontrado.');
+    this.name = 'RestaurantNotFoundError';
+  }
+}
+
+// Null when there is no restaurant with this id, including an id that is
+// not a UUID, which the API refuses with 400.
+export async function fetchRestaurant(
+  id: string,
+  signal?: AbortSignal,
+): Promise<Restaurant | null> {
+  const response = await fetch(
+    `${config.apiUrl}/restaurants/${encodeURIComponent(id)}`,
+    { signal },
+  );
+
+  if (response.status === 404 || response.status === 400) return null;
+  if (!response.ok) {
+    throw new Error(`GET /restaurants/:id respondeu ${response.status}`);
+  }
+
+  const body = (await response.json()) as { restaurant: Restaurant };
+  return body.restaurant;
+}
+
+// Sends the restaurant to a write route, which answers with it as saved.
+async function sendRestaurant(
+  method: 'POST' | 'PUT',
+  path: string,
   input: RestaurantInput,
 ): Promise<Restaurant> {
-  const response = await fetch(`${config.apiUrl}/restaurants`, {
-    method: 'POST',
+  const response = await fetch(`${config.apiUrl}${path}`, {
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
     credentials: 'include',
@@ -129,10 +160,22 @@ export async function createRestaurant(
     };
     throw new ValidationError(body.error.details ?? []);
   }
+  if (response.status === 404) throw new RestaurantNotFoundError();
   if (!response.ok) {
-    throw new Error(`POST /restaurants respondeu ${response.status}`);
+    throw new Error(`${method} ${path} respondeu ${response.status}`);
   }
 
   const body = (await response.json()) as { restaurant: Restaurant };
   return body.restaurant;
+}
+
+export function createRestaurant(input: RestaurantInput): Promise<Restaurant> {
+  return sendRestaurant('POST', '/restaurants', input);
+}
+
+export function updateRestaurant(
+  id: string,
+  input: RestaurantInput,
+): Promise<Restaurant> {
+  return sendRestaurant('PUT', `/restaurants/${encodeURIComponent(id)}`, input);
 }

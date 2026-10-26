@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router';
 import { App } from './App';
 import { AdminHome } from './admin/AdminHome';
 import { AdminLogin } from './admin/AdminLogin';
+import { EditRestaurant } from './admin/EditRestaurant';
 import { NewRestaurant } from './admin/NewRestaurant';
 import { RequireAdmin } from './admin/RequireAdmin';
 import './index.css';
@@ -23,6 +24,7 @@ createRoot(root).render(
           <Route element={<AdminHome />}>
             <Route index element={null} />
             <Route path="restaurants/new" element={<NewRestaurant />} />
+            <Route path="restaurants/:id/edit" element={<EditRestaurant />} />
           </Route>
         </Route>
       </Routes>

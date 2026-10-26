@@ -122,7 +122,7 @@ Tabela com nome, tipo e bairro, busca por nome, estados de carregando, erro e li
 Formulário com todos os campos do modelo, validação antes de enviar e localização escolhida clicando em um mapa (preenche latitude e longitude).
 **Pronto quando:** criar um restaurante pelo painel faz ele aparecer na lista e no mapa público, erros de validação da API aparecem no formulário, e sessão expirada leva de volta ao login.
 
-### [ ] A3 — Editar restaurante
+### [x] A3 — Editar restaurante
 Reaproveita o formulário da A2, preenchido com os dados atuais.
 **Pronto quando:** editar um restaurante atualiza a lista e o mapa público, e abrir a edição de um id inexistente mostra erro.
 
@@ -186,7 +186,7 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (A2) Hoje o horário é preenchido dia a dia. Um botão para "copiar para os outros dias" economizaria trabalho no cadastro. Decidir se vale fazer.
 - (A2) A localização pelo endereço, e o endereço pelo clique no mapa, usam o Nominatim direto do navegador do admin: o endereço digitado e os pontos clicados vão para os servidores do OpenStreetMap, e a política de uso dele limita a 1 busca por segundo e pede identificação da aplicação (hoje vai só o `Referer` do navegador). Basta para poucos admins; entra na conversa de deploy (política de privacidade, ou passar a busca pela API).
 - (A2) O bairro preenchido pelo endereço vem com o nome oficial do OpenStreetMap ("Trindade Sul", "Trindade Norte", "Lagoa da Conceição"), que pode não bater com o nome já usado ("Trindade"). Só um nome igual, sem contar maiúsculas e acentos, é trocado pelo nome já cadastrado; os outros ficam como vieram, e o admin corrige antes de salvar. Entra na mesma decisão da (B11) sobre grafias diferentes do mesmo bairro.
-- (A2) Com o cabeçalho do painel no `RequireAdmin`, o `useAdminSession` deixou de ser usado pelas páginas (só o teste do `RequireAdmin` o usa). Decidir se remove ou se a A3 vai precisar dele.
+- (A2) ~~Com o cabeçalho do painel no `RequireAdmin`, o `useAdminSession` deixou de ser usado pelas páginas (só o teste do `RequireAdmin` o usa). Decidir se remove ou se a A3 vai precisar dele.~~ Resolvido na A3: a edição não precisou dele, e dentro dos modais ele devolveria o contexto do `AdminHome` em vez do admin. O dono decidiu remover o hook.
 - (B12) O "Aberto agora" é calculado no frontend. Quando vier o app mobile, decidir se o cálculo passa para a API ou se é duplicado no app.
 - (B12) O Postgres guarda as chaves de um `jsonb` na ordem dele, então os dias de `openingHours` voltam da API fora da ordem da semana (`friday`, `monday`, `sunday`...). Os clientes leem pelo nome do dia, então nada quebra; decidir se o repositório deve devolver os dias de segunda a domingo.
 - (A0) Abrir `/admin/login` já estando logado mostra o formulário de novo, em vez de levar direto ao painel. Decidir se a tela de login deve verificar a sessão antes.
@@ -196,3 +196,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (U2) As classes `dark:` dos componentes do shadcn eram aplicadas quando o sistema estava em modo escuro, e os campos do site e do painel ficavam acinzentados. O `index.css` passou a ligar o `dark:` a uma classe `.dark` (padrão do shadcn), que o site não usa. Tema escuro não está no escopo da v1.
 - (U2) O `NativeSelect` do shadcn ganhou a propriedade `wrapperClassName`, para o select ocupar a largura do filtro. Um `shadcn add` com `--overwrite` desfaria o ajuste, como os da (U1).
 - (U2) Com o select nativo, o Bairro desabilitado (enquanto carrega ou com erro) aparece com opacidade reduzida, em vez do fundo cinza da F5.
+- (A3) Decidido pelo dono: se o restaurante for removido com a edição aberta, salvar mostra o aviso "Oops, esse restaurante não existe mais.", fecha o modal e recarrega a lista.

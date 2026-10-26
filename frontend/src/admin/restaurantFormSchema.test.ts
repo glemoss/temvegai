@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { Restaurant } from '../api/restaurants';
 import {
   emptyRestaurantForm,
   emptyWeek,
   parseRestaurantForm,
   toFormErrors,
+  toRestaurantFormValues,
   type RestaurantFormValues,
 } from './restaurantFormSchema';
 
@@ -158,5 +160,68 @@ describe('toFormErrors', () => {
         { field: '', message: 'unknown' },
       ]),
     ).toEqual({ name: 'first', '': 'unknown' });
+  });
+});
+
+describe('toRestaurantFormValues', () => {
+  const restaurant: Restaurant = {
+    id: '6a2e5bcb-a4ae-4450-b16d-38e999a29c59',
+    name: 'Mandarina',
+    description: 'Cozinha vegana.',
+    type: 'vegan_options',
+    address: 'Rua das Flores, 100',
+    neighborhood: 'Campeche',
+    latitude: -27.661458,
+    longitude: -48.499222,
+    phone: '(48) 99999-0000',
+    website: 'https://mandarina.com.br',
+    instagram: 'mandarinafloripa',
+    openingHours: {
+      ...emptyWeek,
+      friday: [{ opens: '18:00', closes: '02:00' }],
+    },
+  };
+
+  it('fills the form with the restaurant', () => {
+    expect(toRestaurantFormValues(restaurant)).toEqual({
+      name: 'Mandarina',
+      description: 'Cozinha vegana.',
+      type: 'vegan_options',
+      address: 'Rua das Flores, 100',
+      neighborhood: 'Campeche',
+      latitude: '-27.661458',
+      longitude: '-48.499222',
+      phone: '(48) 99999-0000',
+      website: 'https://mandarina.com.br',
+      instagram: 'mandarinafloripa',
+      openingHours: restaurant.openingHours,
+    });
+  });
+
+  it('leaves empty the fields the restaurant does not have', () => {
+    const values = toRestaurantFormValues({
+      ...restaurant,
+      description: null,
+      phone: null,
+      website: null,
+      instagram: null,
+      openingHours: null,
+    });
+
+    expect(values).toMatchObject({
+      description: '',
+      phone: '',
+      website: '',
+      instagram: '',
+      openingHours: emptyWeek,
+    });
+  });
+
+  it('gives back the restaurant when sent unchanged', () => {
+    // toEqual takes an undefined property as missing, so the id is left out.
+    expect(parseRestaurantForm(toRestaurantFormValues(restaurant))).toEqual({
+      success: true,
+      input: { ...restaurant, id: undefined },
+    });
   });
 });

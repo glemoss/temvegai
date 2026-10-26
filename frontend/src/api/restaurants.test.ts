@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createRestaurant,
+  fetchRestaurant,
   fetchRestaurants,
+  RestaurantNotFoundError,
   UnauthenticatedError,
+  updateRestaurant,
   ValidationError,
   type Restaurant,
   type RestaurantInput,
@@ -23,6 +26,21 @@ const restaurant: Restaurant = {
   website: null,
   instagram: 'mandarinafloripa',
   openingHours: null,
+};
+
+// The restaurant above, before the API gives it an id.
+const input: RestaurantInput = {
+  name: restaurant.name,
+  description: restaurant.description,
+  type: restaurant.type,
+  address: restaurant.address,
+  neighborhood: restaurant.neighborhood,
+  latitude: restaurant.latitude,
+  longitude: restaurant.longitude,
+  phone: restaurant.phone,
+  website: restaurant.website,
+  instagram: restaurant.instagram,
+  openingHours: restaurant.openingHours,
 };
 
 function stubFetch(response: Response | Error) {
@@ -103,22 +121,52 @@ describe('fetchRestaurants', () => {
   });
 });
 
-describe('createRestaurant', () => {
-  // The restaurant above, before the API gives it an id.
-  const input: RestaurantInput = {
-    name: restaurant.name,
-    description: restaurant.description,
-    type: restaurant.type,
-    address: restaurant.address,
-    neighborhood: restaurant.neighborhood,
-    latitude: restaurant.latitude,
-    longitude: restaurant.longitude,
-    phone: restaurant.phone,
-    website: restaurant.website,
-    instagram: restaurant.instagram,
-    openingHours: restaurant.openingHours,
-  };
+describe('fetchRestaurant', () => {
+  it('calls GET /restaurants/:id on the API address', async () => {
+    const fetchMock = stubFetch(Response.json({ restaurant }));
+    const controller = new AbortController();
 
+    await fetchRestaurant(restaurant.id, controller.signal);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `http://api.test/restaurants/${restaurant.id}`,
+      { signal: controller.signal },
+    );
+  });
+
+  it('returns the restaurant from the response', async () => {
+    stubFetch(Response.json({ restaurant }));
+
+    await expect(fetchRestaurant(restaurant.id)).resolves.toEqual(restaurant);
+  });
+
+  it('returns null when the restaurant does not exist', async () => {
+    stubFetch(
+      Response.json(
+        { error: { code: 'RESTAURANT_NOT_FOUND' } },
+        { status: 404 },
+      ),
+    );
+
+    await expect(fetchRestaurant(restaurant.id)).resolves.toBeNull();
+  });
+
+  it('returns null when the id is not a UUID', async () => {
+    stubFetch(
+      Response.json({ error: { code: 'VALIDATION_ERROR' } }, { status: 400 }),
+    );
+
+    await expect(fetchRestaurant('abc')).resolves.toBeNull();
+  });
+
+  it('fails when the API responds with another error status', async () => {
+    stubFetch(Response.json({ error: {} }, { status: 500 }));
+
+    await expect(fetchRestaurant(restaurant.id)).rejects.toThrow('500');
+  });
+});
+
+describe('createRestaurant', () => {
   it('posts the restaurant to /restaurants sending cookies', async () => {
     const fetchMock = stubFetch(Response.json({ restaurant }, { status: 201 }));
 
@@ -168,6 +216,80 @@ describe('createRestaurant', () => {
 
     await expect(createRestaurant(input)).rejects.toThrow(
       'POST /restaurants respondeu 500',
+    );
+  });
+});
+
+describe('updateRestaurant', () => {
+  it('puts the restaurant to /restaurants/:id sending cookies', async () => {
+    const fetchMock = stubFetch(Response.json({ restaurant }));
+
+    await updateRestaurant(restaurant.id, input);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `http://api.test/restaurants/${restaurant.id}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+        credentials: 'include',
+      },
+    );
+  });
+
+  it('returns the updated restaurant', async () => {
+    stubFetch(Response.json({ restaurant }));
+
+    await expect(updateRestaurant(restaurant.id, input)).resolves.toEqual(
+      restaurant,
+    );
+  });
+
+  it('throws UnauthenticatedError on 401', async () => {
+    stubFetch(
+      Response.json({ error: { code: 'UNAUTHENTICATED' } }, { status: 401 }),
+    );
+
+    await expect(updateRestaurant(restaurant.id, input)).rejects.toBeInstanceOf(
+      UnauthenticatedError,
+    );
+  });
+
+  it('throws ValidationError with the details on 400', async () => {
+    const details = [{ field: 'name', message: 'Too small' }];
+    stubFetch(
+      Response.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'x', details } },
+        { status: 400 },
+      ),
+    );
+
+    const error = await updateRestaurant(restaurant.id, input).catch(
+      (reason) => reason,
+    );
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).details).toEqual(details);
+  });
+
+  it('throws RestaurantNotFoundError on 404', async () => {
+    stubFetch(
+      Response.json(
+        { error: { code: 'RESTAURANT_NOT_FOUND' } },
+        { status: 404 },
+      ),
+    );
+
+    await expect(updateRestaurant(restaurant.id, input)).rejects.toBeInstanceOf(
+      RestaurantNotFoundError,
+    );
+  });
+
+  it('throws a generic error on other failures', async () => {
+    stubFetch(Response.json({}, { status: 500 }));
+
+    await expect(updateRestaurant(restaurant.id, input)).rejects.toThrow(
+      `PUT /restaurants/${restaurant.id} respondeu 500`,
     );
   });
 });

@@ -1,12 +1,7 @@
-import { Navigate, Outlet, useOutletContext } from 'react-router';
+import { Navigate, Outlet } from 'react-router';
 import { Toaster } from '@/components/ui/sonner';
-import type { Admin } from '../api/auth';
 import { AdminHeader } from './AdminHeader';
 import { useCurrentAdmin } from './useCurrentAdmin';
-
-interface AdminSession {
-  admin: Admin;
-}
 
 // Layout of the panel pages: checks the session when the panel opens,
 // sends visitors without one to the login page and puts the header on top
@@ -22,7 +17,7 @@ export function RequireAdmin() {
     return (
       <main className="min-h-full bg-secondary px-4 py-6">
         <AdminHeader admin={state.admin} />
-        <Outlet context={{ admin: state.admin } satisfies AdminSession} />
+        <Outlet />
         <Toaster closeButton />
       </main>
     );
@@ -44,9 +39,4 @@ export function RequireAdmin() {
       </p>
     </main>
   );
-}
-
-// The logged in admin, for the pages inside RequireAdmin.
-export function useAdminSession(): AdminSession {
-  return useOutletContext<AdminSession>();
 }

@@ -6,6 +6,9 @@ import { useAdminRestaurants } from './useAdminRestaurants';
 
 interface AdminHomeContext {
   onCreated: (restaurant: Restaurant) => void;
+  onUpdated: (restaurant: Restaurant) => void;
+  // The restaurant being saved no longer exists.
+  onNotFound: () => void;
 }
 
 // The list of restaurants, with the forms opening over it as modals in
@@ -16,6 +19,14 @@ export function AdminHome() {
   const context: AdminHomeContext = {
     onCreated: (restaurant) => {
       toast.success(`Restaurante “${restaurant.name}” adicionado.`);
+      reload();
+    },
+    onUpdated: (restaurant) => {
+      toast.success(`Restaurante “${restaurant.name}” atualizado.`);
+      reload();
+    },
+    onNotFound: () => {
+      toast.error('Oops, esse restaurante não existe mais.');
       reload();
     },
   };
