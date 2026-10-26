@@ -1,5 +1,5 @@
 import type { RestaurantType } from './api/restaurants';
-import { PinIcon } from './leaf';
+import { LeafIcon } from './leaf';
 import { TYPE_LABELS } from './restaurantTypeLabels';
 
 const TYPES = Object.keys(TYPE_LABELS) as RestaurantType[];
@@ -13,7 +13,7 @@ export function MapLegend() {
     >
       {TYPES.map((type) => (
         <li key={type} className="flex items-center gap-2">
-          <PinIcon type={type} className="h-[1.575rem] w-[1.2rem] shrink-0" />
+          <LeafIcon type={type} className="size-6 shrink-0" />
           {TYPE_LABELS[type]}
         </li>
       ))}

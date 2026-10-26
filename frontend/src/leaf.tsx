@@ -48,24 +48,13 @@ export function pinSvg(type: RestaurantType): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${PIN_VIEW_BOX}" aria-hidden="true">${pinMarkup(type)}</svg>`;
 }
 
-// React versions, for the legend, the details panel and the title. They
-// reuse the markup above, which is fixed and holds no outside data, so the
-// shapes are written only once. Decorative: the text next to them carries
-// the meaning.
+// React version, for the legend, the details panel and the title. It
+// reuses the markup above, which is fixed and holds no outside data, so the
+// shape is written only once. Decorative: the text next to it carries the
+// meaning.
 interface IconProps {
   type: RestaurantType;
   className?: string;
-}
-
-export function PinIcon({ type, className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      viewBox={PIN_VIEW_BOX}
-      aria-hidden="true"
-      dangerouslySetInnerHTML={{ __html: pinMarkup(type) }}
-    />
-  );
 }
 
 export function LeafIcon({ type, className }: IconProps) {
