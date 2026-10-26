@@ -1,4 +1,6 @@
 import { useId, useState, type KeyboardEvent } from 'react';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import type { Restaurant } from './api/restaurants';
 import { useDebouncedValue } from './useDebouncedValue';
 import { useRestaurantSuggestions } from './useRestaurantSuggestions';
@@ -87,12 +89,12 @@ export function RestaurantSearch({
   }
 
   return (
-    <div className="restaurant-search">
-      <label>
+    <div className="relative flex min-w-0 flex-1">
+      <label className="flex min-w-0 flex-1">
         {/* The placeholder already says what the field is for; the label
             stays for screen readers. */}
-        <span className="visually-hidden">Nome</span>
-        <input
+        <span className="sr-only">Nome</span>
+        <Input
           type="search"
           role="combobox"
           autoComplete="off"
@@ -102,6 +104,7 @@ export function RestaurantSearch({
           aria-activedescendant={
             active ? `${listId}-${activeIndex}` : undefined
           }
+          className="h-10 rounded-sm bg-card px-2.5 text-base md:text-base"
           value={value}
           placeholder="Buscar restaurante"
           onChange={(event) => {
@@ -113,34 +116,41 @@ export function RestaurantSearch({
           onBlur={close}
         />
       </label>
+      {/* Opens over the map, below the field. */}
       {showPopup && (
-        <div className="restaurant-search-popup">
+        <div className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-10 overflow-hidden rounded-sm border bg-popover text-popover-foreground shadow-(--shadow)">
           {showList ? (
-            <ul id={listId} role="listbox" aria-label="Sugestões">
+            <ul
+              id={listId}
+              role="listbox"
+              aria-label="Sugestões"
+              className="max-h-[50dvh] overflow-y-auto py-1"
+            >
               {restaurants.map((restaurant, index) => (
                 <li
                   key={restaurant.id}
                   id={`${listId}-${index}`}
                   role="option"
                   aria-selected={index === activeIndex}
-                  className="restaurant-search-option"
+                  className={cn(
+                    'flex cursor-pointer flex-col px-3 py-2',
+                    index === activeIndex && 'bg-accent',
+                  )}
                   // Keeps the focus in the field, so the click is not lost
                   // to the blur that closes the list.
                   onMouseDown={(event) => event.preventDefault()}
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => select(restaurant)}
                 >
-                  <span className="restaurant-search-name">
-                    {restaurant.name}
-                  </span>
-                  <span className="restaurant-search-neighborhood">
+                  <span className="font-semibold">{restaurant.name}</span>
+                  <span className="text-[0.8125rem] text-muted-foreground">
                     {restaurant.neighborhood}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="restaurant-search-message">
+            <p className="px-3 py-2.5 text-muted-foreground">
               {suggestions.status === 'error'
                 ? 'Não foi possível buscar sugestões.'
                 : 'Nenhum restaurante com esse nome.'}

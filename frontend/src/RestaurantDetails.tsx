@@ -1,8 +1,17 @@
 import { useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { Restaurant } from './api/restaurants';
 import { LeafIcon } from './leaf';
 import { OpeningHours } from './OpeningHours';
 import { TYPE_LABELS } from './restaurantTypeLabels';
+
+// The labels of the fields, and the values below them.
+const TERM =
+  'text-[0.8125rem] font-semibold tracking-[0.04em] text-muted-foreground uppercase';
+const DESCRIPTION = 'mt-0.5 mb-3.5 wrap-anywhere';
+const LINK = 'font-semibold text-primary underline';
 
 interface RestaurantDetailsProps {
   restaurant: Restaurant;
@@ -51,50 +60,67 @@ export function RestaurantDetails({
   }, [onClose]);
 
   return (
+    // A panel on the right, or a sheet at the bottom on narrow screens.
     <aside
       ref={panel}
-      className="restaurant-details"
+      className="absolute top-0 right-0 z-(--z-overlay) max-h-dvh w-96 overflow-y-auto bg-card px-6 pt-5 pb-6 shadow-(--shadow) focus:outline-none max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:max-h-[60dvh] max-sm:w-auto max-sm:rounded-t-lg max-sm:px-5 max-sm:pt-4 max-sm:pb-5"
       aria-label={restaurant.name}
       tabIndex={-1}
     >
-      <button
+      <Button
         type="button"
-        className="restaurant-details-close"
+        variant="ghost"
+        size="icon-lg"
+        className="absolute top-3 right-3 text-muted-foreground hover:text-foreground [&_svg:not([class*='size-'])]:size-6"
         onClick={onClose}
         aria-label="Fechar"
       >
-        <span aria-hidden="true">×</span>
-      </button>
-      <h2>{restaurant.name}</h2>
-      <p className="restaurant-details-type">
-        <LeafIcon type={restaurant.type} className="leaf-icon" />
+        <X aria-hidden="true" />
+      </Button>
+      <h2 className="mr-10 mb-2 text-2xl leading-tight font-bold text-secondary-foreground">
+        {restaurant.name}
+      </h2>
+      <Badge
+        variant="secondary"
+        className="mb-3 flex gap-1.5 py-1 pr-3 pl-2 text-sm font-semibold [&>svg]:size-[1.1rem]"
+      >
+        <LeafIcon type={restaurant.type} />
         {TYPE_LABELS[restaurant.type]}
-      </p>
+      </Badge>
       {restaurant.description && <p>{restaurant.description}</p>}
-      <dl>
-        <dt>Endereço</dt>
-        <dd>{`${restaurant.address} — ${restaurant.neighborhood}`}</dd>
+      <dl className="mt-4">
+        <dt className={TERM}>Endereço</dt>
+        <dd
+          className={DESCRIPTION}
+        >{`${restaurant.address} — ${restaurant.neighborhood}`}</dd>
         {restaurant.openingHours && (
           <>
-            <dt>Horário</dt>
-            <dd>
+            <dt className={TERM}>Horário</dt>
+            <dd className={DESCRIPTION}>
               <OpeningHours hours={restaurant.openingHours} />
             </dd>
           </>
         )}
         {restaurant.phone && (
           <>
-            <dt>Telefone</dt>
-            <dd>
-              <a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a>
+            <dt className={TERM}>Telefone</dt>
+            <dd className={DESCRIPTION}>
+              <a className={LINK} href={`tel:${restaurant.phone}`}>
+                {restaurant.phone}
+              </a>
             </dd>
           </>
         )}
         {restaurant.website && (
           <>
-            <dt>Site</dt>
-            <dd>
-              <a href={restaurant.website} target="_blank" rel="noreferrer">
+            <dt className={TERM}>Site</dt>
+            <dd className={DESCRIPTION}>
+              <a
+                className={LINK}
+                href={restaurant.website}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {restaurant.website}
               </a>
             </dd>
@@ -102,9 +128,10 @@ export function RestaurantDetails({
         )}
         {restaurant.instagram && (
           <>
-            <dt>Instagram</dt>
-            <dd>
+            <dt className={TERM}>Instagram</dt>
+            <dd className={DESCRIPTION}>
               <a
+                className={LINK}
                 href={`https://www.instagram.com/${restaurant.instagram}`}
                 target="_blank"
                 rel="noreferrer"

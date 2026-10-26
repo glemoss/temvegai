@@ -136,12 +136,8 @@ describe('App', () => {
     render(<App />);
 
     const title = screen.getByRole('heading', { level: 1 });
-    expect(title.querySelector('.visually-hidden')?.textContent).toBe(
-      'Tem Veg Aí?',
-    );
-    expect(
-      title.querySelector('.app-title-i .app-title-accent'),
-    ).not.toBeNull();
+    expect(title.querySelector('.sr-only')?.textContent).toBe('Tem Veg Aí?');
+    expect(title.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
   });
 
   it('centers the map on Florianópolis', () => {

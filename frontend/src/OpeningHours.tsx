@@ -1,4 +1,11 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 import type { WeeklyHours } from './api/restaurants';
 import { isOpenAt, openingHoursLines } from './openingHoursSchedule';
 
@@ -10,46 +17,44 @@ interface OpeningHoursProps {
 // hours, one line per run of days with the same hours.
 export function OpeningHours({ hours }: OpeningHoursProps) {
   const [expanded, setExpanded] = useState(false);
-  const listId = useId();
   const open = isOpenAt(hours, new Date());
 
   return (
-    <>
-      <button
-        type="button"
-        className="opening-hours-toggle"
-        aria-expanded={expanded}
-        aria-controls={listId}
-        onClick={() => setExpanded((value) => !value)}
-      >
+    <Collapsible open={expanded} onOpenChange={setExpanded}>
+      <CollapsibleTrigger className="group inline-flex min-h-8 cursor-pointer items-center gap-2 font-semibold">
         <span
-          className={`opening-hours-status ${open ? 'is-open' : 'is-closed'}`}
+          className={cn(
+            'inline-flex items-center gap-1.5 before:size-[0.55rem] before:rounded-full before:bg-current',
+            open ? 'text-primary' : 'text-destructive',
+          )}
         >
           {open ? 'Aberto agora' : 'Fechado agora'}
         </span>
-        <svg
-          className="opening-hours-arrow"
-          viewBox="0 0 12 8"
+        <ChevronDown
+          className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 motion-reduce:transition-none"
           aria-hidden="true"
+        />
+      </CollapsibleTrigger>
+      {/* Always in the page, so the hours are part of the panel from the
+          start. With forceMount, Radix leaves the hiding to us. */}
+      <CollapsibleContent forceMount asChild>
+        {/* Each line puts its days and hours in the two columns of the
+            list. */}
+        <ul
+          hidden={!expanded}
+          className="mt-1 grid list-none grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 p-0"
         >
-          <path
-            d="M1 1.5l5 5 5-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      <ul id={listId} className="opening-hours" hidden={!expanded}>
-        {openingHoursLines(hours).map((line) => (
-          <li key={line.days}>
-            <span>{line.days}</span>
-            <span>{line.hours}</span>
-          </li>
-        ))}
-      </ul>
-    </>
+          {openingHoursLines(hours).map((line) => (
+            <li
+              key={line.days}
+              className="col-span-full grid grid-cols-subgrid"
+            >
+              <span>{line.days}</span>
+              <span>{line.hours}</span>
+            </li>
+          ))}
+        </ul>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

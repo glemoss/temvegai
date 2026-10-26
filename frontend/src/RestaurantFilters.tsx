@@ -1,4 +1,12 @@
 import { useId, useState } from 'react';
+import { SlidersHorizontal } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
+import { cn } from '@/lib/utils';
 import type { Neighborhood } from './api/neighborhoods';
 import type { Restaurant, RestaurantType } from './api/restaurants';
 import { RestaurantSearch } from './RestaurantSearch';
@@ -6,26 +14,12 @@ import { TYPE_LABELS } from './restaurantTypeLabels';
 
 const TYPES = Object.keys(TYPE_LABELS) as RestaurantType[];
 
-// Three sliders, the usual sign for filter settings.
-function FilterIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
-      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" />
-      <circle cx="16" cy="6" r="2" />
-      <circle cx="10" cy="12" r="2" />
-      <circle cx="18" cy="18" r="2" />
-    </svg>
-  );
-}
+// The label above each select, and the select itself, as tall as the
+// search field.
+const FILTER_LABEL =
+  'flex min-w-0 flex-1 flex-col gap-1 text-[0.8125rem] font-semibold text-muted-foreground';
+const FILTER_SELECT =
+  'h-10 rounded-sm bg-card pl-2.5 text-base font-normal text-foreground md:text-base';
 
 interface RestaurantFiltersProps {
   type: RestaurantType | undefined;
@@ -60,42 +54,48 @@ export function RestaurantFilters({
 
   return (
     <form
-      className="restaurant-filters"
+      className="flex flex-col gap-2"
       role="search"
       onSubmit={(event) => event.preventDefault()}
     >
-      <div className="restaurant-filters-main">
+      <div className="flex items-end gap-2">
         <RestaurantSearch
           value={name}
           onChange={onNameChange}
           onSubmit={onNameSubmit}
           onSelect={onRestaurantSelect}
         />
-        <button
+        <Button
           type="button"
-          className="restaurant-filters-toggle"
+          size="icon-lg"
+          className="relative hover:bg-secondary-foreground [&_svg:not([class*='size-'])]:size-5"
           aria-expanded={expanded}
           aria-controls={moreFiltersId}
           aria-label={label}
           title={label}
           onClick={() => setExpanded(!expanded)}
         >
-          <FilterIcon />
+          <SlidersHorizontal aria-hidden="true" />
+          {/* How many filters are active, on the button's corner. */}
           {activeCount > 0 && (
-            <span className="restaurant-filters-count" aria-hidden="true">
+            <Badge
+              className="absolute -top-1.5 -right-1.5 h-[1.15rem] min-w-[1.15rem] border-2 border-card bg-ring px-1 text-secondary-foreground"
+              aria-hidden="true"
+            >
               {activeCount}
-            </span>
+            </Badge>
           )}
-        </button>
+        </Button>
       </div>
       <div
         id={moreFiltersId}
-        className="restaurant-filters-more"
-        data-expanded={expanded}
+        className={cn('flex gap-2', !expanded && 'hidden')}
       >
-        <label>
+        <label className={FILTER_LABEL}>
           Tipo
-          <select
+          <NativeSelect
+            wrapperClassName="w-full"
+            className={FILTER_SELECT}
             value={type ?? ''}
             onChange={(event) =>
               onTypeChange(
@@ -103,30 +103,32 @@ export function RestaurantFilters({
               )
             }
           >
-            <option value="">Todos os tipos</option>
+            <NativeSelectOption value="">Todos os tipos</NativeSelectOption>
             {TYPES.map((value) => (
-              <option key={value} value={value}>
+              <NativeSelectOption key={value} value={value}>
                 {TYPE_LABELS[value]}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </label>
-        <label>
+        <label className={FILTER_LABEL}>
           Bairro
-          <select
+          <NativeSelect
+            wrapperClassName="w-full"
+            className={FILTER_SELECT}
             value={neighborhood ?? ''}
             disabled={!neighborhoods}
             onChange={(event) =>
               onNeighborhoodChange(event.target.value || undefined)
             }
           >
-            <option value="">Todos os bairros</option>
+            <NativeSelectOption value="">Todos os bairros</NativeSelectOption>
             {neighborhoods?.map(({ name }) => (
-              <option key={name} value={name}>
+              <NativeSelectOption key={name} value={name}>
                 {name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       </div>
     </form>

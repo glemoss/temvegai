@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* The site has no dark theme: the dark: classes of the shadcn/ui
+   components only apply under a .dark class, never by the system's
+   preference. */
+@custom-variant dark (&:is(.dark *));
+
 /* The shadcn/ui theme, built from the identity tokens below. */
 @theme inline {
   --color-background: var(--background);
@@ -32,26 +37,24 @@
 }
 
 :root {
-  --background: var(--color-surface);
-  --foreground: var(--color-text);
-  --card: var(--color-surface);
-  --card-foreground: var(--color-text);
-  --popover: var(--color-surface);
-  --popover-foreground: var(--color-text);
-  --primary: var(--color-green-700);
-  --primary-foreground: var(--color-surface);
-  --secondary: var(--color-green-100);
-  --secondary-foreground: var(--color-green-900);
-  --muted: var(--color-green-100);
-  --muted-foreground: var(--color-text-muted);
-  --accent: var(--color-green-100);
-  --accent-foreground: var(--color-green-900);
-  --destructive: var(--color-error);
-  --input: var(--color-border);
-  --ring: var(--color-focus);
-  /* A literal here, because --color-border, which the current CSS
-     uses, is also Tailwind's name for this token and points back to it. */
-  --border: #c9d4c6;
+  --background: var(--brand-surface);
+  --foreground: var(--brand-text);
+  --card: var(--brand-surface);
+  --card-foreground: var(--brand-text);
+  --popover: var(--brand-surface);
+  --popover-foreground: var(--brand-text);
+  --primary: var(--brand-green-700);
+  --primary-foreground: var(--brand-surface);
+  --secondary: var(--brand-green-100);
+  --secondary-foreground: var(--brand-green-900);
+  --muted: var(--brand-green-100);
+  --muted-foreground: var(--brand-text-muted);
+  --accent: var(--brand-green-100);
+  --accent-foreground: var(--brand-green-900);
+  --destructive: var(--brand-error);
+  --input: var(--brand-border);
+  --ring: var(--brand-focus);
+  --border: var(--brand-border);
 }
 
 @layer base {
@@ -65,15 +68,15 @@
 }
 
 :root {
-  --color-green-900: #1f4d2b;
-  --color-green-700: #2f6b3a;
-  --color-green-100: #e3f1dc;
-  --color-surface: #ffffff;
-  --color-text: #1d261f;
-  --color-text-muted: #55625a;
-  --color-border: var(--border);
-  --color-error: #a3262a;
-  --color-focus: #e0a526;
+  --brand-green-900: #1f4d2b;
+  --brand-green-700: #2f6b3a;
+  --brand-green-100: #e3f1dc;
+  --brand-surface: #ffffff;
+  --brand-text: #1d261f;
+  --brand-text-muted: #55625a;
+  --brand-border: #c9d4c6;
+  --brand-error: #a3262a;
+  --brand-focus: #e0a526;
 
   --font-body:
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
@@ -81,13 +84,11 @@
   --font-brand: 'Bebas Neue', var(--font-body);
 
   --radius: 0.75rem;
-  --radius-small: 0.5rem;
   --shadow: 0 0.25rem 1rem rgb(31 77 43 / 0.2);
-  --gap: 0.75rem;
   /* Leaflet keeps its controls at z-index 1000; the overlays go above. */
   --z-overlay: 1100;
 
-  color: var(--color-text);
+  color: var(--brand-text);
   font-family: var(--font-body);
   line-height: 1.4;
 }
@@ -103,19 +104,9 @@ body,
    which removes the outline, wins over it. */
 @layer base {
   :focus-visible {
-    outline: 3px solid var(--color-focus);
+    outline: 3px solid var(--brand-focus);
     outline-offset: 2px;
   }
-}
-
-/* Hidden on screen, still read by screen readers. */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 /* Map */
@@ -149,487 +140,6 @@ body,
 .pin-marker:hover svg,
 .pin-marker:focus-visible svg {
   transform: scale(1.15);
-}
-
-.leaf-icon {
-  width: 1.1rem;
-  height: 1.1rem;
-  flex-shrink: 0;
-}
-
-.pin-icon {
-  width: 1rem;
-  height: 1.3125rem;
-  flex-shrink: 0;
-}
-
-/* Top of the screen, centered: the header card and, below it, the
-   loading, error and empty messages */
-
-.app-top {
-  position: absolute;
-  top: 1.5rem;
-  left: 50%;
-  z-index: var(--z-overlay);
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  box-sizing: border-box;
-  width: 26rem;
-  max-width: calc(100% - 2 * var(--gap));
-  /* Lets clicks through to the map around the card and the messages. */
-  pointer-events: none;
-}
-
-.app-top > * {
-  pointer-events: auto;
-}
-
-.app-header {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--color-surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.app-title {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin: 0 0 0.5rem;
-  /* Room for the leaf drawn as the accent, so it stays inside the box. */
-  padding-top: 0.15em;
-  color: var(--color-green-900);
-  font-family: var(--font-brand);
-  font-size: 2.25rem;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.02em;
-}
-
-.app-title-i {
-  position: relative;
-}
-
-.app-title-accent {
-  position: absolute;
-  /* Just above the top of the capital I, which sits a little below the top
-     of the line box in Bebas Neue. */
-  top: -0.26em;
-  left: 50%;
-  width: 0.42em;
-  height: 0.42em;
-  transform: translateX(-30%) rotate(-10deg);
-}
-
-.restaurant-filters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.restaurant-filters-main,
-.restaurant-filters-more {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.restaurant-filters-main {
-  align-items: flex-end;
-}
-
-.restaurant-filters-more[data-expanded='false'] {
-  display: none;
-}
-
-.restaurant-filters label {
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  min-width: 0;
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.restaurant-filters input,
-.restaurant-filters select {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 2.5rem;
-  margin-top: 0.2rem;
-  padding: 0 0.6rem;
-  color: var(--color-text);
-  font-size: 1rem;
-  font-weight: 400;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-small);
-}
-
-/* Our own arrow instead of the native one, which sits against the right
-   border and cannot be moved in every browser. */
-.restaurant-filters select {
-  padding-right: 2.25rem;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2355625a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 0.75rem;
-}
-
-.restaurant-filters select:disabled {
-  color: var(--color-text-muted);
-  background: #f2f4f1;
-}
-
-.restaurant-filters-toggle {
-  position: relative;
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  padding: 0;
-}
-
-/* How many filters are active, as a badge on the toggle's corner. */
-.restaurant-filters-count {
-  position: absolute;
-  top: -0.3rem;
-  right: -0.3rem;
-  min-width: 1.15rem;
-  height: 1.15rem;
-  color: var(--color-green-900);
-  font-size: 0.75rem;
-  line-height: 1.15rem;
-  background: var(--color-focus);
-  border: 2px solid var(--color-surface);
-  border-radius: 999px;
-}
-
-/* Search field and its suggestions, which open over the map below it */
-
-.restaurant-search {
-  position: relative;
-  display: flex;
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.restaurant-search-popup {
-  position: absolute;
-  top: calc(100% + 0.35rem);
-  right: 0;
-  left: 0;
-  z-index: 1;
-  overflow: hidden;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-small);
-  box-shadow: var(--shadow);
-}
-
-.restaurant-search-popup ul {
-  max-height: 50dvh;
-  overflow-y: auto;
-  margin: 0;
-  padding: 0.25rem 0;
-  list-style: none;
-}
-
-.restaurant-search-option {
-  display: flex;
-  flex-direction: column;
-  padding: 0.45rem 0.75rem;
-  cursor: pointer;
-}
-
-.restaurant-search-option[aria-selected='true'] {
-  background: var(--color-green-100);
-}
-
-.restaurant-search-name {
-  color: var(--color-text);
-  font-weight: 600;
-}
-
-.restaurant-search-neighborhood {
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-}
-
-.restaurant-search-message {
-  margin: 0;
-  padding: 0.6rem 0.75rem;
-  color: var(--color-text-muted);
-}
-
-/* Legend: bottom right corner, above the map attribution */
-
-.map-legend {
-  position: absolute;
-  right: var(--gap);
-  bottom: 2rem;
-  z-index: var(--z-overlay);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0.6rem 0.9rem;
-  color: var(--color-text-muted);
-  font-size: 0.9375rem;
-  list-style: none;
-  background: var(--color-surface);
-  border-radius: var(--radius-small);
-  box-shadow: var(--shadow);
-}
-
-.map-legend li {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.map-legend .pin-icon {
-  width: 1.2rem;
-  height: 1.575rem;
-}
-
-/* Loading, error and empty messages, below the header */
-
-.map-status-message {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem 0.75rem;
-  margin: 0;
-  padding: 0.6rem 1rem;
-  text-align: center;
-  background: var(--color-surface);
-  border-radius: 999px;
-  box-shadow: var(--shadow);
-}
-
-.map-status-error {
-  color: var(--color-error);
-  font-weight: 600;
-}
-
-.map-status-action,
-.restaurant-filters-toggle {
-  min-height: 2.5rem;
-  color: var(--color-surface);
-  font-weight: 600;
-  background: var(--color-green-700);
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.map-status-action {
-  padding: 0 1rem;
-}
-
-.map-status-action:hover,
-.restaurant-filters-toggle:hover {
-  background: var(--color-green-900);
-}
-
-/* Restaurant details */
-
-.restaurant-details {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: var(--z-overlay);
-  box-sizing: border-box;
-  width: 24rem;
-  max-height: 100dvh;
-  overflow-y: auto;
-  padding: 1.25rem 1.5rem 1.5rem;
-  background: var(--color-surface);
-  box-shadow: var(--shadow);
-}
-
-.restaurant-details:focus {
-  outline: none;
-}
-
-.restaurant-details h2 {
-  margin: 0 2.5rem 0.5rem 0;
-  color: var(--color-green-900);
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.restaurant-details-type {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin: 0 0 0.75rem;
-  padding: 0.2rem 0.7rem 0.2rem 0.5rem;
-  color: var(--color-green-900);
-  font-size: 0.875rem;
-  font-weight: 600;
-  background: var(--color-green-100);
-  border-radius: 999px;
-}
-
-.restaurant-details dl {
-  margin: 1rem 0 0;
-}
-
-.restaurant-details dt {
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.restaurant-details dd {
-  margin: 0.1rem 0 0.85rem;
-  overflow-wrap: anywhere;
-}
-
-/* "Aberto agora" or "Fechado agora", with the arrow that shows the hours */
-.opening-hours-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2rem;
-  padding: 0;
-  font-weight: 600;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.opening-hours-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.opening-hours-status::before {
-  width: 0.55rem;
-  height: 0.55rem;
-  content: '';
-  background: currentColor;
-  border-radius: 50%;
-}
-
-.opening-hours-status.is-open {
-  color: var(--color-green-700);
-}
-
-.opening-hours-status.is-closed {
-  color: var(--color-error);
-}
-
-.opening-hours-arrow {
-  width: 0.75rem;
-  height: 0.5rem;
-  color: var(--color-text-muted);
-  transition: transform 0.15s;
-}
-
-.opening-hours-toggle[aria-expanded='true'] .opening-hours-arrow {
-  transform: rotate(180deg);
-}
-
-.opening-hours {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.15rem 1rem;
-  margin: 0.25rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Each line puts its days and hours in the two columns of the list; a line
-   written without the "Days: hours" shape spans both. */
-.opening-hours[hidden] {
-  display: none;
-}
-
-.opening-hours li {
-  display: grid;
-  grid-template-columns: subgrid;
-  grid-column: 1 / -1;
-}
-
-.opening-hours li:not(:has(span)) {
-  display: block;
-}
-
-.restaurant-details a {
-  color: var(--color-green-700);
-  font-weight: 600;
-  text-decoration: underline;
-}
-
-.restaurant-details-close {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 2.5rem;
-  height: 2.5rem;
-  color: var(--color-text-muted);
-  font-size: 1.75rem;
-  line-height: 1;
-  background: none;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.restaurant-details-close:hover {
-  color: var(--color-text);
-  background: var(--color-green-100);
-}
-
-/* Narrow screens: the header spans the width of the screen and the
-   details panel becomes a sheet at the bottom. */
-@media (max-width: 640px) {
-  :root {
-    --gap: 0.5rem;
-  }
-
-  .app-top {
-    top: 1rem;
-    right: var(--gap);
-    left: var(--gap);
-    transform: none;
-    width: auto;
-    max-width: none;
-  }
-
-  .app-header {
-    padding: 0.6rem 0.75rem 0.75rem;
-  }
-
-  .app-title {
-    font-size: 1.75rem;
-  }
-
-  .restaurant-details {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    width: auto;
-    max-height: 60dvh;
-    padding: 1rem 1.25rem 1.25rem;
-    border-radius: var(--radius) var(--radius) 0 0;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
