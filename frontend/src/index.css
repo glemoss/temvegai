@@ -142,6 +142,18 @@ body,
   transform: scale(1.15);
 }
 
+/* The selected restaurant's pin stays larger, growing from its tip, with
+   a stronger shadow, also under the pointer. */
+.pin-marker-selected {
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.5));
+}
+
+.pin-marker-selected svg,
+.pin-marker-selected:hover svg,
+.pin-marker-selected:focus-visible svg {
+  transform: scale(1.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pin-marker svg {
     transition: none;

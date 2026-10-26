@@ -136,6 +136,7 @@ export function App() {
       <RestaurantMap
         restaurants={restaurants}
         focusBounds={focusBounds}
+        selectedId={selected?.id}
         onSelect={setSelected}
         onBoundsChange={setBounds}
       />

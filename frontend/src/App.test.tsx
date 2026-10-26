@@ -25,8 +25,11 @@ const fakeMap = vi.hoisted(() => ({
 
 // Leaflet needs a real browser to lay out the map, so the map components
 // are replaced by plain elements that expose the props they receive. Each
-// marker is a button that triggers its click handler.
-vi.mock('leaflet', () => ({ divIcon: () => ({}) }));
+// marker is a button that triggers its click handler, and each icon keeps
+// its options so the marker can expose its class.
+vi.mock('leaflet', () => ({
+  divIcon: (options: { className: string }) => options,
+}));
 vi.mock('react-leaflet', () => ({
   useMap: () => fakeMap,
   useMapEvents: () => fakeMap,
@@ -53,6 +56,8 @@ vi.mock('react-leaflet', () => ({
   ZoomControl: () => null,
   Marker: (props: {
     position: [number, number];
+    icon: { className: string };
+    zIndexOffset: number;
     title: string;
     eventHandlers: { click: () => void };
   }) => (
@@ -60,6 +65,8 @@ vi.mock('react-leaflet', () => ({
       type="button"
       data-testid="marker"
       data-position={props.position.join(',')}
+      data-class={props.icon.className}
+      data-z-index-offset={props.zIndexOffset}
       onClick={props.eventHandlers.click}
     >
       {props.title}
@@ -287,6 +294,74 @@ describe('App restaurant details', () => {
     expect(
       screen.getByRole('complementary', { name: 'Mandarina' }),
     ).toBeDefined();
+  });
+});
+
+describe('App selected marker', () => {
+  beforeEach(() => {
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants,
+    });
+    vi.mocked(useRestaurantSuggestions).mockReturnValue({
+      status: 'success',
+      restaurants: [restaurants[1]!],
+    });
+  });
+
+  function isHighlighted(name: string) {
+    const marker = screen.getByRole('button', { name });
+    const highlighted = marker.dataset.class?.includes('pin-marker-selected');
+    // A highlighted pin is always in front of the others.
+    expect(Number(marker.dataset.zIndexOffset) > 0).toBe(highlighted);
+    return highlighted;
+  }
+
+  it('highlights no marker before a restaurant is selected', () => {
+    render(<App />);
+
+    expect(isHighlighted('Mandarina')).toBe(false);
+    expect(isHighlighted('Girassol')).toBe(false);
+  });
+
+  it('highlights the clicked marker', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+
+    expect(isHighlighted('Mandarina')).toBe(true);
+    expect(isHighlighted('Girassol')).toBe(false);
+  });
+
+  it('moves the highlight when another marker is clicked', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Girassol' }));
+
+    expect(isHighlighted('Mandarina')).toBe(false);
+    expect(isHighlighted('Girassol')).toBe(true);
+  });
+
+  it('highlights the marker of the restaurant chosen in the search', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'gira' },
+    });
+    fireEvent.click(screen.getByRole('option', { name: /Girassol/ }));
+
+    expect(isHighlighted('Girassol')).toBe(true);
+    expect(isHighlighted('Mandarina')).toBe(false);
+  });
+
+  it('removes the highlight when the panel closes', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(isHighlighted('Mandarina')).toBe(false);
   });
 });
 

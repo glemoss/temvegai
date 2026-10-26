@@ -108,7 +108,7 @@ Ao digitar no campo de busca, uma lista abaixo dele sugere restaurantes de toda 
 A legenda do mapa deixa de mostrar o pin e passa a mostrar só a folha de cada tipo (cheia para 100% vegano, contorno para opções veganas), com 24px. Os marcadores do mapa continuam com o pin. Etapa criada depois da A5.
 **Pronto quando:** a legenda mostra as duas folhas sem o pin, os marcadores do mapa continuam iguais, e a legenda é aprovada visualmente pelo dono no desktop e no celular. Com testes.
 
-### [ ] F8 — Destaque do pin selecionado
+### [x] F8 — Destaque do pin selecionado
 O pin do restaurante aberto no painel fica 1,35× maior (crescendo a partir da ponta), com um verde mais vivo, sombra mais forte e na frente dos pins vizinhos. Vale para o restaurante escolhido nas sugestões da busca e para o pin clicado no mapa, e o destaque some quando o painel fecha. Sem animação contínua. Etapa criada a partir da pendência da F6.
 **Pronto quando:** clicar num pin ou escolher uma sugestão destaca o pin do restaurante, trocar de restaurante move o destaque, fechar o painel remove o destaque, e o destaque é aprovado visualmente pelo dono no desktop e no celular. Com testes.
 
@@ -192,7 +192,7 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (F5) ~~Os 5 restaurantes do seed são todos `fully_vegan`, então a folha de contorno (opções veganas) nunca aparece no mapa de desenvolvimento. Decidir se o seed deve ganhar restaurantes `vegan_options`.~~ Resolvido depois da F6: o seed ganhou 4 bares com opções veganas indicados pelo dono (Bugio Centro, Bugio Trindade, Janela Bar e Dona Jovem). Em produção, eles entram pelo painel admin.
 - (F6) A API não tem parâmetro de limite: as sugestões recebem todos os restaurantes que combinam com o nome e o frontend mostra só os 8 primeiros. Basta com poucos dados; decidir se `GET /restaurants` deve ganhar um `limit` quando a base crescer.
 - (F6) No celular, escolher uma sugestão centraliza o restaurante na tela, mas o painel de detalhes ocupa a parte de baixo (até 60% da altura) e pode cobrir o marcador. Decidir se o mapa deve deslocar o restaurante para a parte visível acima do painel.
-- (F6) Ao escolher um restaurante nas sugestões da busca, destacar o pin dele no mapa, para ficar claro qual é entre os marcadores próximos. Decidir como será o destaque (tamanho, cor, animação) e se ele também vale para o pin clicado direto no mapa.
+- (F6) ~~Ao escolher um restaurante nas sugestões da busca, destacar o pin dele no mapa, para ficar claro qual é entre os marcadores próximos. Decidir como será o destaque (tamanho, cor, animação) e se ele também vale para o pin clicado direto no mapa.~~ Resolvido na F8: o dono escolheu o pin maior e em verde mais vivo, sem animação contínua, para o restaurante selecionado pela busca ou pelo clique.
 - (A2) Decidido no planejamento: o formulário valida com Zod (dependência nova no `/frontend`, já na tabela de stack) e o campo de bairro sugere os bairros existentes com `<datalist>` vindo de `GET /neighborhoods`.
 - (A2) As mensagens de validação da API estão em inglês. O formulário repete as regras em português e só mostra uma mensagem da API quando ela recusa algo que passou pela validação do formulário. Decidir se a API deve passar a responder em português.
 - (A2) Hoje o horário é preenchido dia a dia. Um botão para "copiar para os outros dias" economizaria trabalho no cadastro. Decidir se vale fazer.

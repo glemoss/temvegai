@@ -16,6 +16,7 @@ const PIN_LEAF_TRANSFORM = 'translate(8.5 8) scale(0.625)';
 
 const GREEN = '#2f6b3a';
 const DARK_GREEN = '#1f4d2b';
+const BRIGHT_GREEN = '#3fa34d';
 const WHITE = '#ffffff';
 
 // Fully vegan places get a solid leaf; places with vegan options get an
@@ -34,18 +35,22 @@ function leafMarkup(type: RestaurantType): string {
   );
 }
 
-function pinMarkup(type: RestaurantType): string {
+// The selected restaurant's pin is a brighter green, so it stands out from
+// the pins around it and still fits the green identity.
+function pinMarkup(type: RestaurantType, selected: boolean): string {
   const { cx, cy, r } = PIN_CIRCLE;
+  const fill = selected ? BRIGHT_GREEN : GREEN;
+  const stroke = selected ? GREEN : DARK_GREEN;
   return (
-    `<path d="${PIN}" fill="${GREEN}" stroke="${DARK_GREEN}" stroke-width="1.5" stroke-linejoin="round"/>` +
+    `<path d="${PIN}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/>` +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${WHITE}"/>` +
     `<g transform="${PIN_LEAF_TRANSFORM}">${leafMarkup(type)}</g>`
   );
 }
 
 // The pin as an SVG string, for Leaflet markers, which take plain HTML.
-export function pinSvg(type: RestaurantType): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${PIN_VIEW_BOX}" aria-hidden="true">${pinMarkup(type)}</svg>`;
+export function pinSvg(type: RestaurantType, selected = false): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${PIN_VIEW_BOX}" aria-hidden="true">${pinMarkup(type, selected)}</svg>`;
 }
 
 // React version, for the legend, the details panel and the title. It

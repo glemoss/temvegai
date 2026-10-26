@@ -20,16 +20,27 @@ const INITIAL_ZOOM = 12;
 // the way in.
 const FOCUS_MAX_ZOOM = 16;
 
-// One pin per restaurant type, anchored at its tip.
+// Keeps the selected restaurant's pin in front of the pins around it.
+const SELECTED_Z_INDEX_OFFSET = 1000;
+
+// One pin per restaurant type, anchored at its tip, and a highlighted one
+// for the selected restaurant.
 const markerIcons: Record<RestaurantType, ReturnType<typeof divIcon>> = {
-  fully_vegan: pinIcon('fully_vegan'),
-  vegan_options: pinIcon('vegan_options'),
+  fully_vegan: pinIcon('fully_vegan', false),
+  vegan_options: pinIcon('vegan_options', false),
+};
+const selectedMarkerIcons: Record<
+  RestaurantType,
+  ReturnType<typeof divIcon>
+> = {
+  fully_vegan: pinIcon('fully_vegan', true),
+  vegan_options: pinIcon('vegan_options', true),
 };
 
-function pinIcon(type: RestaurantType) {
+function pinIcon(type: RestaurantType, selected: boolean) {
   return divIcon({
-    html: pinSvg(type),
-    className: 'pin-marker',
+    html: pinSvg(type, selected),
+    className: selected ? 'pin-marker pin-marker-selected' : 'pin-marker',
     iconSize: [32, 42],
     iconAnchor: [16, 41],
   });
@@ -104,6 +115,7 @@ function FocusBounds({ bounds }: { bounds: MapBounds | undefined }) {
 interface RestaurantMapProps {
   restaurants: Restaurant[];
   focusBounds: MapBounds | undefined;
+  selectedId: string | undefined;
   onSelect: (restaurant: Restaurant) => void;
   onBoundsChange: (bounds: MapBounds) => void;
 }
@@ -111,6 +123,7 @@ interface RestaurantMapProps {
 export function RestaurantMap({
   restaurants,
   focusBounds,
+  selectedId,
   onSelect,
   onBoundsChange,
 }: RestaurantMapProps) {
@@ -140,15 +153,21 @@ export function RestaurantMap({
       />
       <BoundsWatcher onChange={onBoundsChange} />
       <FocusBounds bounds={focusBounds} />
-      {restaurants.map((restaurant) => (
-        <Marker
-          key={restaurant.id}
-          position={[restaurant.latitude, restaurant.longitude]}
-          icon={markerIcons[restaurant.type]}
-          title={restaurant.name}
-          eventHandlers={{ click: () => onSelect(restaurant) }}
-        />
-      ))}
+      {restaurants.map((restaurant) => {
+        const selected = restaurant.id === selectedId;
+        return (
+          <Marker
+            key={restaurant.id}
+            position={[restaurant.latitude, restaurant.longitude]}
+            icon={
+              (selected ? selectedMarkerIcons : markerIcons)[restaurant.type]
+            }
+            zIndexOffset={selected ? SELECTED_Z_INDEX_OFFSET : 0}
+            title={restaurant.name}
+            eventHandlers={{ click: () => onSelect(restaurant) }}
+          />
+        );
+      })}
     </MapContainer>
   );
 }
