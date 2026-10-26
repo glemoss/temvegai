@@ -130,6 +130,10 @@ Reaproveita o formulário da A2, preenchido com os dados atuais.
 Botão de remover na lista, com confirmação antes de apagar.
 **Pronto quando:** cancelar não apaga nada, e confirmar remove o restaurante da lista e do mapa público.
 
+### [ ] A5 — Site sem protocolo no site público
+O painel de detalhes do site público mostra o site sem o protocolo, sem `www.` e sem a barra final (ex.: `https://www.mandarina.com.br/` aparece como `mandarina.com.br`), com o link ainda apontando para o endereço completo. O formulário do admin e a API continuam exigindo o endereço com `http://` ou `https://`, porque o site pode não ter `https`. Etapa criada durante a revisão da A3.
+**Pronto quando:** o site público mostra o site sem protocolo, `www.` e barra final, e o link abre o endereço salvo, com `http` ou `https`. Com testes.
+
 ---
 
 ## Fase U — Interface com shadcn/ui
