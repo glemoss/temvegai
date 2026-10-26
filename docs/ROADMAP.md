@@ -108,6 +108,10 @@ Ao digitar no campo de busca, uma lista abaixo dele sugere restaurantes de toda 
 A legenda do mapa deixa de mostrar o pin e passa a mostrar só a folha de cada tipo (cheia para 100% vegano, contorno para opções veganas), com 24px. Os marcadores do mapa continuam com o pin. Etapa criada depois da A5.
 **Pronto quando:** a legenda mostra as duas folhas sem o pin, os marcadores do mapa continuam iguais, e a legenda é aprovada visualmente pelo dono no desktop e no celular. Com testes.
 
+### [ ] F8 — Destaque do pin selecionado
+O pin do restaurante aberto no painel fica 1,35× maior (crescendo a partir da ponta), com um verde mais vivo, sombra mais forte e na frente dos pins vizinhos. Vale para o restaurante escolhido nas sugestões da busca e para o pin clicado no mapa, e o destaque some quando o painel fecha. Sem animação contínua. Etapa criada a partir da pendência da F6.
+**Pronto quando:** clicar num pin ou escolher uma sugestão destaca o pin do restaurante, trocar de restaurante move o destaque, fechar o painel remove o destaque, e o destaque é aprovado visualmente pelo dono no desktop e no celular. Com testes.
+
 ---
 
 ## Fase A — Painel admin
