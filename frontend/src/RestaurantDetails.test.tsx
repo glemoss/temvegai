@@ -13,7 +13,7 @@ const restaurant: Restaurant = {
   latitude: -27.661458,
   longitude: -48.499222,
   phone: '(48) 3333-4444',
-  website: 'https://mandarina.com.br',
+  website: 'https://www.mandarina.com.br/',
   instagram: 'mandarinafloripa',
   openingHours: {
     monday: [{ opens: '10:30', closes: '14:30' }],
@@ -47,9 +47,17 @@ describe('RestaurantDetails', () => {
       '<span>Segunda a sexta</span><span>10h30–14h30</span>',
     );
     expect(html).toContain('href="tel:(48) 3333-4444"');
-    expect(html).toContain('href="https://mandarina.com.br"');
+    expect(html).toContain('href="https://www.mandarina.com.br/"');
+    expect(html).toContain('>mandarina.com.br</a>');
     expect(html).toContain('href="https://www.instagram.com/mandarinafloripa"');
     expect(html).toContain('@mandarinafloripa');
+  });
+
+  it('links to the saved website when it uses http', () => {
+    const html = render({ website: 'http://bugio.com.br/' });
+
+    expect(html).toContain('href="http://bugio.com.br/"');
+    expect(html).toContain('>bugio.com.br</a>');
   });
 
   it('labels restaurants with vegan options', () => {

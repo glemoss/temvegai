@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Restaurant } from './api/restaurants';
+import { displayWebsite } from './displayWebsite';
 import { LeafIcon } from './leaf';
 import { OpeningHours } from './OpeningHours';
 import { TYPE_LABELS } from './restaurantTypeLabels';
@@ -121,7 +122,7 @@ export function RestaurantDetails({
                 target="_blank"
                 rel="noreferrer"
               >
-                {restaurant.website}
+                {displayWebsite(restaurant.website)}
               </a>
             </dd>
           </>
