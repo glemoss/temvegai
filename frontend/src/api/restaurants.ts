@@ -179,3 +179,17 @@ export function updateRestaurant(
 ): Promise<Restaurant> {
   return sendRestaurant('PUT', `/restaurants/${encodeURIComponent(id)}`, input);
 }
+
+export async function deleteRestaurant(id: string): Promise<void> {
+  const path = `/restaurants/${encodeURIComponent(id)}`;
+  const response = await fetch(`${config.apiUrl}${path}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (response.status === 401) throw new UnauthenticatedError();
+  if (response.status === 404) throw new RestaurantNotFoundError();
+  if (!response.ok) {
+    throw new Error(`DELETE ${path} respondeu ${response.status}`);
+  }
+}

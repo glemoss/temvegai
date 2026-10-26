@@ -1,4 +1,4 @@
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -14,13 +14,15 @@ import {
 } from '@/components/ui/table';
 import { normalize } from '../normalize';
 import { TYPE_LABELS } from '../restaurantTypeLabels';
+import type { Restaurant } from '../api/restaurants';
 import type { AdminRestaurantsState } from './useAdminRestaurants';
 
 interface RestaurantListProps {
   state: AdminRestaurantsState;
+  onDelete: (restaurant: Restaurant) => void;
 }
 
-export function RestaurantList({ state }: RestaurantListProps) {
+export function RestaurantList({ state, onDelete }: RestaurantListProps) {
   const [search, setSearch] = useState('');
   const searchId = useId();
   const hasRestaurants =
@@ -64,7 +66,7 @@ export function RestaurantList({ state }: RestaurantListProps) {
           </Link>
         </Button>
       </div>
-      <RestaurantTable state={state} search={search} />
+      <RestaurantTable state={state} search={search} onDelete={onDelete} />
     </section>
   );
 }
@@ -72,9 +74,11 @@ export function RestaurantList({ state }: RestaurantListProps) {
 function RestaurantTable({
   state,
   search,
+  onDelete,
 }: {
   state: AdminRestaurantsState;
   search: string;
+  onDelete: (restaurant: Restaurant) => void;
 }) {
   if (state.status === 'loading') {
     return <p role="status">Carregando restaurantes…</p>;
@@ -141,7 +145,7 @@ function RestaurantTable({
               <TableCell className="px-4 py-3">
                 {restaurant.neighborhood}
               </TableCell>
-              <TableCell className="px-2 py-1 text-right">
+              <TableCell className="px-2 py-1 text-right whitespace-nowrap">
                 <Button
                   asChild
                   variant="ghost"
@@ -155,6 +159,17 @@ function RestaurantTable({
                   >
                     <Pencil className="size-5" />
                   </Link>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-lg"
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label={`Remover ${restaurant.name}`}
+                  title="Remover"
+                  onClick={() => onDelete(restaurant)}
+                >
+                  <Trash2 className="size-5" />
                 </Button>
               </TableCell>
             </TableRow>

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createRestaurant,
+  deleteRestaurant,
   fetchRestaurant,
   fetchRestaurants,
   RestaurantNotFoundError,
@@ -290,6 +291,50 @@ describe('updateRestaurant', () => {
 
     await expect(updateRestaurant(restaurant.id, input)).rejects.toThrow(
       `PUT /restaurants/${restaurant.id} respondeu 500`,
+    );
+  });
+});
+
+describe('deleteRestaurant', () => {
+  it('deletes /restaurants/:id sending cookies', async () => {
+    const fetchMock = stubFetch(new Response(null, { status: 204 }));
+
+    await expect(deleteRestaurant(restaurant.id)).resolves.toBeUndefined();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `http://api.test/restaurants/${restaurant.id}`,
+      { method: 'DELETE', credentials: 'include' },
+    );
+  });
+
+  it('throws UnauthenticatedError on 401', async () => {
+    stubFetch(
+      Response.json({ error: { code: 'UNAUTHENTICATED' } }, { status: 401 }),
+    );
+
+    await expect(deleteRestaurant(restaurant.id)).rejects.toBeInstanceOf(
+      UnauthenticatedError,
+    );
+  });
+
+  it('throws RestaurantNotFoundError on 404', async () => {
+    stubFetch(
+      Response.json(
+        { error: { code: 'RESTAURANT_NOT_FOUND' } },
+        { status: 404 },
+      ),
+    );
+
+    await expect(deleteRestaurant(restaurant.id)).rejects.toBeInstanceOf(
+      RestaurantNotFoundError,
+    );
+  });
+
+  it('throws a generic error on other failures', async () => {
+    stubFetch(Response.json({}, { status: 500 }));
+
+    await expect(deleteRestaurant(restaurant.id)).rejects.toThrow(
+      `DELETE /restaurants/${restaurant.id} respondeu 500`,
     );
   });
 });

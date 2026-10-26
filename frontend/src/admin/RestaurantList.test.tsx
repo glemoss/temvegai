@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Restaurant } from '../api/restaurants';
 import { RestaurantList } from './RestaurantList';
 import type { AdminRestaurantsState } from './useAdminRestaurants';
@@ -50,10 +50,11 @@ function typeSearch(value: string) {
 
 function renderList(
   state: AdminRestaurantsState = { status: 'success', restaurants },
+  onDelete: (restaurant: Restaurant) => void = () => {},
 ) {
   render(
     <MemoryRouter>
-      <RestaurantList state={state} />
+      <RestaurantList state={state} onDelete={onDelete} />
     </MemoryRouter>,
   );
 }
@@ -142,6 +143,15 @@ describe('RestaurantList', () => {
         .getByRole('link', { name: 'Editar Janela Bar' })
         .getAttribute('href'),
     ).toBe('/restaurants/2/edit');
+  });
+
+  it('asks to remove the restaurant of the row', () => {
+    const onDelete = vi.fn();
+    renderList({ status: 'success', restaurants }, onDelete);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remover Janela Bar' }));
+
+    expect(onDelete).toHaveBeenCalledExactlyOnceWith(restaurants[1]);
   });
 
   it('puts the add button on the line of the search', () => {
