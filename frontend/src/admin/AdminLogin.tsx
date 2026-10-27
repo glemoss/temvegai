@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,8 +9,10 @@ import {
   TooManyAttemptsError,
 } from '../api/auth';
 import { AppTitle } from '../AppTitle';
+import { useCurrentAdmin } from './useCurrentAdmin';
 
 export function AdminLogin() {
+  const session = useCurrentAdmin();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +38,21 @@ export function AdminLogin() {
       );
       setSubmitting(false);
     }
+  }
+
+  // An admin who is already logged in goes straight to the panel. When the
+  // session cannot be checked, the form is shown, since logging in may
+  // still work.
+  if (session.status === 'authenticated') {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (session.status === 'loading') {
+    return (
+      <main className="flex min-h-full items-center justify-center bg-secondary px-4 py-6">
+        <p role="status">Verificando sessão…</p>
+      </main>
+    );
   }
 
   return (

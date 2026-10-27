@@ -14,11 +14,13 @@ import {
   TooManyAttemptsError,
 } from '../api/auth';
 import { AdminLogin } from './AdminLogin';
+import { useCurrentAdmin } from './useCurrentAdmin';
 
 vi.mock('../api/auth', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../api/auth')>()),
   login: vi.fn(),
 }));
+vi.mock('./useCurrentAdmin', () => ({ useCurrentAdmin: vi.fn() }));
 
 function renderLogin() {
   render(
@@ -43,6 +45,7 @@ function submit(email: string, password: string) {
 
 beforeEach(() => {
   vi.mocked(login).mockReset();
+  vi.mocked(useCurrentAdmin).mockReturnValue({ status: 'unauthenticated' });
 });
 
 afterEach(() => {
@@ -122,5 +125,31 @@ describe('AdminLogin', () => {
       name: 'Entrando…',
     }) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
+  });
+
+  it('opens the panel when the admin is already logged in', () => {
+    vi.mocked(useCurrentAdmin).mockReturnValue({
+      status: 'authenticated',
+      admin: { id: '1', email: 'admin@example.com' },
+    });
+    renderLogin();
+
+    expect(screen.getByText('Painel aberto')).toBeTruthy();
+    expect(screen.queryByLabelText('E-mail')).toBeNull();
+  });
+
+  it('waits for the session check before showing the form', () => {
+    vi.mocked(useCurrentAdmin).mockReturnValue({ status: 'loading' });
+    renderLogin();
+
+    expect(screen.getByRole('status').textContent).toBe('Verificando sessão…');
+    expect(screen.queryByLabelText('E-mail')).toBeNull();
+  });
+
+  it('shows the form when the session cannot be checked', () => {
+    vi.mocked(useCurrentAdmin).mockReturnValue({ status: 'error' });
+    renderLogin();
+
+    expect(screen.getByLabelText('E-mail')).toBeTruthy();
   });
 });
