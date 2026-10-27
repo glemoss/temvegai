@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
@@ -29,6 +29,7 @@ export function App() {
   // to. A new object on every choice, so choosing the same restaurant
   // again moves the map back to it.
   const [chosenBounds, setChosenBounds] = useState<MapBounds>();
+  const headerRef = useRef<HTMLElement>(null);
 
   const state = useRestaurants({ type, neighborhood, name, bounds });
   const neighborhoodsState = useNeighborhoods();
@@ -89,7 +90,10 @@ export function App() {
         loading, error and empty messages. Clicks around them reach the
         map. */}
       <div className="pointer-events-none absolute top-6 left-1/2 z-(--z-overlay) flex w-[26rem] max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-col items-center gap-2 *:pointer-events-auto max-sm:top-4 max-sm:right-2 max-sm:left-2 max-sm:w-auto max-sm:max-w-none max-sm:translate-x-0">
-        <header className="w-full rounded-lg bg-card px-4 py-3 shadow-(--shadow) max-sm:px-3 max-sm:pt-2.5">
+        <header
+          ref={headerRef}
+          className="w-full rounded-lg bg-card px-4 py-3 shadow-(--shadow) max-sm:px-3 max-sm:pt-2.5"
+        >
           <AppTitle />
           <RestaurantFilters
             type={type}
@@ -136,7 +140,9 @@ export function App() {
       <RestaurantMap
         restaurants={restaurants}
         focusBounds={focusBounds}
+        focusIsSelected={chosenBounds !== undefined}
         selectedId={selected?.id}
+        headerRef={headerRef}
         onSelect={setSelected}
         onBoundsChange={setBounds}
       />

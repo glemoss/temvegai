@@ -21,6 +21,11 @@ const fakeMap = vi.hoisted(() => ({
   }),
   fitBounds: vi.fn(),
   setView: vi.fn(),
+  // A 400 by 800 map at the top of the page.
+  getSize: () => ({ x: 400, y: 800 }),
+  getContainer: () => ({ getBoundingClientRect: () => ({ top: 0 }) }),
+  latLngToContainerPoint: vi.fn(),
+  panBy: vi.fn(),
 }));
 
 // Leaflet needs a real browser to lay out the map, so the map components
@@ -711,5 +716,97 @@ describe('App empty state', () => {
     expect(screen.getByRole('status').textContent).not.toContain(
       'Nenhum restaurante',
     );
+  });
+});
+
+// jsdom lays nothing out, so the header ends at the top of the map and the
+// selected pin goes 10rem (160px) below it, above the panel, which starts
+// at 320px.
+describe('App on narrow screens', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(width < 40rem)',
+    }));
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants,
+    });
+    vi.mocked(useRestaurantSuggestions).mockReturnValue({
+      status: 'success',
+      restaurants: [restaurants[1]!],
+    });
+    fakeMap.panBy.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('puts the chosen restaurant above the details panel', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'gira' },
+    });
+    fireEvent.click(screen.getByRole('option', { name: /Girassol/ }));
+
+    expect(fakeMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [-27.5969, -48.5495],
+        [-27.5969, -48.5495],
+      ],
+      expect.objectContaining({
+        padding: [32, 32],
+        paddingBottomRight: [32, 512],
+      }),
+    );
+  });
+
+  it('keeps a neighborhood in the middle of the map', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Bairro'), {
+      target: { value: 'Campeche' },
+    });
+
+    expect(fakeMap.fitBounds).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.not.objectContaining({ paddingBottomRight: expect.anything() }),
+    );
+  });
+
+  it('moves a clicked pin that the details panel would cover', () => {
+    fakeMap.latLngToContainerPoint.mockReturnValue({ x: 200, y: 600 });
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+
+    expect(fakeMap.panBy).toHaveBeenCalledWith([0, 440], { animate: true });
+    expect(screen.getByRole('heading', { name: 'Mandarina' })).toBeTruthy();
+  });
+
+  it('leaves a clicked pin above the details panel where it is', () => {
+    fakeMap.latLngToContainerPoint.mockReturnValue({ x: 200, y: 250 });
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+
+    expect(fakeMap.panBy).not.toHaveBeenCalled();
+  });
+});
+
+describe('App on wide screens', () => {
+  it('does not move a clicked pin', () => {
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants,
+    });
+    fakeMap.panBy.mockClear();
+    fakeMap.latLngToContainerPoint.mockReturnValue({ x: 200, y: 600 });
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+
+    expect(fakeMap.panBy).not.toHaveBeenCalled();
   });
 });
