@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Copy, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { TimeInterval, Weekday, WeeklyHours } from '../api/restaurants';
@@ -38,8 +38,8 @@ function weekError(errors: FormErrors): string | undefined {
 }
 
 // A table with a column per day of the week and a row per interval; a day
-// without intervals is closed. The last row has the add button of each
-// day.
+// without intervals is closed. The last row has the add and copy buttons
+// of each day.
 export function OpeningHoursInput({
   value,
   errors,
@@ -49,6 +49,15 @@ export function OpeningHoursInput({
 
   function setDay(day: Weekday, intervals: TimeInterval[]) {
     onChange({ ...value, [day]: intervals });
+  }
+
+  // Replaces the hours of every other day with the hours of `day`.
+  function copyToOtherDays(day: Weekday) {
+    onChange(
+      Object.fromEntries(
+        WEEK.map((other) => [other, value[day].map((item) => ({ ...item }))]),
+      ) as WeeklyHours,
+    );
   }
 
   function cell(day: Weekday, index: number) {
@@ -142,17 +151,29 @@ export function OpeningHoursInput({
             <tr>
               {WEEK.map((day) => (
                 <td key={day} className={CELL}>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    aria-label={`Adicionar intervalo em ${DAY_NAMES[day]}`}
-                    title="Adicionar intervalo"
-                    onClick={() =>
-                      setDay(day, [...value[day], { opens: '', closes: '' }])
-                    }
-                  >
-                    <Plus />
-                  </Button>
+                  <div className="flex justify-center gap-1">
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      aria-label={`Adicionar intervalo em ${DAY_NAMES[day]}`}
+                      title="Adicionar intervalo"
+                      onClick={() =>
+                        setDay(day, [...value[day], { opens: '', closes: '' }])
+                      }
+                    >
+                      <Plus />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label={`Copiar horário de ${DAY_NAMES[day]} para os outros dias`}
+                      title="Copiar para os outros dias"
+                      onClick={() => copyToOtherDays(day)}
+                    >
+                      <Copy />
+                    </Button>
+                  </div>
                 </td>
               ))}
             </tr>

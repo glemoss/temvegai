@@ -122,4 +122,47 @@ describe('OpeningHoursInput', () => {
         .getAttribute('aria-invalid'),
     ).toBe('true');
   });
+
+  it('copies the hours of a day to the other days', () => {
+    const tuesday = [
+      { opens: '11:00', closes: '15:00' },
+      { opens: '18:00', closes: '23:00' },
+    ];
+    const onChange = renderInput({
+      ...emptyWeek,
+      monday: [{ opens: '08:00', closes: '12:00' }],
+      tuesday,
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Copiar horário de terça para os outros dias',
+      }),
+    );
+
+    expect(onChange).toHaveBeenCalledWith({
+      monday: tuesday,
+      tuesday,
+      wednesday: tuesday,
+      thursday: tuesday,
+      friday: tuesday,
+      saturday: tuesday,
+      sunday: tuesday,
+    });
+  });
+
+  it('closes every day when a closed day is copied', () => {
+    const onChange = renderInput({
+      ...emptyWeek,
+      monday: [{ opens: '08:00', closes: '12:00' }],
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Copiar horário de domingo para os outros dias',
+      }),
+    );
+
+    expect(onChange).toHaveBeenCalledWith(emptyWeek);
+  });
 });
