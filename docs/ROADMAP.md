@@ -211,7 +211,7 @@ Publicação gratuita, para portfólio, sem domínio próprio. Site e API ficam 
 
 Para que a troca da API por um container (ex.: Cloud Run) continue barata depois, a API não usa nenhum serviço próprio da Vercel (KV, Edge Config, Postgres, `waitUntil`), tem build próprio com `tsc` e lê toda a configuração de produção de variáveis de ambiente. Os limites dos planos gratuitos são conferidos na etapa que usa cada plataforma.
 
-### [ ] D0 — Build de produção
+### [x] D0 — Build de produção
 Script `build` (compila com `tsc` para `dist`) e `start` (roda `dist/server.js` com `node`, sem `tsx`) no backend, e `build` (`vite build`) no frontend.
 **Pronto quando:** no backend, `npm run build && npm start` sobe a API contra o banco local e `GET /health` responde 200; no frontend, `npm run build` gera o `dist`, e o site servido por ele (`vite preview`) abre o mapa e o painel contra a API local.
 
@@ -289,3 +289,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (U2) Com o select nativo, o Bairro desabilitado (enquanto carrega ou com erro) aparece com opacidade reduzida, em vez do fundo cinza da F5.
 - (A3) Decidido pelo dono: se o restaurante for removido com a edição aberta, salvar mostra o aviso "Oops, esse restaurante não existe mais.", fecha o modal e recarrega a lista.
 - (B13) ~~O banco ordena os textos pelos bytes, com maiúsculas antes de minúsculas: a imagem `postgres:18-alpine` usa musl, que ignora a collation `en_US.utf8`. Um bairro ou restaurante em minúsculas ("lagoa da conceicao") aparece depois de "Trindade", e o repositório em memória, que usa `localeCompare`, ordena diferente. Decidir se a ordenação deve ignorar maiúsculas (ex.: `order by lower(name)` ou uma collation ICU).~~ Resolvido na B15: a ordem usa `lower(unaccent(...)) COLLATE "C"`, igual em qualquer Postgres, e o repositório em memória segue a mesma regra.
+- (D0) O `vite build` avisa que o JavaScript do site passa de 500 kB depois de minificado (686 kB, 209 kB com gzip), porque mapa, site e painel admin vão num arquivo só. O build funciona; decidir se vale separar o painel admin (e talvez o Leaflet) com `import()` dinâmico.

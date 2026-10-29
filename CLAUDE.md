@@ -84,6 +84,8 @@ Backend: rodar dentro de `/backend`, com Node 24 (`nvm use` na raiz lê o `.nvmr
 | Comando | O que faz |
 |---|---|
 | `npm run dev` | Sobe a API em `http://localhost:3000` com recarga automática |
+| `npm run build` | Compila com `tsc` para `dist` |
+| `npm start` | Roda a API compilada em `dist`, com `node` |
 | `npm test` | Roda os testes com Vitest |
 | `npm run lint` | ESLint e verificação de formatação do Prettier |
 | `npm run typecheck` | Checagem de tipos com `tsc --noEmit` |
@@ -98,6 +100,8 @@ Frontend: rodar dentro de `/frontend`, com o mesmo Node 24.
 | Comando | O que faz |
 |---|---|
 | `npm run dev` | Sobe o site em `http://localhost:5173` com recarga automática |
+| `npm run build` | Gera o site de produção em `dist` com `vite build` |
+| `npm run preview` | Serve o `dist` em `http://localhost:4173` |
 | `npm test` | Roda os testes com Vitest |
 | `npm run lint` | ESLint e verificação de formatação do Prettier |
 | `npm run typecheck` | Checagem de tipos com `tsc --noEmit` |
