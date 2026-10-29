@@ -136,6 +136,43 @@ describe('read routes', () => {
   });
 });
 
+describe('GET /restaurants with limit', () => {
+  it('returns only the first restaurants in name order', async () => {
+    await setup();
+    await asAdmin({ method: 'POST', url: '/restaurants', payload: body });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/restaurants?limit=1',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(
+      response.json().restaurants.map(({ name }: Restaurant) => name),
+    ).toEqual(['Kairú']);
+  });
+
+  it.each(['0', '101', '1.5', 'abc', ''])(
+    'responds 400 for limit=%s',
+    async (limit) => {
+      await setup();
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `/restaurants?limit=${limit}`,
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({
+        error: {
+          code: 'VALIDATION_ERROR',
+          details: [expect.objectContaining({ field: 'limit' })],
+        },
+      });
+    },
+  );
+});
+
 describe('POST /restaurants', () => {
   it('responds 201 with the created restaurant', async () => {
     await setup();
@@ -271,7 +308,7 @@ describe('POST /restaurants', () => {
       },
     },
     {
-      field: 'openingHours',
+      field: 'openingHours.holiday',
       payload: {
         ...body,
         openingHours: { ...body.openingHours, holiday: [] },
@@ -296,26 +333,49 @@ describe('POST /restaurants', () => {
     });
   });
 
-  it('responds 400 for an unknown field', async () => {
+  it('responds 400 with one detail for each unknown field', async () => {
     await setup();
 
     const response = await asAdmin({
       method: 'POST',
       url: '/restaurants',
-      payload: { ...body, openinghours: 'Seg a sex' },
+      payload: { ...body, openinghours: 'Seg a sex', city: 'Florianópolis' },
     });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toMatchObject({
+    expect(response.json()).toEqual({
       error: {
         code: 'VALIDATION_ERROR',
+        message: 'Dados inválidos.',
         details: [
-          expect.objectContaining({
-            message: expect.stringContaining('openinghours'),
-          }),
+          { field: 'openinghours', message: 'Campo desconhecido.' },
+          { field: 'city', message: 'Campo desconhecido.' },
         ],
       },
     });
+  });
+
+  it('responds with the validation messages in Portuguese', async () => {
+    await setup();
+
+    const response = await asAdmin({
+      method: 'POST',
+      url: '/restaurants',
+      payload: {
+        ...withMonday([{ opens: '11:00', closes: '11:00' }]),
+        name: '',
+        instagram: 'instagram.com/novoveg',
+      },
+    });
+
+    expect(response.json().error.details).toEqual([
+      { field: 'name', message: 'Campo obrigatório' },
+      { field: 'instagram', message: 'Usuário do Instagram inválido' },
+      {
+        field: 'openingHours.monday.0',
+        message: 'Abertura e fechamento devem ser diferentes',
+      },
+    ]);
   });
 });
 

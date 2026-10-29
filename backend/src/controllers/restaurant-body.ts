@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const requiredText = z.string().trim().min(1);
+const requiredText = z.string().trim().min(1, 'Campo obrigatório');
 
 // A missing field and an empty value are both stored as null, so a PUT
 // without an optional field clears it.
@@ -24,17 +24,17 @@ const instagramUsername = z
   .string()
   .transform((value) => value.replace(/^@/, ''))
   .pipe(
-    z.string().regex(/^[A-Za-z0-9._]{1,30}$/, 'Invalid Instagram username'),
+    z.string().regex(/^[A-Za-z0-9._]{1,30}$/, 'Usuário do Instagram inválido'),
   );
 
 const time = z
   .string()
-  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected a time as HH:MM');
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Horário deve estar no formato HH:MM');
 
 const timeInterval = z
   .strictObject({ opens: time, closes: time })
   .refine(({ opens, closes }) => opens !== closes, {
-    message: 'Opening and closing times must differ',
+    message: 'Abertura e fechamento devem ser diferentes',
   });
 
 // Intervals of a day must be in order and must not overlap. Only the last
@@ -45,14 +45,14 @@ const dayHours = z.array(timeInterval).superRefine((intervals, context) => {
     if (previous && interval.opens < previous.closes) {
       context.addIssue({
         code: 'custom',
-        message: 'Intervals must be in order and must not overlap',
+        message: 'Intervalos devem estar em ordem e sem sobreposição',
         path: [index],
       });
     }
     if (interval.closes < interval.opens && index < intervals.length - 1) {
       context.addIssue({
         code: 'custom',
-        message: 'Only the last interval of a day may end after midnight',
+        message: 'Só o último intervalo do dia pode passar da meia-noite',
         path: [index],
       });
     }
@@ -80,7 +80,13 @@ export const restaurantBodySchema = z.strictObject({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   phone: optionalText(),
-  website: optionalText(website),
-  instagram: optionalText(instagramUsername),
+  website: optionalText(website).meta({
+    format: 'uri',
+    description: 'Endereço completo, com `http://` ou `https://`.',
+  }),
+  instagram: optionalText(instagramUsername).meta({
+    pattern: '^@?[A-Za-z0-9._]{1,30}$',
+    description: 'Usuário do Instagram, com ou sem `@`; é salvo sem o `@`.',
+  }),
   openingHours: weeklyHours.nullish().transform((value) => value ?? null),
 });

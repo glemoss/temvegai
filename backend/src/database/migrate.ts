@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import type { Knex } from 'knex';
-import { loadEnvOrExit } from '../config/env.js';
+import { databaseEnvSchema, loadEnvOrExit } from '../config/env.js';
 import { createDatabase } from './connection.js';
 
 const command = process.argv[2];
@@ -10,7 +10,7 @@ if (command !== 'latest' && command !== 'rollback') {
   process.exit(1);
 }
 
-const env = loadEnvOrExit();
+const env = loadEnvOrExit(databaseEnvSchema);
 const db = createDatabase(env.DATABASE_URL);
 const config: Knex.MigratorConfig = {
   directory: fileURLToPath(new URL('./migrations', import.meta.url)),

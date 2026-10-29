@@ -1,7 +1,7 @@
 import { createInterface } from 'node:readline';
 import { Writable } from 'node:stream';
 import { z } from 'zod';
-import { loadEnvOrExit } from '../config/env.js';
+import { databaseEnvSchema, loadEnvOrExit } from '../config/env.js';
 import { createDatabase } from '../database/connection.js';
 import { KnexUserRepository } from '../repositories/knex/knex-user.repository.js';
 import { Argon2PasswordHasher } from '../services/argon2-password-hasher.js';
@@ -78,7 +78,7 @@ function errorMessage(error: unknown): string | null {
   return null;
 }
 
-const env = loadEnvOrExit();
+const env = loadEnvOrExit(databaseEnvSchema);
 const db = createDatabase(env.DATABASE_URL);
 const createAdmin = new CreateAdminUseCase(
   new KnexUserRepository(db),

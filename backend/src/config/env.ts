@@ -1,8 +1,13 @@
 import { z } from 'zod';
 
-const envSchema = z.object({
-  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+// What the commands that only touch the database (migrate, seed,
+// create-admin) need.
+export const databaseEnvSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+});
+
+export const serverEnvSchema = databaseEnvSchema.extend({
+  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   JWT_SECRET: z.string().min(32),
   NODE_ENV: z.enum(['development', 'production']).default('development'),
   // Origin of the frontend allowed by CORS. Reduced to scheme, host and port,
@@ -12,8 +17,6 @@ const envSchema = z.object({
     .transform((value) => new URL(value).origin),
 });
 
-export type Env = z.infer<typeof envSchema>;
-
 export class InvalidEnvError extends Error {
   constructor(problems: string[]) {
     super(`Invalid environment variables:\n${problems.join('\n')}`);
@@ -21,8 +24,11 @@ export class InvalidEnvError extends Error {
   }
 }
 
-export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const result = envSchema.safeParse(source);
+export function loadEnv<Schema extends z.ZodType>(
+  schema: Schema,
+  source: NodeJS.ProcessEnv = process.env,
+): z.infer<Schema> {
+  const result = schema.safeParse(source);
 
   if (!result.success) {
     throw new InvalidEnvError(
@@ -35,9 +41,11 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   return result.data;
 }
 
-export function loadEnvOrExit(): Env {
+export function loadEnvOrExit<Schema extends z.ZodType>(
+  schema: Schema,
+): z.infer<Schema> {
   try {
-    return loadEnv();
+    return loadEnv(schema);
   } catch (error) {
     if (error instanceof InvalidEnvError) {
       console.error(error.message);

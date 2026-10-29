@@ -1,15 +1,9 @@
 import type { Knex } from 'knex';
-import type { Weekday, WeeklyHours } from '../../entities/restaurant.js';
-
-const WEEKDAYS: Weekday[] = [
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-  'saturday',
-  'sunday',
-];
+import {
+  WEEKDAYS,
+  type Weekday,
+  type WeeklyHours,
+} from '../../entities/restaurant.js';
 
 // The days from first to last, Monday first: days('monday', 'friday').
 function days(first: Weekday, last: Weekday = first): Weekday[] {

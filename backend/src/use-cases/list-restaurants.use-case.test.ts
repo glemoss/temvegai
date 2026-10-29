@@ -86,6 +86,18 @@ describe('ListRestaurantsUseCase', () => {
     ]);
   });
 
+  it('filters by neighborhood ignoring accents', async () => {
+    const useCase = new ListRestaurantsUseCase(
+      new InMemoryRestaurantRepository([
+        makeRestaurant({ id: '4', neighborhood: 'Lagoa da Conceição' }),
+      ]),
+    );
+
+    expect(
+      await useCase.execute({ neighborhood: 'lagoa da conceicao' }),
+    ).toHaveLength(1);
+  });
+
   it('filters by part of the name ignoring case and accents', async () => {
     expect(await makeUseCase().execute({ name: 'KAIRU' })).toEqual([kairu]);
     expect(await makeUseCase().execute({ name: 'veg' })).toEqual([desvioVeg]);
@@ -116,6 +128,19 @@ describe('ListRestaurantsUseCase', () => {
         neighborhood: 'Centro',
         bounds: downtown,
       }),
+    ).toEqual([desvioVeg]);
+  });
+
+  it('returns only the first restaurants in name order with a limit', async () => {
+    expect(await makeUseCase().execute({ limit: 2 })).toEqual([
+      desvioVeg,
+      kairu,
+    ]);
+  });
+
+  it('applies the limit after the filters', async () => {
+    expect(
+      await makeUseCase().execute({ neighborhood: 'Centro', limit: 1 }),
     ).toEqual([desvioVeg]);
   });
 

@@ -9,6 +9,16 @@ export type Weekday =
   | 'saturday'
   | 'sunday';
 
+export const WEEKDAYS: Weekday[] = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+];
+
 // Times are "HH:MM". A closing at or before the opening, as in
 // 18:00–02:00, ends on the next day.
 export interface TimeInterval {

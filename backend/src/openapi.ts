@@ -91,7 +91,7 @@ export const openApiDocument: OpenApiDocument = {
         tags: ['restaurants'],
         summary: 'Lista restaurantes, com filtros opcionais',
         description:
-          'Os quatro parâmetros da área do mapa (`minLat`, `maxLat`, `minLng`, `maxLng`) são enviados juntos ou nenhum. A busca por nome (`q`) ignora maiúsculas e acentos.',
+          'Os quatro parâmetros da área do mapa (`minLat`, `maxLat`, `minLng`, `maxLng`) são enviados juntos ou nenhum. O bairro (`neighborhood`) e a busca por nome (`q`) ignoram maiúsculas e acentos. Sem `limit`, vêm todos os restaurantes; com ele, só os primeiros em ordem de nome.',
         parameters: toParameters(listRestaurantsQuery, 'query'),
         responses: {
           200: { description: 'Lista de restaurantes' },
@@ -149,7 +149,7 @@ export const openApiDocument: OpenApiDocument = {
         tags: ['neighborhoods'],
         summary: 'Lista os bairros com restaurantes',
         description:
-          'Cada bairro vem uma vez só, sem diferenciar maiúsculas, com a área (`bounds`) que cobre os seus restaurantes. O nome serve para o filtro `neighborhood` de `GET /restaurants`.',
+          'Cada bairro vem uma vez só, sem diferenciar maiúsculas nem acentos, com a área (`bounds`) que cobre os seus restaurantes. O nome é a grafia usada pela maioria dos restaurantes do bairro (no empate, a com acento) e serve para o filtro `neighborhood` de `GET /restaurants`.',
         responses: { 200: { description: 'Lista de bairros' } },
       },
     },

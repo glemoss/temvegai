@@ -12,6 +12,19 @@ interface ErrorBody {
   };
 }
 
+// Zod reports all unknown fields of an object in one issue, with the object
+// as the path, so each unknown field becomes a detail of its own.
+function validationDetails(error: ZodError): ErrorBody['error']['details'] {
+  return error.issues.flatMap((issue) =>
+    issue.code === 'unrecognized_keys'
+      ? issue.keys.map((key) => ({
+          field: [...issue.path, key].join('.'),
+          message: 'Campo desconhecido.',
+        }))
+      : [{ field: issue.path.join('.'), message: issue.message }],
+  );
+}
+
 function errorBody(
   code: string,
   message: string,
@@ -26,16 +39,15 @@ export function errorHandler(
   reply: FastifyReply,
 ): FastifyReply {
   if (error instanceof ZodError) {
-    return reply.status(400).send(
-      errorBody(
-        'VALIDATION_ERROR',
-        'Dados inválidos.',
-        error.issues.map((issue) => ({
-          field: issue.path.join('.'),
-          message: issue.message,
-        })),
-      ),
-    );
+    return reply
+      .status(400)
+      .send(
+        errorBody(
+          'VALIDATION_ERROR',
+          'Dados inválidos.',
+          validationDetails(error),
+        ),
+      );
   }
 
   if (error instanceof RestaurantNotFoundError) {

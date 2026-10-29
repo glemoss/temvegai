@@ -8,6 +8,7 @@ import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
 } from 'fastify';
+import { z } from 'zod';
 import { CreateRestaurantController } from './controllers/create-restaurant.controller.js';
 import { DeleteRestaurantController } from './controllers/delete-restaurant.controller.js';
 import { GetCurrentAdminController } from './controllers/get-current-admin.controller.js';
@@ -39,6 +40,9 @@ import { ListNeighborhoodsUseCase } from './use-cases/list-neighborhoods.use-cas
 import { ListRestaurantsUseCase } from './use-cases/list-restaurants.use-case.js';
 import { LoginUseCase } from './use-cases/login.use-case.js';
 import { UpdateRestaurantUseCase } from './use-cases/update-restaurant.use-case.js';
+
+// Validation messages of the API in Portuguese, like the rest of its errors.
+z.config(z.locales.ptBR());
 
 export interface AppDependencies {
   checkDatabase: DatabaseCheck;

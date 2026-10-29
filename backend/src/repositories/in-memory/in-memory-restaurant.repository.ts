@@ -7,12 +7,36 @@ import type {
   RestaurantRepository,
 } from '../restaurant.repository.js';
 
-// Mirrors the Knex repository: lower() for neighborhood, unaccent + ilike for name.
+// Mirrors the Knex repository: lower() + unaccent for neighborhood, unaccent +
+// ilike for name.
 function normalize(value: string): string {
   return value
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase();
+}
+
+function hasAccents(value: string): boolean {
+  return /\p{Diacritic}/u.test(value.normalize('NFD'));
+}
+
+// Mirrors the Knex repository: the most used spelling; on a tie, one with
+// accents, then the smallest.
+function compareSpellings(
+  [a, aUses]: [string, number],
+  [b, bUses]: [string, number],
+): number {
+  return (
+    bUses - aUses ||
+    Number(hasAccents(b)) - Number(hasAccents(a)) ||
+    (a < b ? -1 : 1)
+  );
+}
+
+interface NeighborhoodGroup {
+  neighborhood: Neighborhood;
+  // How many restaurants use each spelling.
+  spellings: Map<string, number>;
 }
 
 export class InMemoryRestaurantRepository implements RestaurantRepository {
@@ -28,13 +52,14 @@ export class InMemoryRestaurantRepository implements RestaurantRepository {
     neighborhood,
     name,
     bounds,
+    limit,
   }: RestaurantFilters): Promise<Restaurant[]> {
     return this.restaurants
       .filter((restaurant) => !type || restaurant.type === type)
       .filter(
         (restaurant) =>
           !neighborhood ||
-          restaurant.neighborhood.toLowerCase() === neighborhood.toLowerCase(),
+          normalize(restaurant.neighborhood) === normalize(neighborhood),
       )
       .filter(
         (restaurant) =>
@@ -48,45 +73,57 @@ export class InMemoryRestaurantRepository implements RestaurantRepository {
             restaurant.longitude >= bounds.minLng &&
             restaurant.longitude <= bounds.maxLng),
       )
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(0, limit);
   }
 
   async findById(id: string): Promise<Restaurant | null> {
     return this.restaurants.find((restaurant) => restaurant.id === id) ?? null;
   }
 
-  // Mirrors the Knex repository: groups by lower(neighborhood) and keeps the
-  // smallest spelling as the name, like min().
+  // Mirrors the Knex repository: groups by lower(unaccent(neighborhood)).
   async findNeighborhoods(): Promise<Neighborhood[]> {
-    const groups = new Map<string, Neighborhood>();
+    const groups = new Map<string, NeighborhoodGroup>();
 
     for (const { neighborhood, latitude, longitude } of this.restaurants) {
-      const key = neighborhood.toLowerCase();
+      const key = normalize(neighborhood);
       const group = groups.get(key);
 
       if (!group) {
         groups.set(key, {
-          name: neighborhood,
-          bounds: {
-            minLat: latitude,
-            maxLat: latitude,
-            minLng: longitude,
-            maxLng: longitude,
+          neighborhood: {
+            name: neighborhood,
+            bounds: {
+              minLat: latitude,
+              maxLat: latitude,
+              minLng: longitude,
+              maxLng: longitude,
+            },
           },
+          spellings: new Map([[neighborhood, 1]]),
         });
         continue;
       }
 
-      if (neighborhood < group.name) {
-        group.name = neighborhood;
-      }
-      group.bounds.minLat = Math.min(group.bounds.minLat, latitude);
-      group.bounds.maxLat = Math.max(group.bounds.maxLat, latitude);
-      group.bounds.minLng = Math.min(group.bounds.minLng, longitude);
-      group.bounds.maxLng = Math.max(group.bounds.maxLng, longitude);
+      const { bounds } = group.neighborhood;
+      group.spellings.set(
+        neighborhood,
+        (group.spellings.get(neighborhood) ?? 0) + 1,
+      );
+      bounds.minLat = Math.min(bounds.minLat, latitude);
+      bounds.maxLat = Math.max(bounds.maxLat, latitude);
+      bounds.minLng = Math.min(bounds.minLng, longitude);
+      bounds.maxLng = Math.max(bounds.maxLng, longitude);
     }
 
-    return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return [...groups.values()]
+      .map(({ neighborhood, spellings }) => {
+        const [name] = [...spellings].reduce((best, spelling) =>
+          compareSpellings(spelling, best) < 0 ? spelling : best,
+        );
+        return { ...neighborhood, name };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async create(data: RestaurantData): Promise<Restaurant> {

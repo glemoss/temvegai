@@ -62,6 +62,34 @@ describe('ListNeighborhoodsUseCase', () => {
     ]);
   });
 
+  it('groups neighborhoods ignoring accents', async () => {
+    const neighborhoods = await makeUseCase([
+      makeRestaurant({ id: '4', neighborhood: 'Lagoa da Conceicao' }),
+      makeRestaurant({ id: '5', neighborhood: 'Lagoa da Conceição' }),
+    ]).execute();
+
+    expect(neighborhoods).toHaveLength(1);
+  });
+
+  it('names the neighborhood by the spelling most restaurants use', async () => {
+    const [neighborhood] = await makeUseCase([
+      makeRestaurant({ id: '4', neighborhood: 'Lagoa da Conceição' }),
+      makeRestaurant({ id: '5', neighborhood: 'lagoa da conceicao' }),
+      makeRestaurant({ id: '6', neighborhood: 'lagoa da conceicao' }),
+    ]).execute();
+
+    expect(neighborhood?.name).toBe('lagoa da conceicao');
+  });
+
+  it('prefers the spelling with accents on a tie', async () => {
+    const [neighborhood] = await makeUseCase([
+      makeRestaurant({ id: '4', neighborhood: 'Lagoa da Conceicao' }),
+      makeRestaurant({ id: '5', neighborhood: 'Lagoa da Conceição' }),
+    ]).execute();
+
+    expect(neighborhood?.name).toBe('Lagoa da Conceição');
+  });
+
   it('returns the area that covers all restaurants of the neighborhood', async () => {
     const [centro] = await makeUseCase([desvioVeg, tsanThe]).execute();
 

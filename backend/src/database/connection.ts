@@ -1,10 +1,12 @@
 import knex, { type Knex } from 'knex';
 
-export function createDatabase(connectionUrl: string): Knex {
+// Without a logger, Knex writes its messages to the console.
+export function createDatabase(connectionUrl: string, log?: Knex.Logger): Knex {
   return knex({
     client: 'pg',
     connection: connectionUrl,
     acquireConnectionTimeout: 5000,
+    log,
   });
 }
 

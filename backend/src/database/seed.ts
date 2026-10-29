@@ -1,9 +1,9 @@
 import { basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadEnvOrExit } from '../config/env.js';
+import { databaseEnvSchema, loadEnvOrExit } from '../config/env.js';
 import { createDatabase } from './connection.js';
 
-const env = loadEnvOrExit();
+const env = loadEnvOrExit(databaseEnvSchema);
 const db = createDatabase(env.DATABASE_URL);
 
 try {

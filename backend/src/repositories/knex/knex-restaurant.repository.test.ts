@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { WeeklyHours } from '../../entities/restaurant.js';
 import {
   toRestaurant,
   type RestaurantRow,
@@ -6,6 +7,16 @@ import {
 
 const createdAt = new Date('2026-10-14T12:00:00Z');
 const updatedAt = new Date('2026-10-15T12:00:00Z');
+
+const openingHours: WeeklyHours = {
+  monday: [{ opens: '19:00', closes: '23:00' }],
+  tuesday: [],
+  wednesday: [{ opens: '19:00', closes: '23:00' }],
+  thursday: [{ opens: '19:00', closes: '23:00' }],
+  friday: [{ opens: '19:00', closes: '23:00' }],
+  saturday: [{ opens: '19:00', closes: '23:00' }],
+  sunday: [{ opens: '19:00', closes: '23:00' }],
+};
 
 const row: RestaurantRow = {
   id: '6a2e5bcb-a4ae-4450-b16d-38e999a29c59',
@@ -19,15 +30,7 @@ const row: RestaurantRow = {
   phone: '(48) 99124-2935',
   website: null,
   instagram: 'kairu.veg',
-  opening_hours: {
-    monday: [{ opens: '19:00', closes: '23:00' }],
-    tuesday: [],
-    wednesday: [{ opens: '19:00', closes: '23:00' }],
-    thursday: [{ opens: '19:00', closes: '23:00' }],
-    friday: [{ opens: '19:00', closes: '23:00' }],
-    saturday: [{ opens: '19:00', closes: '23:00' }],
-    sunday: [{ opens: '19:00', closes: '23:00' }],
-  },
+  opening_hours: openingHours,
   created_at: createdAt,
   updated_at: updatedAt,
 };
@@ -46,8 +49,7 @@ describe('toRestaurant', () => {
       phone: '(48) 99124-2935',
       website: null,
       instagram: 'kairu.veg',
-      openingHours: row.opening_hours,
-
+      openingHours,
       createdAt,
       updatedAt,
     });
@@ -58,6 +60,25 @@ describe('toRestaurant', () => {
 
     expect(typeof restaurant.latitude).toBe('number');
     expect(typeof restaurant.longitude).toBe('number');
+  });
+
+  it('returns the opening hours from Monday to Sunday', () => {
+    const { monday, ...fromTuesday } = openingHours;
+    const restaurant = toRestaurant({
+      ...row,
+      opening_hours: { ...fromTuesday, monday },
+    });
+
+    expect(Object.keys(restaurant.openingHours ?? {})).toEqual([
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ]);
+    expect(restaurant.openingHours).toEqual(openingHours);
   });
 
   it('keeps optional fields as null', () => {

@@ -136,7 +136,15 @@ describe('API documentation', () => {
       'maxLat',
       'minLng',
       'maxLng',
+      'limit',
     ]);
+    const [, , , minLat, , , , limit] = paths['/restaurants'].get.parameters;
+    expect(minLat.schema).toEqual({
+      type: 'number',
+      minimum: -90,
+      maximum: 90,
+    });
+    expect(limit.schema).toEqual({ type: 'integer', minimum: 1, maximum: 100 });
 
     const restaurantBody =
       paths['/restaurants'].post.requestBody.content['application/json'].schema;
@@ -151,6 +159,14 @@ describe('API documentation', () => {
       ]),
     );
     expect(restaurantBody.additionalProperties).toBe(false);
+    expect(restaurantBody.properties.website).toMatchObject({
+      type: 'string',
+      format: 'uri',
+    });
+    expect(restaurantBody.properties.instagram).toMatchObject({
+      type: 'string',
+      pattern: '^@?[A-Za-z0-9._]{1,30}$',
+    });
 
     const idParameter = paths['/restaurants/{id}'].get.parameters[0];
     expect(idParameter).toMatchObject({
