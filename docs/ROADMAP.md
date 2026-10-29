@@ -138,6 +138,10 @@ Etapa criada a partir das pendências. Depende da B13 só no item do `limit`, qu
 **Pronto quando:** cada item aprovado no plano funciona como descrito, e o deslocamento no celular é aprovado visualmente pelo dono. Com testes.
 No plano: o item do `limit` ficou de fora porque a B13 ainda não foi feita, e o botão de copiar entrou com um botão por dia.
 
+### [x] F10 — Sugestões com `limit`
+As sugestões da busca pedem só 8 restaurantes à API, com o `limit` criado na B13, em vez de receber todos os que combinam com o nome e cortar no navegador. O mapa continua sem limite. Etapa criada a partir da pendência da F6.
+**Pronto quando:** a requisição das sugestões leva `limit=8`, as sugestões continuam as mesmas, o mapa continua pedindo sem `limit`. Com testes.
+
 ---
 
 ## Fase A — Painel admin
@@ -216,7 +220,7 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (F4) ~~O painel de detalhes fecha quando o restaurante aberto sai do resultado, inclusive quando a pessoa arrasta o mapa e ele sai da área visível. No celular isso pode surpreender. Decidir na F5 se o painel deve continuar aberto até ser fechado.~~ Resolvido na F5: o dono decidiu que o painel continua aberto até ser fechado pelo botão ou pelo Esc.
 - (F5) A fonte Bebas Neue (título) vem do Google Fonts por `<link>`, sem pacote npm. Cada visita faz uma requisição a servidores do Google, que recebem o IP do visitante. Decidir no deploy se mantém, se hospeda a fonte junto com o site ou se avisa na política de privacidade (LGPD).
 - (F5) ~~Os 5 restaurantes do seed são todos `fully_vegan`, então a folha de contorno (opções veganas) nunca aparece no mapa de desenvolvimento. Decidir se o seed deve ganhar restaurantes `vegan_options`.~~ Resolvido depois da F6: o seed ganhou 4 bares com opções veganas indicados pelo dono (Bugio Centro, Bugio Trindade, Janela Bar e Dona Jovem). Em produção, eles entram pelo painel admin.
-- (F6) ~~A API não tem parâmetro de limite: as sugestões recebem todos os restaurantes que combinam com o nome e o frontend mostra só os 8 primeiros. Basta com poucos dados; decidir se `GET /restaurants` deve ganhar um `limit` quando a base crescer.~~ Resolvido na B13: `GET /restaurants` aceita `limit` de 1 a 100. As sugestões da busca ainda pedem todos e mostram os 8 primeiros; passar a usar `limit=8` fica para uma etapa do frontend.
+- (F6) ~~A API não tem parâmetro de limite: as sugestões recebem todos os restaurantes que combinam com o nome e o frontend mostra só os 8 primeiros. Basta com poucos dados; decidir se `GET /restaurants` deve ganhar um `limit` quando a base crescer.~~ Resolvido na B13: `GET /restaurants` aceita `limit` de 1 a 100. Resolvido na F10: as sugestões da busca pedem `limit=8`.
 - (F6) ~~No celular, escolher uma sugestão centraliza o restaurante na tela, mas o painel de detalhes ocupa a parte de baixo (até 60% da altura) e pode cobrir o marcador. Decidir se o mapa deve deslocar o restaurante para a parte visível acima do painel.~~ Resolvido na F9: no celular, a sugestão escolhida fica com a ponta do pin 10rem abaixo do cabeçalho, sem passar do topo do painel; um pin clicado que o painel cobriria sobe para a mesma altura.
 - (F6) ~~Ao escolher um restaurante nas sugestões da busca, destacar o pin dele no mapa, para ficar claro qual é entre os marcadores próximos. Decidir como será o destaque (tamanho, cor, animação) e se ele também vale para o pin clicado direto no mapa.~~ Resolvido na F8: o dono escolheu o pin maior e em verde mais vivo, sem animação contínua, para o restaurante selecionado pela busca ou pelo clique.
 - (A2) Decidido no planejamento: o formulário valida com Zod (dependência nova no `/frontend`, já na tabela de stack) e o campo de bairro sugere os bairros existentes com `<datalist>` vindo de `GET /neighborhoods`.

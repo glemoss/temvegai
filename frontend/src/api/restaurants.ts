@@ -48,6 +48,8 @@ export interface RestaurantFilters {
   neighborhood?: string;
   name?: string;
   bounds?: MapBounds;
+  // At most this many restaurants, the first ones in name order.
+  limit?: number;
 }
 
 function toSearchParams({
@@ -55,6 +57,7 @@ function toSearchParams({
   neighborhood,
   name,
   bounds,
+  limit,
 }: RestaurantFilters): URLSearchParams {
   const params = new URLSearchParams();
 
@@ -67,6 +70,7 @@ function toSearchParams({
     params.set('minLng', String(bounds.minLng));
     params.set('maxLng', String(bounds.maxLng));
   }
+  if (limit) params.set('limit', String(limit));
 
   return params;
 }

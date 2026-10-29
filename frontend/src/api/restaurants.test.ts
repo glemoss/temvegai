@@ -78,6 +78,7 @@ describe('fetchRestaurants', () => {
       neighborhood: 'Lagoa da Conceição',
       name: ' mandarina ',
       bounds: { minLat: -27.7, maxLat: -27.5, minLng: -48.6, maxLng: -48.4 },
+      limit: 8,
     });
 
     const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
@@ -90,6 +91,7 @@ describe('fetchRestaurants', () => {
       maxLat: '-27.5',
       minLng: '-48.6',
       maxLng: '-48.4',
+      limit: '8',
     });
   });
 

@@ -42,7 +42,7 @@ describe('useRestaurantSuggestions', () => {
     expect(fetchRestaurants).not.toHaveBeenCalled();
   });
 
-  it('requests the restaurants of the whole city by name only', async () => {
+  it(`requests up to ${MAX_SUGGESTIONS} restaurants of the whole city by name only`, async () => {
     vi.mocked(fetchRestaurants).mockResolvedValue([restaurant(1)]);
 
     const { result } = renderHook(() => useRestaurantSuggestions(' rest '));
@@ -54,24 +54,8 @@ describe('useRestaurantSuggestions', () => {
       }),
     );
     expect(fetchRestaurants).toHaveBeenCalledWith(
-      { name: 'rest' },
+      { name: 'rest', limit: MAX_SUGGESTIONS },
       expect.any(AbortSignal),
-    );
-  });
-
-  it(`keeps at most ${MAX_SUGGESTIONS} suggestions`, async () => {
-    const many = Array.from({ length: MAX_SUGGESTIONS + 2 }, (_, index) =>
-      restaurant(index),
-    );
-    vi.mocked(fetchRestaurants).mockResolvedValue(many);
-
-    const { result } = renderHook(() => useRestaurantSuggestions('rest'));
-
-    await waitFor(() =>
-      expect(result.current).toEqual({
-        status: 'success',
-        restaurants: many.slice(0, MAX_SUGGESTIONS),
-      }),
     );
   });
 

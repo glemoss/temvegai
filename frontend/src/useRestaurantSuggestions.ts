@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchRestaurants, type Restaurant } from './api/restaurants';
 
-// The API has no limit parameter, so the list is cut here.
+// Asked of the API with `limit`, so only these restaurants are sent.
 export const MAX_SUGGESTIONS = 8;
 
 export type RestaurantSuggestionsState =
@@ -30,12 +30,11 @@ export function useRestaurantSuggestions(
     // new ones arrive, so the list does not blink on every key.
     const controller = new AbortController();
 
-    fetchRestaurants({ name: trimmed }, controller.signal).then(
-      (restaurants) =>
-        setState({
-          status: 'success',
-          restaurants: restaurants.slice(0, MAX_SUGGESTIONS),
-        }),
+    fetchRestaurants(
+      { name: trimmed, limit: MAX_SUGGESTIONS },
+      controller.signal,
+    ).then(
+      (restaurants) => setState({ status: 'success', restaurants }),
       () => {
         if (!controller.signal.aborted) {
           setState({ status: 'error' });
