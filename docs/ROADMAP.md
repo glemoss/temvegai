@@ -205,28 +205,64 @@ Filtros, busca com sugestões, painel de detalhes e legenda passam a usar os com
 
 ---
 
+## Fase D — Deploy
+
+Publicação gratuita, para portfólio, sem domínio próprio. Site e API ficam na Vercel, em dois projetos do mesmo repositório (raiz `frontend` e raiz `backend`); o banco fica no Neon; o GitHub Actions roda os checks e publica. O site repassa `/api/*` para a API (rewrite da Vercel), então o navegador vê um único domínio e o cookie de sessão continua `httpOnly` e `sameSite: 'lax'`, sem mudar a decisão 5 do `SPEC.md`.
+
+Para que a troca da API por um container (ex.: Cloud Run) continue barata depois, a API não usa nenhum serviço próprio da Vercel (KV, Edge Config, Postgres, `waitUntil`), tem build próprio com `tsc` e lê toda a configuração de produção de variáveis de ambiente. Os limites dos planos gratuitos são conferidos na etapa que usa cada plataforma.
+
+### [ ] D0 — Build de produção
+Script `build` (compila com `tsc` para `dist`) e `start` (roda `dist/server.js` com `node`, sem `tsx`) no backend, e `build` (`vite build`) no frontend.
+**Pronto quando:** no backend, `npm run build && npm start` sobe a API contra o banco local e `GET /health` responde 200; no frontend, `npm run build` gera o `dist`, e o site servido por ele (`vite preview`) abre o mapa e o painel contra a API local.
+
+### [ ] D1 — API atrás de proxy e seed protegido
+Variável de ambiente para o `trustProxy` do Fastify, para que o limite de tentativas do login conte pelo IP de quem acessa e não pelo do proxy. O `seed`, que apaga os dados, recusa rodar com `NODE_ENV=production`. `.env.example` atualizado.
+**Pronto quando:** um teste com `app.inject` mostra que, com o proxy confiável ligado, duas origens diferentes no `X-Forwarded-For` têm contagens separadas, e o `seed` termina com erro e sem apagar nada quando `NODE_ENV=production`. Com testes.
+
+### [ ] D2 — CI
+Workflow do GitHub Actions que roda `test`, `lint`, `typecheck` e `build` do backend e do frontend em todo push e pull request, com o Node do `.nvmrc`.
+**Pronto quando:** um pull request mostra os checks verdes, e um teste quebrado de propósito deixa o check vermelho.
+
+### [ ] D3 — Banco no Neon
+O dono cria o projeto no Neon (região de São Paulo, se o plano gratuito oferecer). O README ganha uma seção de produção com como rodar `migrate` e `create-admin` contra o Neon pela conexão direta, e com o aviso de que o `seed` não roda lá.
+**Pronto quando:** as migrations rodaram no Neon, inclusive a do `unaccent`, existe uma conta de admin, e o `migrate:rollback` não foi preciso.
+
+### [ ] D4 — API na Vercel
+Arquivo de entrada da função da Vercel, que exporta o app em vez de chamar `listen`; a montagem das dependências passa a ficar numa função usada por ele e pelo `server.ts`, para continuar havendo um só lugar de composição. Projeto da Vercel com raiz `backend`, Node 24, variáveis de ambiente (`DATABASE_URL` pela conexão com pooler do Neon, `JWT_SECRET`, `NODE_ENV`, `CORS_ORIGIN`, a do proxy) e deploy automático pelo Git desligado, para que nenhum deploy de prévia use o banco de produção.
+**Pronto quando:** `curl https://<api>.vercel.app/health` responde 200 com o banco acessível, e o login por `curl` devolve o cookie com `Secure` e `HttpOnly` (o `argon2` carregou o binário pronto).
+
+### [ ] D5 — Site na Vercel
+`vercel.json` no frontend com o repasse de `/api/*` para a API e o fallback da SPA para o `index.html`. Projeto da Vercel com raiz `frontend`, `VITE_API_URL=/api` e deploy automático pelo Git desligado. `CORS_ORIGIN` da API passa a ser o endereço do site. A quantidade de proxies confiáveis da D1 é conferida aqui, com o caminho completo.
+**Pronto quando:** o mapa carrega no endereço público; recarregar `/admin` abre o painel; o login funciona no Chrome e no Firefox (que bloqueia cookies de terceiros); criar, editar e remover funcionam; e o limite de tentativas do login vê o IP de quem acessa.
+
+### [ ] D6 — Deploy automático
+Workflow que, depois dos checks verdes num push na `main`, roda as migrations pendentes no Neon pela conexão direta e publica a API e depois o site com a CLI da Vercel (`npx`, sem entrar no `package.json`). Tokens e endereços do banco ficam nos secrets do GitHub. Como as migrations rodam antes do código novo, cada migration precisa funcionar também com a versão anterior da API.
+**Pronto quando:** um commit na `main` aparece publicado sem passo manual; um commit com teste quebrado não é publicado; e uma migration nova é aplicada no Neon antes de a API que depende dela entrar no ar.
+
+---
+
 ## Depois da v1 (não planejado ainda)
 
-Deploy e CI/CD, aplicativo mobile.
+Domínio próprio, API em container (ex.: Cloud Run) se a Vercel deixar de bastar, aplicativo mobile.
 
 ## Pendências
 
 Coisas notadas durante uma etapa que ficam para depois.
 
-- (B0) ~~O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.~~ Decidido pelo dono: deixa como está, sem aprovar nenhum script (vale também para o `argon2` da B7 e o `fsevents` da F0). O binário do `esbuild` chega pelo pacote opcional `@esbuild/<plataforma>`, o `argon2` carrega os binários prontos de `prebuilds/` (inclusive musl, para Alpine) e o `fsevents`, só no macOS, é opcional. No deploy, rodar `npm ci` dentro do próprio container, sem `--omit=optional`, e confirmar que o login funciona; só aprovar um script se a plataforma de produção exigir.
+- (B0) ~~O npm avisa que o script de instalação do `esbuild` (dependência do `tsx` e do Vitest) não está aprovado em `allowScripts`. Dev e testes funcionam sem ele; decidir se aprova ou se deixa como está.~~ Decidido pelo dono: deixa como está, sem aprovar nenhum script (vale também para o `argon2` da B7 e o `fsevents` da F0). O binário do `esbuild` chega pelo pacote opcional `@esbuild/<plataforma>`, o `argon2` carrega os binários prontos de `prebuilds/` (inclusive musl, para Alpine) e o `fsevents`, só no macOS, é opcional. No deploy, rodar `npm ci` dentro do próprio container, sem `--omit=optional`, e confirmar que o login funciona; só aprovar um script se a plataforma de produção exigir. Com a fase D na Vercel, a confirmação do login entra no critério de pronto da D4.
 - (B1) ~~O Knex escreve `Acquire connection error` direto no console quando o banco está fora do ar, fora do logger do Fastify. Decidir se vale redirecionar para o logger.~~ Resolvido na B13: no servidor, as mensagens do Knex vão para o logger do Fastify; os comandos continuam no console.
 - (B4) Decidido pelo dono: Zod só na entrada, com `schema.parse` no controller, sem dependência nova e sem schema de saída. Resolvido na B10 (opção A): o `src/openapi.ts` monta o documento a partir dos schemas exportados pelos controllers, com `z.toJSONSchema`, e um teste garante que toda rota registrada está documentada.
 - (B5) ~~Rotas sem teste automatizado.~~ Resolvido na B8: o dono decidiu testar rotas com `app.inject` e dependências em memória, e o `CLAUDE.md` foi atualizado.
 - (B7) O `argon2` também tem script de instalação fora do `allowScripts` (mesmo aviso do `esbuild` na B0). Funciona sem ele porque o pacote traz binários prontos. Resolvido com a decisão da (B0): não aprovar.
 - (B8) ~~`migrate`, `seed` e `create-admin` usam a mesma validação de ambiente do servidor e agora também exigem `JWT_SECRET` e, desde a B10, `CORS_ORIGIN`, embora não os usem. Decidir se os comandos devem validar só o que precisam.~~ Resolvido na B13: os comandos validam só o `DATABASE_URL`.
 - (B8) O logout só apaga o cookie: um token copiado continua válido até expirar (7 dias). Revogação de sessão não está no escopo da v1.
-- (B8) O limite de tentativas do login fica na memória do processo; reiniciar o servidor zera a contagem, e com mais de uma instância cada uma conta separado. Basta para a v1, mas entra na conversa de deploy.
+- (B8) O limite de tentativas do login fica na memória do processo; reiniciar o servidor zera a contagem, e com mais de uma instância cada uma conta separado. Basta para a v1, mas entra na conversa de deploy. Decidido no planejamento da fase D: na Vercel, cada instância da função conta separado e a contagem some quando a instância é desligada. Com o tráfego de um portfólio costuma haver uma instância só; a garantia volta com um armazenamento compartilhado ou com a API num container de instância única.
 - (B9) ~~Um campo desconhecido no corpo de `POST`/`PUT /restaurants` gera um item em `details` com `field` vazio, porque o Zod põe o nome do campo na mensagem e não no caminho. O error handler poderia usar o nome do campo como `field`; decidir se vale ajustar.~~ Resolvido na B13: cada campo desconhecido vira um item de `details`, com o nome em `field`.
 - (B10) A documentação em `/docs` fica aberta também em produção. Decidir na etapa de deploy se esconde ou protege.
 - (B10) ~~Como a documentação descreve o que o cliente envia, campos com transformação aparecem só pelo tipo de entrada: `website` e `instagram` aparecem como texto livre, sem o formato de URL nem o padrão de usuário, e os parâmetros de área do mapa aparecem como texto em vez de número. A validação real continua igual; decidir se vale completar a descrição à mão.~~ Resolvido na B13: os schemas ganharam `.meta()` com o formato de `website` e `instagram`, e os parâmetros numéricos aparecem como número.
 - Horários de funcionamento seguem a convenção `Dias: horário`, com trechos separados por `;`, dias por extenso de segunda a domingo, "a" para intervalo, "e" (e vírgula) para dias soltos, `fechado` para dias sem abertura e meia-noite como `0h` (ex.: `Segunda a sexta: 11h–14h; Sábado e domingo: fechado`). O painel de detalhes lê esse texto para mostrar "Aberto agora" ou "Fechado agora"; um texto fora da convenção aparece sem o estado. O dono quer que o formulário do admin já gere o horário nesse formato, em vez de texto livre; decidir na etapa do formulário se basta montar o texto ou se o horário passa a ser estruturado no banco. Decidido no planejamento da A2: o horário passa a ser estruturado, na etapa B12, antes da A2. Resolvido na B12: o horário virou `jsonb` com vários intervalos por dia, a migration converteu os textos e a convenção de texto deixou de existir (só o rollback ainda gera texto nela).
 - (F0) ~~O app passa a se chamar **Tem Veg Aí?** (domínio pretendido: `temveg.ai`). Só o frontend usa o nome novo; README, título do `SPEC.md`, `veganos-backend` no `package.json` e o nome do banco continuam "veganos". Decidir se e quando renomear.~~ Resolvido antes da B12: README, título da OpenAPI, pacote `temveg-backend`, usuário, senha e banco `temveg` no `docker-compose.yml` e no `.env.example`, e e-mails dos testes. A pasta local e o repositório no GitHub continuam `veganos`, e a troca fica com o dono.
-- (F0) Com o domínio `temveg.ai`, a decisão 5 do `SPEC.md` (site e API no mesmo domínio por causa do cookie) leva a algo como `temveg.ai` e `api.temveg.ai`. Entra na etapa de deploy.
+- (F0) Com o domínio `temveg.ai`, a decisão 5 do `SPEC.md` (site e API no mesmo domínio por causa do cookie) leva a algo como `temveg.ai` e `api.temveg.ai`. Entra na etapa de deploy. Decidido no planejamento da fase D: sem domínio por enquanto; o site na Vercel repassa `/api/*` para a API, e o navegador vê um domínio só. Os endereços `*.vercel.app` estão na Public Suffix List, então sem o repasse o cookie não funcionaria. Com domínio próprio, volta a valer `temveg.ai` e `api.temveg.ai`.
 - (B11) ~~`GET /neighborhoods` agrupa os bairros sem diferenciar maiúsculas, como o filtro `neighborhood`, mas não ignora acentos: "Conceicao" e "Conceição" aparecem como bairros separados. Quando a mesma grafia varia só nas maiúsculas, o nome exibido é o menor (`min`). Decidir se o filtro e o agrupamento devem passar a ignorar acentos, ou se o painel admin deve evitar grafias diferentes.~~ Resolvido na B13: o filtro e o agrupamento ignoram acentos, e o nome exibido é a grafia usada pela maioria dos restaurantes do bairro (no empate, a com acento).
 - (B11) ~~Um bairro com um só restaurante tem área de um ponto (mínimo igual ao máximo). A F4 precisa limitar o zoom ao mover o mapa até ele.~~ Resolvido na F4: o mapa vai até o bairro com zoom máximo 16.
 - (F0) No frontend, o `fsevents` (dependência opcional do Vite no macOS) tem script de instalação fora do `allowScripts`. Mesmo aviso do `esbuild` (B0) e do `argon2` (B7). Resolvido com a decisão da (B0): não aprovar.

@@ -38,7 +38,7 @@ Não implementar, nem deixar "preparado":
 - Outras cidades.
 - Aplicativo mobile.
 - Importação automática de dados (Google Places, OpenStreetMap etc.).
-- Deploy e CI/CD (será uma etapa própria, decidida depois).
+- Domínio próprio (a v1 usa os endereços da Vercel; o deploy está na fase D do `ROADMAP.md`).
 
 ## Stack
 
@@ -46,7 +46,7 @@ Não implementar, nem deixar "preparado":
 |---|---|
 | Linguagem | TypeScript em tudo, modo `strict` |
 | Backend | Node (LTS atual) + Fastify |
-| Banco | PostgreSQL, rodando localmente via Docker Compose |
+| Banco | PostgreSQL, rodando localmente via Docker Compose; em produção no Neon |
 | Acesso ao banco | Knex (query builder, migrations e seeds) |
 | Validação | Zod |
 | Hash de senha | argon2 |
@@ -59,6 +59,8 @@ Não implementar, nem deixar "preparado":
 | Mapa | Leaflet (react-leaflet) com tiles do OpenStreetMap |
 | Geocodificação | Nominatim (OpenStreetMap), chamado pelo painel admin para marcar o endereço no mapa e preencher o endereço do ponto clicado |
 | Gerenciador de pacotes | npm |
+| Hospedagem | Vercel, com site e API em dois projetos; o site repassa `/api/*` para a API |
+| CI/CD | GitHub Actions (checks em todo push e pull request; deploy na `main`) |
 
 ## Estrutura do repositório
 
@@ -108,6 +110,6 @@ Estas escolhas não vieram do dono do projeto; foram assumidas para destravar o 
 2. **Tipos de restaurante**: inclui lugares com opções veganas, não só os 100% veganos.
 3. **Coordenadas**: colunas simples de latitude/longitude, sem PostGIS.
 4. **Mapa**: Leaflet + OpenStreetMap, por ser gratuito e não exigir chave de API.
-5. **Sessão do admin**: o login devolve um JWT em cookie `httpOnly`, que o JavaScript da página não consegue ler. A sessão expira em 7 dias. Isso exige que, em produção, site e API fiquem no mesmo domínio (ex.: `site.com` e `api.site.com`).
+5. **Sessão do admin**: o login devolve um JWT em cookie `httpOnly`, que o JavaScript da página não consegue ler. A sessão expira em 7 dias. Isso exige que, em produção, site e API fiquem no mesmo domínio (ex.: `site.com` e `api.site.com`). Sem domínio próprio, o site na Vercel repassa `/api/*` para a API, e o navegador vê um domínio só.
 6. **Criação de admins**: por comando no terminal (`npm run create-admin`), sem tela de cadastro.
 7. **Idioma**: código e nomes em inglês; textos da interface em português.
