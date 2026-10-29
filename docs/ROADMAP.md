@@ -90,6 +90,10 @@ No plano: entraram os oito itens. O bairro passa a ser nomeado pela grafia usada
 **Pronto quando:** criar e editar um restaurante com o bairro em minúsculas, maiúsculas ou misturado salva e devolve o bairro no formato descrito, com as preposições minúsculas, e os bairros já salvos continuam como estão. Verificado com `curl`. Com testes.
 No plano: espaços repetidos viram um só, e só o espaço separa palavras (hífen e apóstrofo não).
 
+### [x] B15 — Ordenação igual em qualquer banco
+Restaurantes e bairros passam a ser ordenados por uma chave sem acentos e em minúsculas, comparada byte a byte (`lower(unaccent(...)) COLLATE "C"`), com o texto original (também em `"C"`) como desempate. A escolha da grafia do bairro, no empate, também passa a usar `"C"`. O repositório em memória ordena pela mesma regra, em vez do `localeCompare`. Sem migration: a ordem deixa de depender da collation do sistema operacional do Postgres. Etapa criada a partir da pendência (B13).
+**Pronto quando:** `GET /restaurants` e `GET /neighborhoods` ordenam nomes com acento no início ("Éden") e com maiúsculas e minúsculas misturadas ("BUGIO", "naTerra") como se não tivessem acento nem caixa, o que muda quais restaurantes entram com `limit`. Verificado com `curl`. Com testes.
+
 ---
 
 ## Fase F — Frontend
@@ -248,4 +252,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (U2) O `NativeSelect` do shadcn ganhou a propriedade `wrapperClassName`, para o select ocupar a largura do filtro. Um `shadcn add` com `--overwrite` desfaria o ajuste, como os da (U1).
 - (U2) Com o select nativo, o Bairro desabilitado (enquanto carrega ou com erro) aparece com opacidade reduzida, em vez do fundo cinza da F5.
 - (A3) Decidido pelo dono: se o restaurante for removido com a edição aberta, salvar mostra o aviso "Oops, esse restaurante não existe mais.", fecha o modal e recarrega a lista.
-- (B13) O banco ordena os textos pelos bytes, com maiúsculas antes de minúsculas: a imagem `postgres:18-alpine` usa musl, que ignora a collation `en_US.utf8`. Um bairro ou restaurante em minúsculas ("lagoa da conceicao") aparece depois de "Trindade", e o repositório em memória, que usa `localeCompare`, ordena diferente. Decidir se a ordenação deve ignorar maiúsculas (ex.: `order by lower(name)` ou uma collation ICU).
+- (B13) ~~O banco ordena os textos pelos bytes, com maiúsculas antes de minúsculas: a imagem `postgres:18-alpine` usa musl, que ignora a collation `en_US.utf8`. Um bairro ou restaurante em minúsculas ("lagoa da conceicao") aparece depois de "Trindade", e o repositório em memória, que usa `localeCompare`, ordena diferente. Decidir se a ordenação deve ignorar maiúsculas (ex.: `order by lower(name)` ou uma collation ICU).~~ Resolvido na B15: a ordem usa `lower(unaccent(...)) COLLATE "C"`, igual em qualquer Postgres, e o repositório em memória segue a mesma regra.

@@ -16,6 +16,16 @@ function normalize(value: string): string {
     .toLowerCase();
 }
 
+// Mirrors the Knex repository: by the name without accents and case, then by
+// the name itself, comparing code points like the "C" collation.
+function compareNames(a: string, b: string): number {
+  const [aKey, bKey] = [normalize(a), normalize(b)];
+  if (aKey !== bKey) {
+    return aKey < bKey ? -1 : 1;
+  }
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 function hasAccents(value: string): boolean {
   return /\p{Diacritic}/u.test(value.normalize('NFD'));
 }
@@ -73,7 +83,7 @@ export class InMemoryRestaurantRepository implements RestaurantRepository {
             restaurant.longitude >= bounds.minLng &&
             restaurant.longitude <= bounds.maxLng),
       )
-      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => compareNames(a.name, b.name))
       .slice(0, limit);
   }
 
@@ -123,7 +133,7 @@ export class InMemoryRestaurantRepository implements RestaurantRepository {
         );
         return { ...neighborhood, name };
       })
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => compareNames(a.name, b.name));
   }
 
   async create(data: RestaurantData): Promise<Restaurant> {

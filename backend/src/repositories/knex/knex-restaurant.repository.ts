@@ -93,6 +93,13 @@ function toRestaurantDataRow(data: RestaurantData): RestaurantDataRow {
 // How neighborhoods are compared and grouped: ignoring case and accents.
 const NEIGHBORHOOD_KEY = 'lower(unaccent(neighborhood))';
 
+// Orders by the name without accents and case, then by the name itself. The
+// "C" collation compares bytes, so the order is the same on any server
+// instead of depending on its operating system's locale.
+function orderByName(column: string): string {
+  return `lower(unaccent(${column})) collate "C", ${column} collate "C"`;
+}
+
 // Makes % and _ match literally instead of acting as LIKE wildcards.
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, '\\$&');
@@ -108,7 +115,9 @@ export class KnexRestaurantRepository implements RestaurantRepository {
     bounds,
     limit,
   }: RestaurantFilters): Promise<Restaurant[]> {
-    const query = this.db<RestaurantRow>('restaurants').orderBy('name');
+    const query = this.db<RestaurantRow>('restaurants').orderByRaw(
+      orderByName('name'),
+    );
 
     if (type) {
       query.where({ type });
@@ -164,7 +173,7 @@ export class KnexRestaurantRepository implements RestaurantRepository {
           .distinctOn('key')
           .select('key', 'neighborhood as name')
           .orderByRaw(
-            'key, uses desc, (neighborhood <> unaccent(neighborhood)) desc, neighborhood',
+            'key, uses desc, (neighborhood <> unaccent(neighborhood)) desc, neighborhood collate "C"',
           ),
       )
       .from('restaurants')
@@ -177,7 +186,7 @@ export class KnexRestaurantRepository implements RestaurantRepository {
         this.db.raw('max(longitude) as max_lng'),
       )
       .groupBy('names.name')
-      .orderBy('names.name');
+      .orderByRaw(orderByName('names.name'));
 
     return rows.map((row) => ({
       name: row.name,

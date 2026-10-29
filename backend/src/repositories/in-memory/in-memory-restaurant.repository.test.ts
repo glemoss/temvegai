@@ -66,6 +66,67 @@ describe('InMemoryRestaurantRepository', () => {
     expect(await repository.findAll({})).toEqual([desvioVeg, kairu, tsanThe]);
   });
 
+  it('orders names ignoring accents and case', async () => {
+    const names = ['naTerra', 'Zen Veg', 'Éden Veg', 'BUGIO', 'Bistrô'];
+    const repository = new InMemoryRestaurantRepository(
+      names.map((name, index) =>
+        makeRestaurant({
+          id: `00000000-0000-0000-0000-00000000000${index}`,
+          name,
+        }),
+      ),
+    );
+
+    const restaurants = await repository.findAll({});
+
+    expect(restaurants.map(({ name }) => name)).toEqual([
+      'Bistrô',
+      'BUGIO',
+      'Éden Veg',
+      'naTerra',
+      'Zen Veg',
+    ]);
+  });
+
+  it('keeps an accented first letter within the limit', async () => {
+    const names = ['Horta Veg', 'Ilha Veg', 'Éden Veg', 'Folha Veg'];
+    const repository = new InMemoryRestaurantRepository(
+      names.map((name, index) =>
+        makeRestaurant({
+          id: `00000000-0000-0000-0000-00000000000${index}`,
+          name,
+        }),
+      ),
+    );
+
+    const restaurants = await repository.findAll({ limit: 2 });
+
+    expect(restaurants.map(({ name }) => name)).toEqual([
+      'Éden Veg',
+      'Folha Veg',
+    ]);
+  });
+
+  it('orders neighborhoods ignoring accents', async () => {
+    const neighborhoods = ['Trindade', 'Água Verde', 'Centro'];
+    const repository = new InMemoryRestaurantRepository(
+      neighborhoods.map((neighborhood, index) =>
+        makeRestaurant({
+          id: `00000000-0000-0000-0000-00000000000${index}`,
+          neighborhood,
+        }),
+      ),
+    );
+
+    const result = await repository.findNeighborhoods();
+
+    expect(result.map(({ name }) => name)).toEqual([
+      'Água Verde',
+      'Centro',
+      'Trindade',
+    ]);
+  });
+
   it('finds a restaurant by id', async () => {
     const repository = new InMemoryRestaurantRepository([tsanThe, kairu]);
 
