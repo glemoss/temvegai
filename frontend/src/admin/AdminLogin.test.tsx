@@ -56,9 +56,9 @@ describe('AdminLogin', () => {
   it('shows the project title', () => {
     renderLogin();
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain(
-      'Tem Veg Aí?',
-    );
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Tem Veg Aí?' }),
+    ).toBeTruthy();
   });
 
   it('sends the trimmed e-mail and the password and opens the panel', async () => {

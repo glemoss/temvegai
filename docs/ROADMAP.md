@@ -203,6 +203,10 @@ Login, cabeçalho, lista, formulário em modal e avisos do painel passam a usar 
 Filtros, busca com sugestões, painel de detalhes e legenda passam a usar os componentes do shadcn/ui. O CSS próprio que deixar de ser usado é removido.
 **Pronto quando:** tudo o que a F3 a F6 entregaram continua funcionando, inclusive a navegação das sugestões por teclado, com testes, e o site é aprovado visualmente pelo dono no desktop e no celular.
 
+### [x] U3 — Logo e favicon em SVG
+O título do site público e do login do admin, hoje montado com texto em Bebas Neue e a folha posicionada como acento, passa a ser a logo em SVG feita pelo dono, com "Tem Veg Aí?" como texto alternativo. O favicon passa a ser o pin com a folha, também feito pelo dono. Etapa criada depois da D1.
+**Pronto quando:** o site público e o login mostram a logo no desktop e no celular, a aba do navegador mostra o favicon novo, o título continua sendo o `h1` com o nome "Tem Veg Aí?" para leitores de tela, e `test`, `lint`, `typecheck` e `build` passam.
+
 ---
 
 ## Fase D — Deploy

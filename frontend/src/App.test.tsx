@@ -144,12 +144,14 @@ afterEach(() => {
 });
 
 describe('App', () => {
-  it('shows the project title with the leaf as the accent', () => {
+  it('shows the project logo as the title', () => {
     render(<App />);
 
-    const title = screen.getByRole('heading', { level: 1 });
-    expect(title.querySelector('.sr-only')?.textContent).toBe('Tem Veg Aí?');
-    expect(title.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
+    const title = screen.getByRole('heading', {
+      level: 1,
+      name: 'Tem Veg Aí?',
+    });
+    expect(title.querySelector('img')).not.toBeNull();
   });
 
   it('centers the map on Florianópolis', () => {
