@@ -35,4 +35,19 @@ describe('CreateRestaurantUseCase', () => {
     expect(restaurant).toMatchObject(data);
     expect(await repository.findById(restaurant.id)).toEqual(restaurant);
   });
+
+  it('stores the neighborhood capitalized', async () => {
+    const repository = new InMemoryRestaurantRepository();
+    const useCase = new CreateRestaurantUseCase(repository);
+
+    const restaurant = await useCase.execute({
+      ...data,
+      neighborhood: 'lagoa DA conceição',
+    });
+
+    expect(restaurant.neighborhood).toBe('Lagoa da Conceição');
+    expect((await repository.findById(restaurant.id))?.neighborhood).toBe(
+      'Lagoa da Conceição',
+    );
+  });
 });

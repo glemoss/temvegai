@@ -101,6 +101,8 @@ export const openApiDocument: OpenApiDocument = {
       post: {
         tags: ['restaurants'],
         summary: 'Cria um restaurante',
+        description:
+          'Cada palavra do bairro (`neighborhood`) é salva com a primeira letra maiúscula e o resto minúsculo, exceto `da`, `de`, `do`, `das`, `dos` e `e`, que ficam minúsculos quando não são a primeira palavra.',
         security: adminOnly,
         requestBody: jsonBody(restaurantBodySchema),
         responses: {
@@ -124,7 +126,8 @@ export const openApiDocument: OpenApiDocument = {
       put: {
         tags: ['restaurants'],
         summary: 'Substitui os dados de um restaurante',
-        description: 'Campos opcionais ausentes são apagados.',
+        description:
+          'Campos opcionais ausentes são apagados. Cada palavra do bairro (`neighborhood`) é salva com a primeira letra maiúscula e o resto minúsculo, exceto `da`, `de`, `do`, `das`, `dos` e `e`, que ficam minúsculos quando não são a primeira palavra.',
         security: adminOnly,
         parameters: toParameters(updateRestaurantParams, 'path'),
         requestBody: jsonBody(restaurantBodySchema),

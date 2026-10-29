@@ -63,6 +63,21 @@ describe('UpdateRestaurantUseCase', () => {
     expect(await repository.findById(kairu.id)).toEqual(restaurant);
   });
 
+  it('stores the neighborhood capitalized', async () => {
+    const repository = new InMemoryRestaurantRepository([kairu]);
+    const useCase = new UpdateRestaurantUseCase(repository);
+
+    const restaurant = await useCase.execute(kairu.id, {
+      ...data,
+      neighborhood: 'RIO TAVARES',
+    });
+
+    expect(restaurant.neighborhood).toBe('Rio Tavares');
+    expect((await repository.findById(kairu.id))?.neighborhood).toBe(
+      'Rio Tavares',
+    );
+  });
+
   it('throws RestaurantNotFoundError for an unknown id', async () => {
     const useCase = new UpdateRestaurantUseCase(
       new InMemoryRestaurantRepository([kairu]),

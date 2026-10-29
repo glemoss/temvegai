@@ -1,3 +1,4 @@
+import { formatNeighborhoodName } from '../entities/neighborhood.js';
 import type { Restaurant } from '../entities/restaurant.js';
 import type {
   RestaurantData,
@@ -9,7 +10,10 @@ export class UpdateRestaurantUseCase {
   constructor(private readonly restaurantRepository: RestaurantRepository) {}
 
   async execute(id: string, data: RestaurantData): Promise<Restaurant> {
-    const restaurant = await this.restaurantRepository.update(id, data);
+    const restaurant = await this.restaurantRepository.update(id, {
+      ...data,
+      neighborhood: formatNeighborhoodName(data.neighborhood),
+    });
 
     if (!restaurant) {
       throw new RestaurantNotFoundError();

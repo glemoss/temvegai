@@ -196,6 +196,21 @@ describe('POST /restaurants', () => {
     });
   });
 
+  it('responds with the neighborhood capitalized', async () => {
+    await setup();
+
+    const response = await asAdmin({
+      method: 'POST',
+      url: '/restaurants',
+      payload: { ...body, neighborhood: 'lagoa DA conceição' },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      restaurant: { neighborhood: 'Lagoa da Conceição' },
+    });
+  });
+
   it('stores missing and empty optional fields as null', async () => {
     await setup();
 
@@ -402,6 +417,21 @@ describe('PUT /restaurants/:id', () => {
     };
     expect(response.json()).toEqual(expected);
     expect((await getRestaurant(kairu.id)).json()).toEqual(expected);
+  });
+
+  it('responds with the neighborhood capitalized', async () => {
+    await setup();
+
+    const response = await asAdmin({
+      method: 'PUT',
+      url: `/restaurants/${kairu.id}`,
+      payload: { ...body, neighborhood: 'sAnTo AnTôNiO dE lIsBoA' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      restaurant: { neighborhood: 'Santo Antônio de Lisboa' },
+    });
   });
 
   it('responds 400 for an invalid body', async () => {

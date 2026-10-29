@@ -85,9 +85,10 @@ Etapa criada a partir das pendências. No plano, o dono decide item a item quais
 **Pronto quando:** cada item aprovado no plano funciona como descrito, aparece em `/docs` quando muda a API, e é verificado com `curl`. Com testes.
 No plano: entraram os oito itens. O bairro passa a ser nomeado pela grafia usada pela maioria dos restaurantes (no empate, a com acento), e o `limit` vai de 1 a 100.
 
-### [ ] B14 — Bairro capitalizado
+### [x] B14 — Bairro capitalizado
 `POST` e `PUT /restaurants` salvam o bairro com a primeira letra de cada palavra maiúscula e o resto minúsculo, independente de como foi escrito, exceto as preposições e artigos `da`, `de`, `do`, `das`, `dos` e `e`, que ficam minúsculos quando não são a primeira palavra (ex.: `lagoa DA conceição` vira `Lagoa da Conceição`). A regra fica na API, para valer para qualquer cliente. Os bairros já salvos não são convertidos. Etapa criada junto com a A6, e vem antes dela.
 **Pronto quando:** criar e editar um restaurante com o bairro em minúsculas, maiúsculas ou misturado salva e devolve o bairro no formato descrito, com as preposições minúsculas, e os bairros já salvos continuam como estão. Verificado com `curl`. Com testes.
+No plano: espaços repetidos viram um só, e só o espaço separa palavras (hífen e apóstrofo não).
 
 ---
 
