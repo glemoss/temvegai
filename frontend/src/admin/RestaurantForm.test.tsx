@@ -6,6 +6,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import {
   afterEach,
@@ -316,6 +317,113 @@ describe('RestaurantForm', () => {
   });
 });
 
+describe('RestaurantForm, new neighborhood', () => {
+  function dialog() {
+    return screen.queryByRole('alertdialog');
+  }
+
+  it('saves a registered neighborhood without asking, whatever its spelling', async () => {
+    const { onSubmit } = renderForm();
+    fillRequired();
+    type('Bairro', 'CENTRO');
+
+    submit();
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(dialog()).toBeNull();
+  });
+
+  it('asks before saving a new neighborhood, showing the similar ones', () => {
+    const { onSubmit } = renderForm();
+    fillRequired();
+    type('Bairro', 'Centro Histórico');
+
+    submit();
+
+    expect(dialog()?.textContent).toContain(
+      'Nenhum restaurante está em “Centro Histórico”. Bairros parecidos: Centro. Salvar mesmo assim?',
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('asks without similar ones when none shares a word', () => {
+    renderForm();
+    fillRequired();
+    type('Bairro', 'Pantanal');
+
+    submit();
+
+    expect(dialog()?.textContent).toContain(
+      'Nenhum restaurante está em “Pantanal”. Salvar mesmo assim?',
+    );
+  });
+
+  it('goes back to the form without sending when cancelled', async () => {
+    const { onSubmit } = renderForm();
+    fillRequired();
+    type('Bairro', 'Pantanal');
+    submit();
+
+    fireEvent.click(
+      within(dialog() as HTMLElement).getByRole('button', { name: 'Cancelar' }),
+    );
+
+    await waitFor(() => expect(dialog()).toBeNull());
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(inputValue('Bairro')).toBe('Pantanal');
+  });
+
+  it('saves once confirmed', async () => {
+    const { onSubmit } = renderForm();
+    fillRequired();
+    type('Bairro', 'Pantanal');
+    submit();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar mesmo assim' }));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ neighborhood: 'Pantanal' }),
+      ),
+    );
+    expect(dialog()).toBeNull();
+  });
+
+  it('asks when editing too', () => {
+    const { onSubmit } = renderForm({
+      initialValues: {
+        ...emptyRestaurantForm,
+        name: 'Mandarina',
+        type: 'fully_vegan',
+        address: 'Rua das Flores, 100',
+        neighborhood: 'Campeche',
+        latitude: '-27.66',
+        longitude: '-48.49',
+      },
+    });
+    type('Bairro', 'Campeche Sul');
+
+    submit();
+
+    expect(dialog()?.textContent).toContain(
+      'Nenhum restaurante está em “Campeche Sul”. Bairros parecidos: Campeche.',
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('saves without asking while the registered ones are not known', async () => {
+    vi.mocked(useNeighborhoods).mockReturnValue({ status: 'error' });
+    const { onSubmit } = renderForm();
+    fillRequired();
+    type('Bairro', 'Pantanal');
+
+    submit();
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(dialog()).toBeNull();
+  });
+});
+
 describe('RestaurantForm, location by address', () => {
   const found = { latitude: -27.59, longitude: -48.55, neighborhood: null };
 
@@ -424,7 +532,7 @@ describe('RestaurantForm, location by address', () => {
     );
   });
 
-  it('fills the neighborhood as found when none is registered with that name', async () => {
+  it('leaves the neighborhood empty when the name found is not registered', async () => {
     vi.mocked(geocodeAddress).mockResolvedValue({
       ...found,
       neighborhood: 'Trindade Sul',
@@ -434,7 +542,25 @@ describe('RestaurantForm, location by address', () => {
     type('Endereço', 'Rua Deputado Antônio Edu Vieira, 100');
     await waitForSearch();
 
-    expect(inputValue('Bairro')).toBe('Trindade Sul');
+    expect(inputValue('Bairro')).toBe('');
+    expect(inputValue('Latitude')).toBe('-27.59');
+    expect(screen.getByRole('status').textContent).toBe(
+      'Pin marcado pelo endereço. “Trindade Sul” não é um bairro cadastrado; escolha o bairro.',
+    );
+  });
+
+  it('leaves the neighborhood empty while the registered ones are not known', async () => {
+    vi.mocked(useNeighborhoods).mockReturnValue({ status: 'error' });
+    vi.mocked(geocodeAddress).mockResolvedValue({
+      ...found,
+      neighborhood: 'Campeche',
+    });
+    renderForm();
+
+    type('Endereço', 'Avenida Pequeno Príncipe, 2000');
+    await waitForSearch();
+
+    expect(inputValue('Bairro')).toBe('');
   });
 
   it('keeps a neighborhood typed by the admin', async () => {
@@ -492,6 +618,15 @@ describe('RestaurantForm, address by map', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.mocked(useNeighborhoods).mockReturnValue({
+      status: 'success',
+      neighborhoods: [
+        { name: 'Campeche', bounds: noArea },
+        { name: 'Centro', bounds: noArea },
+        { name: 'Jurerê', bounds: noArea },
+        { name: 'Pantanal', bounds: noArea },
+      ],
+    });
   });
 
   function clickMap() {
@@ -586,6 +721,27 @@ describe('RestaurantForm, address by map', () => {
 
     expect(inputValue('Endereço')).toBe('Rua dos Tucunarés');
     expect(inputValue('Bairro')).toBe('Jurerê');
+  });
+
+  it('empties a neighborhood it filled when the next one is not registered', async () => {
+    vi.mocked(reverseGeocode).mockResolvedValue(pantanal);
+    renderForm();
+    clickMap();
+    await waitForReverseSearch();
+
+    vi.mocked(reverseGeocode).mockResolvedValue({
+      road: 'Rua Lauro Linhares',
+      houseNumber: '100',
+      neighborhood: 'Trindade Norte',
+    });
+    clickMap();
+    await waitForReverseSearch();
+
+    expect(inputValue('Endereço')).toBe('Rua Lauro Linhares, 100');
+    expect(inputValue('Bairro')).toBe('');
+    expect(screen.getByRole('status').textContent).toBe(
+      'Endereço preenchido pelo mapa. Confira se precisar. “Trindade Norte” não é um bairro cadastrado; escolha o bairro.',
+    );
   });
 
   it('does not search the address it filled, keeping the pin', async () => {

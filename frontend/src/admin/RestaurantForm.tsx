@@ -24,10 +24,10 @@ import {
   type RestaurantInput,
   type RestaurantType,
 } from '../api/restaurants';
-import { normalize } from '../normalize';
 import { TYPE_LABELS } from '../restaurantTypeLabels';
 import { useNeighborhoods } from '../useNeighborhoods';
 import { LocationPicker } from './LocationPicker';
+import { NewNeighborhoodDialog } from './NewNeighborhoodDialog';
 import { OpeningHoursInput } from './OpeningHoursInput';
 import {
   parseRestaurantForm,
@@ -35,6 +35,10 @@ import {
   type FormErrors,
   type RestaurantFormValues,
 } from './restaurantFormSchema';
+import {
+  registeredSpelling,
+  similarNeighborhoods,
+} from './similarNeighborhoods';
 
 // How long the address must stay unchanged before it is searched; the
 // geocoding service does not allow a search for every key typed.
@@ -176,45 +180,58 @@ export function RestaurantForm({
     address: false,
     neighborhood: false,
   });
+  // A restaurant ready to be sent, waiting for the admin to confirm its
+  // new neighborhood.
+  const [toConfirm, setToConfirm] = useState<RestaurantInput | null>(null);
   const neighborhoods = useNeighborhoods();
   const neighborhoodListId = useId();
   const typeId = useId();
 
-  // The spelling of a neighborhood already registered when the name
-  // matches apart from case and accents.
-  function registeredSpelling(name: string): string {
-    const known =
-      neighborhoods.status === 'success' ? neighborhoods.neighborhoods : [];
-    return (
-      known.find((item) => normalize(item.name) === normalize(name))?.name ??
-      name
-    );
-  }
+  // Null while the neighborhoods are not known, when no name can be told
+  // new.
+  const registered =
+    neighborhoods.status === 'success'
+      ? neighborhoods.neighborhoods.map(({ name }) => name)
+      : null;
 
   function mayFill(key: 'address' | 'neighborhood'): boolean {
     return filledBySearch[key] || !values[key].trim();
   }
 
+  // The neighborhood a search puts in the field: the registered spelling
+  // of the name found or, when it is not registered, an empty field for
+  // the admin to choose. Null leaves the field as it is.
+  function searchedNeighborhood(found: string | null): string | null {
+    if (!found || !mayFill('neighborhood')) return null;
+    return registeredSpelling(found, registered ?? []) ?? '';
+  }
+
+  function unregisteredMessage(found: string | null): string {
+    return `“${found}” não é um bairro cadastrado; escolha o bairro.`;
+  }
+
   // Places the pin and fills the neighborhood unless the admin typed one.
   const applyGeocodedAddress = useEffectEvent((found: GeocodedAddress) => {
-    const neighborhood =
-      found.neighborhood && mayFill('neighborhood')
-        ? registeredSpelling(found.neighborhood)
-        : null;
+    const neighborhood = searchedNeighborhood(found.neighborhood);
 
     setValues((current) => ({
       ...current,
       latitude: String(found.latitude),
       longitude: String(found.longitude),
-      ...(neighborhood && { neighborhood }),
+      ...(neighborhood !== null && { neighborhood }),
     }));
-    if (neighborhood) {
-      setFilledBySearch((current) => ({ ...current, neighborhood: true }));
+    if (neighborhood !== null) {
+      setFilledBySearch((current) => ({
+        ...current,
+        neighborhood: neighborhood !== '',
+      }));
     }
     setGeocodeMessage(
       neighborhood
         ? 'Pin e bairro preenchidos pelo endereço. Confira e ajuste se precisar.'
-        : 'Pin marcado pelo endereço. Confira e ajuste com um clique se precisar.',
+        : neighborhood === ''
+          ? `Pin marcado pelo endereço. ${unregisteredMessage(found.neighborhood)}`
+          : 'Pin marcado pelo endereço. Confira e ajuste com um clique se precisar.',
     );
   });
 
@@ -226,19 +243,17 @@ export function RestaurantForm({
       place.road && mayFill('address')
         ? [place.road, place.houseNumber].filter(Boolean).join(', ')
         : null;
-    const neighborhood =
-      place.neighborhood && mayFill('neighborhood')
-        ? registeredSpelling(place.neighborhood)
-        : null;
+    const neighborhood = searchedNeighborhood(place.neighborhood);
 
     setValues((current) => ({
       ...current,
       ...(address && { address }),
-      ...(neighborhood && { neighborhood }),
+      ...(neighborhood !== null && { neighborhood }),
     }));
     setFilledBySearch((current) => ({
       address: current.address || address !== null,
-      neighborhood: current.neighborhood || neighborhood !== null,
+      neighborhood:
+        neighborhood === null ? current.neighborhood : neighborhood !== '',
     }));
 
     const filled =
@@ -249,14 +264,16 @@ export function RestaurantForm({
           : neighborhood
             ? 'Bairro preenchido'
             : null;
-    setGeocodeMessage(
+    const messages = [
       filled &&
         `${filled} pelo mapa. ${
           address && !place.houseNumber
             ? 'Confira e complete o número.'
             : 'Confira se precisar.'
         }`,
-    );
+      neighborhood === '' && unregisteredMessage(place.neighborhood),
+    ].filter(Boolean);
+    setGeocodeMessage(messages.length > 0 ? messages.join(' ') : null);
   });
 
   useEffect(() => {
@@ -386,9 +403,20 @@ export function RestaurantForm({
     }
 
     setErrors({});
+    if (
+      registered &&
+      !registeredSpelling(result.input.neighborhood, registered)
+    ) {
+      setToConfirm(result.input);
+      return;
+    }
+    await save(result.input);
+  }
+
+  async function save(input: RestaurantInput) {
     setSubmitting(true);
     try {
-      await onSubmit(result.input);
+      await onSubmit(input);
     } catch (reason) {
       if (reason instanceof ValidationError) {
         setErrors(toFormErrors(reason.details));
@@ -601,6 +629,18 @@ export function RestaurantForm({
           {formMessage}
         </p>
       </div>
+
+      {toConfirm && registered && (
+        <NewNeighborhoodDialog
+          name={toConfirm.neighborhood}
+          similar={similarNeighborhoods(toConfirm.neighborhood, registered)}
+          onCancel={() => setToConfirm(null)}
+          onConfirm={() => {
+            setToConfirm(null);
+            void save(toConfirm);
+          }}
+        />
+      )}
     </form>
   );
 }
