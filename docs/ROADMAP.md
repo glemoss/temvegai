@@ -215,9 +215,10 @@ Para que a troca da API por um container (ex.: Cloud Run) continue barata depois
 Script `build` (compila com `tsc` para `dist`) e `start` (roda `dist/server.js` com `node`, sem `tsx`) no backend, e `build` (`vite build`) no frontend.
 **Pronto quando:** no backend, `npm run build && npm start` sobe a API contra o banco local e `GET /health` responde 200; no frontend, `npm run build` gera o `dist`, e o site servido por ele (`vite preview`) abre o mapa e o painel contra a API local.
 
-### [ ] D1 — API atrás de proxy e seed protegido
+### [x] D1 — API atrás de proxy e seed protegido
 Variável de ambiente para o `trustProxy` do Fastify, para que o limite de tentativas do login conte pelo IP de quem acessa e não pelo do proxy. O `seed`, que apaga os dados, recusa rodar com `NODE_ENV=production`. `.env.example` atualizado.
 **Pronto quando:** um teste com `app.inject` mostra que, com o proxy confiável ligado, duas origens diferentes no `X-Forwarded-For` têm contagens separadas, e o `seed` termina com erro e sem apagar nada quando `NODE_ENV=production`. Com testes.
+No plano: `TRUST_PROXY` é o número de proxies na frente da API (padrão 0, desligado). Como o Fastify 5.12 deixou de aceitar a contagem (ela não distingue um proxy de um cliente que chega direto na API), a contagem vira uma função passada ao `trustProxy`, segura enquanto toda requisição passa pelos proxies, como na Vercel. Com a API num container exposto diretamente, trocar por uma lista de endereços dos proxies.
 
 ### [ ] D2 — CI
 Workflow do GitHub Actions que roda `test`, `lint`, `typecheck` e `build` do backend e do frontend em todo push e pull request, com o Node do `.nvmrc`.

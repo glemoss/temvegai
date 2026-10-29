@@ -47,6 +47,7 @@ Todos os comandos partem da raiz do repositório.
    | `JWT_SECRET` | Segredo que assina o cookie de sessão, com pelo menos 32 caracteres |
    | `NODE_ENV` | `development` ou `production`; em produção o cookie só é enviado por HTTPS |
    | `CORS_ORIGIN` | Endereço do frontend autorizado a chamar a API com cookies (padrão: o Vite em `http://localhost:5173`) |
+   | `TRUST_PROXY` | Quantos proxies ficam na frente da API e acrescentam o `X-Forwarded-For`; o limite de tentativas do login conta pelo IP que eles informam (padrão `0`: nenhum, usa o endereço da conexão) |
 
    A API não inicia se alguma variável estiver faltando ou inválida, e diz qual é.
 
@@ -58,7 +59,7 @@ Todos os comandos partem da raiz do repositório.
    npm run seed
    ```
 
-   O `seed` apaga os restaurantes e recria 5 de exemplo. Use só em desenvolvimento.
+   O `seed` apaga os restaurantes e recria os de exemplo. Use só em desenvolvimento: com `NODE_ENV=production` ele recusa rodar e não apaga nada.
 
 5. **Conta de admin** (opcional, só para testar as rotas de escrita). O comando pede e-mail e senha no terminal; a senha precisa de pelo menos 12 caracteres:
 
@@ -119,7 +120,7 @@ Rodar dentro de `backend`:
 | `npm run format` | Formata o código com Prettier |
 | `npm run migrate` | Aplica as migrations pendentes |
 | `npm run migrate:rollback` | Desfaz o último lote de migrations |
-| `npm run seed` | Apaga e recria os dados de exemplo |
+| `npm run seed` | Apaga e recria os dados de exemplo (recusa rodar com `NODE_ENV=production`) |
 | `npm run create-admin` | Cria uma conta de admin |
 
 ### Site

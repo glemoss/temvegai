@@ -4,6 +4,7 @@ import { createDatabase, isDatabaseReachable } from './database/connection.js';
 import { KnexRestaurantRepository } from './repositories/knex/knex-restaurant.repository.js';
 import { KnexUserRepository } from './repositories/knex/knex-user.repository.js';
 import { Argon2PasswordHasher } from './services/argon2-password-hasher.js';
+import { trustProxyHops } from './trust-proxy.js';
 
 const env = loadEnvOrExit(serverEnvSchema);
 // Knex messages, such as connection errors, go to the Fastify logger. The
@@ -26,7 +27,7 @@ const app = buildApp(
     cookieSecure: env.NODE_ENV === 'production',
     corsOrigin: env.CORS_ORIGIN,
   },
-  { logger: true },
+  { logger: true, trustProxy: trustProxyHops(env.TRUST_PROXY) },
 );
 
 app.addHook('onClose', async () => {

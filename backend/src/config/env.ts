@@ -1,20 +1,29 @@
 import { z } from 'zod';
 
-// What the commands that only touch the database (migrate, seed,
-// create-admin) need.
+// What the commands that only touch the database (migrate, create-admin)
+// need.
 export const databaseEnvSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
 });
 
+const nodeEnv = z.enum(['development', 'production']).default('development');
+
+// The seed also reads NODE_ENV, to refuse to run in production.
+export const seedEnvSchema = databaseEnvSchema.extend({ NODE_ENV: nodeEnv });
+
 export const serverEnvSchema = databaseEnvSchema.extend({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   JWT_SECRET: z.string().min(32),
-  NODE_ENV: z.enum(['development', 'production']).default('development'),
+  NODE_ENV: nodeEnv,
   // Origin of the frontend allowed by CORS. Reduced to scheme, host and port,
   // which is what the browser sends in the Origin header.
   CORS_ORIGIN: z
     .url({ protocol: /^https?$/ })
     .transform((value) => new URL(value).origin),
+  // How many proxies in front of the API add to X-Forwarded-For. Only those
+  // entries are trusted, so the client IP cannot be forged; 0 ignores the
+  // header and uses the address of the connection.
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 });
 
 export class InvalidEnvError extends Error {

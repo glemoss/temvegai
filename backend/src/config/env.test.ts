@@ -3,6 +3,7 @@ import {
   InvalidEnvError,
   databaseEnvSchema,
   loadEnv,
+  seedEnvSchema,
   serverEnvSchema,
 } from './env.js';
 
@@ -21,6 +22,7 @@ describe('loadEnv with the server schema', () => {
       ...required,
       PORT: '4000',
       NODE_ENV: 'production',
+      TRUST_PROXY: '2',
     });
 
     expect(env).toEqual({
@@ -29,6 +31,7 @@ describe('loadEnv with the server schema', () => {
       JWT_SECRET: jwtSecret,
       NODE_ENV: 'production',
       CORS_ORIGIN: corsOrigin,
+      TRUST_PROXY: 2,
     });
   });
 
@@ -42,6 +45,18 @@ describe('loadEnv with the server schema', () => {
     const env = loadEnv(serverEnvSchema, required);
 
     expect(env.NODE_ENV).toBe('development');
+  });
+
+  it('defaults TRUST_PROXY to 0', () => {
+    const env = loadEnv(serverEnvSchema, required);
+
+    expect(env.TRUST_PROXY).toBe(0);
+  });
+
+  it.each(['-1', '1.5', 'yes'])('rejects TRUST_PROXY %s', (value) => {
+    expect(() =>
+      loadEnv(serverEnvSchema, { ...required, TRUST_PROXY: value }),
+    ).toThrow(/TRUST_PROXY/);
   });
 
   it('throws naming the missing variable', () => {
@@ -129,5 +144,23 @@ describe('loadEnv with the database schema', () => {
     expect(() => loadEnv(databaseEnvSchema, {})).toThrow(/DATABASE_URL/);
     expect(() => loadEnv(databaseEnvSchema, {})).not.toThrow(/JWT_SECRET/);
     expect(() => loadEnv(databaseEnvSchema, {})).not.toThrow(/CORS_ORIGIN/);
+  });
+});
+
+describe('loadEnv with the seed schema', () => {
+  it('reads DATABASE_URL and NODE_ENV', () => {
+    expect(
+      loadEnv(seedEnvSchema, {
+        DATABASE_URL: databaseUrl,
+        NODE_ENV: 'production',
+      }),
+    ).toEqual({ DATABASE_URL: databaseUrl, NODE_ENV: 'production' });
+  });
+
+  it('defaults NODE_ENV to development', () => {
+    expect(loadEnv(seedEnvSchema, { DATABASE_URL: databaseUrl })).toEqual({
+      DATABASE_URL: databaseUrl,
+      NODE_ENV: 'development',
+    });
   });
 });

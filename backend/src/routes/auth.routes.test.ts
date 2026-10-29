@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memory-restaurant.repository.js';
 import { InMemoryUserRepository } from '../repositories/in-memory/in-memory-user.repository.js';
-import type { FastifyInstance } from 'fastify';
+import { trustProxyHops } from '../trust-proxy.js';
+import type { FastifyInstance, FastifyServerOptions } from 'fastify';
 
 const email = 'admin@temveg.ai';
 const password = 'correct-horse-battery';
@@ -10,30 +11,50 @@ const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 
 let app: FastifyInstance;
 
-async function setup() {
+async function setup(options: FastifyServerOptions = {}) {
   const userRepository = new InMemoryUserRepository();
   const admin = await userRepository.create({
     email,
     passwordHash: `hashed:${password}`,
   });
-  app = buildApp({
-    checkDatabase: async () => true,
-    restaurantRepository: new InMemoryRestaurantRepository(),
-    userRepository,
-    passwordHasher: {
-      hash: async (plain) => `hashed:${plain}`,
-      verify: async (hash, plain) => hash === `hashed:${plain}`,
+  app = buildApp(
+    {
+      checkDatabase: async () => true,
+      restaurantRepository: new InMemoryRestaurantRepository(),
+      userRepository,
+      passwordHasher: {
+        hash: async (plain) => `hashed:${plain}`,
+        verify: async (hash, plain) => hash === `hashed:${plain}`,
+      },
+      jwtSecret: 'a'.repeat(32),
+      cookieSecure: false,
+      corsOrigin: 'http://localhost:5173',
     },
-    jwtSecret: 'a'.repeat(32),
-    cookieSecure: false,
-    corsOrigin: 'http://localhost:5173',
-  });
+    options,
+  );
   await app.ready();
   return { admin };
 }
 
-function login(body: object) {
-  return app.inject({ method: 'POST', url: '/auth/login', payload: body });
+function login(body: object, forwardedFor?: string) {
+  return app.inject({
+    method: 'POST',
+    url: '/auth/login',
+    payload: body,
+    ...(forwardedFor !== undefined && {
+      headers: { 'x-forwarded-for': forwardedFor },
+    }),
+  });
+}
+
+async function exhaustLoginAttempts(forwardedFor: string) {
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const response = await login(
+      { email, password: 'wrong-horse-battery' },
+      forwardedFor,
+    );
+    expect(response.statusCode).toBe(401);
+  }
 }
 
 async function loginToken(): Promise<string> {
@@ -157,6 +178,32 @@ describe('POST /auth/login', () => {
       },
     });
     expect(response.cookies).toEqual([]);
+  });
+
+  it('counts each X-Forwarded-For origin separately behind a trusted proxy', async () => {
+    await setup({ trustProxy: trustProxyHops(1) });
+
+    await exhaustLoginAttempts('203.0.113.1');
+
+    expect((await login({ email, password }, '203.0.113.1')).statusCode).toBe(
+      429,
+    );
+    expect((await login({ email, password }, '203.0.113.2')).statusCode).toBe(
+      200,
+    );
+  });
+
+  it.each([
+    ['without trustProxy', {}],
+    ['with 0 hops', { trustProxy: trustProxyHops(0) }],
+  ])('ignores X-Forwarded-For %s', async (_case, options) => {
+    await setup(options);
+
+    await exhaustLoginAttempts('203.0.113.1');
+
+    expect((await login({ email, password }, '203.0.113.2')).statusCode).toBe(
+      429,
+    );
   });
 
   it('does not limit other routes', async () => {
