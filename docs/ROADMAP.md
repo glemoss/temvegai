@@ -224,7 +224,7 @@ Variável de ambiente para o `trustProxy` do Fastify, para que o limite de tenta
 **Pronto quando:** um teste com `app.inject` mostra que, com o proxy confiável ligado, duas origens diferentes no `X-Forwarded-For` têm contagens separadas, e o `seed` termina com erro e sem apagar nada quando `NODE_ENV=production`. Com testes.
 No plano: `TRUST_PROXY` é o número de proxies na frente da API (padrão 0, desligado). Como o Fastify 5.12 deixou de aceitar a contagem (ela não distingue um proxy de um cliente que chega direto na API), a contagem vira uma função passada ao `trustProxy`, segura enquanto toda requisição passa pelos proxies, como na Vercel. Com a API num container exposto diretamente, trocar por uma lista de endereços dos proxies.
 
-### [ ] D2 — CI
+### [x] D2 — CI
 Workflow do GitHub Actions que roda `test`, `lint`, `typecheck` e `build` do backend e do frontend em todo push e pull request, com o Node do `.nvmrc`.
 **Pronto quando:** um pull request mostra os checks verdes, e um teste quebrado de propósito deixa o check vermelho.
 
@@ -295,3 +295,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (A3) Decidido pelo dono: se o restaurante for removido com a edição aberta, salvar mostra o aviso "Oops, esse restaurante não existe mais.", fecha o modal e recarrega a lista.
 - (B13) ~~O banco ordena os textos pelos bytes, com maiúsculas antes de minúsculas: a imagem `postgres:18-alpine` usa musl, que ignora a collation `en_US.utf8`. Um bairro ou restaurante em minúsculas ("lagoa da conceicao") aparece depois de "Trindade", e o repositório em memória, que usa `localeCompare`, ordena diferente. Decidir se a ordenação deve ignorar maiúsculas (ex.: `order by lower(name)` ou uma collation ICU).~~ Resolvido na B15: a ordem usa `lower(unaccent(...)) COLLATE "C"`, igual em qualquer Postgres, e o repositório em memória segue a mesma regra.
 - (D0) O `vite build` avisa que o JavaScript do site passa de 500 kB depois de minificado (686 kB, 209 kB com gzip), porque mapa, site e painel admin vão num arquivo só. O build funciona; decidir se vale separar o painel admin (e talvez o Leaflet) com `import()` dinâmico.
+- (D2) Os testes do frontend dependem do `VITE_API_URL` no ambiente: o `src/config.ts` valida a configuração ao ser importado, e sem `.env` (como num clone novo) 7 arquivos de teste falham antes de rodar. O CI define a variável no workflow. Decidir se os testes devem deixar de depender dela (ex.: `test.env` no `vite.config.ts`).
