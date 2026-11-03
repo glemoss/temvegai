@@ -236,13 +236,25 @@ O dono cria o projeto no Neon (região de São Paulo, se o plano gratuito oferec
 Arquivo de entrada da função da Vercel, que exporta o app em vez de chamar `listen`; a montagem das dependências passa a ficar numa função usada por ele e pelo `server.ts`, para continuar havendo um só lugar de composição. Projeto da Vercel com raiz `backend`, Node 24, variáveis de ambiente (`DATABASE_URL` pela conexão com pooler do Neon, `JWT_SECRET`, `NODE_ENV`, `CORS_ORIGIN`, a do proxy) e deploy automático pelo Git desligado, para que nenhum deploy de prévia use o banco de produção.
 **Pronto quando:** `curl https://<api>.vercel.app/health` responde 200 com o banco acessível, e o login por `curl` devolve o cookie com `Secure` e `HttpOnly` (o `argon2` carregou o binário pronto).
 
-### [ ] D5 — Site na Vercel
+### [x] D5 — Site na Vercel
 `vercel.json` no frontend com o repasse de `/api/*` para a API e o fallback da SPA para o `index.html`. Projeto da Vercel com raiz `frontend`, `VITE_API_URL=/api` e deploy automático pelo Git desligado. `CORS_ORIGIN` da API passa a ser o endereço do site. A quantidade de proxies confiáveis da D1 é conferida aqui, com o caminho completo.
 **Pronto quando:** o mapa carrega no endereço público; recarregar `/admin` abre o painel; o login funciona no Chrome e no Firefox (que bloqueia cookies de terceiros); criar, editar e remover funcionam; e o limite de tentativas do login vê o IP de quem acessa.
+Conferido: pelo site (navegador → borda do site → borda da API → função) e direto na API, o `remoteAddress` nos logs da função é o IP de quem acessa, então o `TRUST_PROXY` continua `1`. O rewrite de um projeto da Vercel para outro não acrescenta um proxy à contagem.
 
 ### [ ] D6 — Deploy automático
 Workflow que, depois dos checks verdes num push na `main`, roda as migrations pendentes no Neon pela conexão direta e publica a API e depois o site com a CLI da Vercel (`npx`, sem entrar no `package.json`). Tokens e endereços do banco ficam nos secrets do GitHub. Como as migrations rodam antes do código novo, cada migration precisa funcionar também com a versão anterior da API.
 **Pronto quando:** um commit na `main` aparece publicado sem passo manual; um commit com teste quebrado não é publicado; e uma migration nova é aplicada no Neon antes de a API que depende dela entrar no ar.
+
+---
+
+## Fase M — Melhorias
+
+Melhorias no cadastro do painel admin e no site público, notadas pelo dono ao testar o site publicado na D5. Começa depois da fase D. As etapas ainda não estão definidas: cada item abaixo precisa das decisões indicadas antes de virar etapa.
+
+- **Limite da descrição.** O campo `description` não tem limite de tamanho (no banco é `text`, e nem a API nem o formulário limitam). Decidir o número de caracteres e se o formulário mostra um contador.
+- **Telefone padronizado.** O `phone` é texto livre. O formulário passa a padronizar a entrada (ex.: máscara `(48) 99999-9999`, aceitando fixo e celular). Decidir se a API também valida e guarda num formato único, e o que fazer com os telefones já cadastrados.
+- **Endereço em campos separados.** O endereço é um campo de texto só (`address`). Passa a ser separado em logradouro, número e CEP (e talvez complemento), com o CEP preenchendo o resto. É mudança no modelo de dados do `SPEC.md`: precisa de migration que converta os endereços existentes, e muda o formulário, a busca no Nominatim e o painel de detalhes. Para o CEP há APIs gratuitas e sem chave, como o ViaCEP e a BrasilAPI (que às vezes devolve também a coordenada), sem SLA; como no Nominatim (A2), o CEP sairia do navegador do admin para um serviço de terceiros.
+- **Rota até o restaurante.** O painel de detalhes do site ganha um botão que abre o restaurante num app de mapa, já com a rota traçada até ele, a partir da latitude e longitude cadastradas, sem dependência nova (links como `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>`, `https://maps.apple.com/?daddr=<lat>,<lng>` e `https://waze.com/ul?ll=<lat>,<lng>&navigate=yes`). Decidir quais apps oferecer: um botão só (Google Maps, que abre o app no celular quando instalado), uma lista para escolher, ou o app padrão do sistema (Apple Maps no iPhone).
 
 ---
 
@@ -299,3 +311,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (D3) O bloqueio do `seed` olha só o `NODE_ENV`. Com o `DATABASE_URL` do Neon exportado no terminal e o `.env` local com `NODE_ENV=development`, um `npm run seed` apagaria os restaurantes de produção. O README manda dar `unset DATABASE_URL` logo depois dos comandos; decidir se o `seed` também deve recusar um banco que não esteja em `localhost`.
 - (D4) O carregador de funções da Vercel no Node 24 sobe o processo sem o `require()` de pacotes ESM, que o Node 24 aceita sozinho ([vercel/vercel#17770](https://github.com/vercel/vercel/issues/17770)). O `@fastify/static`, usado pelo Swagger UI do `/docs`, faz `require()` do `content-disposition` 3, que é só ESM, e a função quebrava ao carregar. Resolvido com `NODE_OPTIONS=--experimental-require-module` nas variáveis da Vercel. Quando a Vercel corrigir, a variável pode sair; se o `/docs` deixar de ser servido em produção (pendência da B10), ela também deixa de ser necessária.
 - (D4) O Knex usa o pool padrão (mínimo de 2 conexões) também na função da Vercel, que é congelada entre requisições. Com o pooler do Neon funcionou; se aparecerem erros de conexão encerrada depois de um tempo parada, configurar `pool: { min: 0 }` e um `idleTimeoutMillis` curto.
+- (D5) Pelo site, `/api/docs` abre o HTML do Swagger UI, mas ele pede os arquivos em `/docs/static/...`, fora do `/api`, e o fallback da SPA devolve o `index.html` do site no lugar deles: a documentação só funciona direto na API (`https://temvegai-api.vercel.app/docs`). Entra na decisão da (B10) sobre esconder ou proteger o `/docs` em produção.

@@ -165,16 +165,76 @@ Variáveis de ambiente, só em **Production**:
 | `JWT_SECRET` | Segredo próprio de produção, diferente do local (`openssl rand -base64 48`) |
 | `NODE_ENV` | `production` |
 | `CORS_ORIGIN` | Endereço do site |
-| `TRUST_PROXY` | `1` |
+| `TRUST_PROXY` | `1`. Conferido com o caminho completo: também pelo repasse do site, a API vê o IP de quem acessa |
 | `NODE_OPTIONS` | `--experimental-require-module`. O carregador de funções da Vercel desliga o `require()` de pacotes ESM, que o Node 24 aceita; sem a flag, o `@fastify/static` (usado pelo `/docs`) quebra ao carregar o `content-disposition` |
 
-Para publicar, a partir da **raiz** do repositório (a Root Directory já aponta para `backend`), com o projeto ligado por `npx vercel link`:
+Para publicar, a partir da **raiz** do repositório (a Root Directory já aponta para `backend`), com o projeto da API ligado (veja [Qual projeto está ligado](#qual-projeto-está-ligado)):
 
 ```sh
+npx vercel link --yes --project temvegai-api
 npx vercel deploy --prod
 ```
 
 O CLI não lê o `.gitignore`: o `.vercelignore` da raiz impede que os `.env` locais, `node_modules` e `dist` sejam enviados. Para conferir a lista antes de publicar, use `npx vercel deploy --dry`.
+
+### Site na Vercel
+
+O site fica no projeto `temvegai-app` da Vercel, no plano gratuito (Hobby). O `frontend/vercel.json` faz duas coisas:
+
+- repassa `/api/*` para a API (`/api/restaurants` vira `https://temvegai-api.vercel.app/restaurants`). O navegador vê um domínio só, e o cookie de sessão é gravado no domínio do site, inclusive no Firefox, que bloqueia cookies de terceiros. Os endereços `*.vercel.app` estão na Public Suffix List, então sem o repasse o cookie da API não valeria para o site;
+- manda qualquer outro caminho que não seja arquivo do `dist` para o `index.html`, para que recarregar `/admin` abra o painel em vez de dar 404.
+
+Ele também desliga o deploy automático pelo Git, como na API.
+
+Para criar o projeto, a partir da **raiz** do repositório:
+
+```sh
+npx vercel link
+```
+
+| Pergunta | Resposta |
+|---|---|
+| Set up "…/temvegai"? | `yes` |
+| Which scope? | o mesmo time da API |
+| Link to existing project? | `no` |
+| What's your project's name? | `temvegai-app` |
+| In which directory is your code located? | `./frontend` |
+| Want to modify these settings? | `no` (ele detecta o Vite, com `vite build` e saída `dist`) |
+
+Depois, confira no painel (**Settings**):
+
+| Onde | Valor |
+|---|---|
+| Root Directory | `frontend` |
+| Framework Preset | Vite |
+| Node.js Version | 24.x |
+| Git | nenhum repositório conectado |
+
+Variável de ambiente, só em **Production** (não é sensível: o valor vai no JavaScript público):
+
+```sh
+npx vercel env add VITE_API_URL production   # valor: /api
+```
+
+O Vite lê a variável no build, que roda na Vercel; o `frontend/.env` local não é enviado. Para publicar:
+
+```sh
+npx vercel link --yes --project temvegai-app
+npx vercel deploy --prod
+```
+
+Na primeira vez, troque o `CORS_ORIGIN` da API pelo endereço de produção do site (linha **Aliased** do deploy, sem barra no final) e publique a API de novo, porque a variável só vale num deploy novo:
+
+```sh
+npx vercel link --yes --project temvegai-api
+npx vercel env rm CORS_ORIGIN production
+npx vercel env add CORS_ORIGIN production
+npx vercel deploy --prod
+```
+
+### Qual projeto está ligado
+
+O CLI liga um projeto por pasta, no `.vercel/project.json`, e os dois projetos são publicados a partir da raiz. Ligar um desliga o outro. Por isso cada publicação acima começa com `npx vercel link --yes --project <nome>`. Para ver qual está ligado agora: `cat .vercel/project.json`.
 
 ## Comandos
 

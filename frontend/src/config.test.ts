@@ -14,6 +14,14 @@ describe('loadConfig', () => {
     });
   });
 
+  it.each(['/api', '/api/'])('reads the path %s on the same domain', (path) => {
+    expect(loadConfig({ VITE_API_URL: path })).toEqual({ apiUrl: '/api' });
+  });
+
+  it.each(['api', '//api.example.com'])('refuses the address %s', (value) => {
+    expect(() => loadConfig({ VITE_API_URL: value })).toThrow('VITE_API_URL');
+  });
+
   it('refuses a missing address', () => {
     expect(() => loadConfig({})).toThrow('VITE_API_URL');
   });
