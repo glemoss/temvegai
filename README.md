@@ -105,6 +105,46 @@ O site fica em `http://localhost:5173` e busca os restaurantes na API, então a 
 
 Em `/docs`, abra `POST /auth/login`, clique em **Try it out** e envie o e-mail e a senha criados no passo 5. O navegador guarda o cookie de sessão, e as rotas de criar, editar e remover restaurante passam a funcionar na mesma página.
 
+## Produção
+
+### Banco no Neon
+
+O banco de produção fica no [Neon](https://neon.com), no plano gratuito, num projeto na região **AWS São Paulo** (`aws-sa-east-1`). Limites do plano gratuito que importam aqui:
+
+- 1 GB de armazenamento por projeto e 5 GB de transferência por mês.
+- 100 CU-horas de processamento por mês. O banco desliga depois de 5 minutos sem uso (não dá para mudar no plano gratuito), e a primeira consulta depois disso demora um pouco mais.
+- 6 horas de histórico para restaurar o banco a um momento anterior.
+
+O painel do Neon mostra dois endereços de conexão (**Connect**, opção **Connection pooling**):
+
+| Endereço | Host | Uso |
+|---|---|---|
+| Direto | sem `-pooler` | `migrate` e `create-admin`, rodados da sua máquina |
+| Com pooler | com `-pooler` | a API na Vercel |
+
+Os dois terminam em `?sslmode=require&channel_binding=require` e funcionam assim: o `pg` 8 trata o `require` como `verify-full` (verifica o certificado do Neon) e ignora o `channel_binding`. Ele avisa que no `pg` 9 o `require` deixará de verificar o certificado; para manter a verificação e não ver o aviso, troque `sslmode=require` por `sslmode=verify-full` no endereço.
+
+### Migrations e conta de admin no Neon
+
+Dentro de `backend`. O endereço é passado só para estes comandos, sem mexer no `.env`: o Node não troca uma variável que já existe pelo valor do `.env`. O `read -rs` lê o endereço sem mostrar na tela e sem gravar no histórico do terminal. Cole o endereço **direto** e aperte Enter:
+
+```sh
+read -rs DATABASE_URL && export DATABASE_URL
+npm run migrate
+npm run create-admin
+unset DATABASE_URL
+```
+
+Para conferir, abra o **SQL Editor** do Neon e rode:
+
+```sql
+select extname from pg_extension where extname = 'unaccent';
+select name from knex_migrations order by id;
+select email from users;
+```
+
+**Não rode o `seed` no Neon.** Ele apaga os restaurantes, e o bloqueio dele olha só o `NODE_ENV`, que continua `development` no `.env` local. Por isso o `unset DATABASE_URL` logo depois dos comandos. Em produção, os restaurantes entram pelo painel admin.
+
 ## Comandos
 
 ### API

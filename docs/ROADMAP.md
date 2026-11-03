@@ -228,7 +228,7 @@ No plano: `TRUST_PROXY` é o número de proxies na frente da API (padrão 0, des
 Workflow do GitHub Actions que roda `test`, `lint`, `typecheck` e `build` do backend e do frontend em todo push e pull request, com o Node do `.nvmrc`.
 **Pronto quando:** um pull request mostra os checks verdes, e um teste quebrado de propósito deixa o check vermelho.
 
-### [ ] D3 — Banco no Neon
+### [x] D3 — Banco no Neon
 O dono cria o projeto no Neon (região de São Paulo, se o plano gratuito oferecer). O README ganha uma seção de produção com como rodar `migrate` e `create-admin` contra o Neon pela conexão direta, e com o aviso de que o `seed` não roda lá.
 **Pronto quando:** as migrations rodaram no Neon, inclusive a do `unaccent`, existe uma conta de admin, e o `migrate:rollback` não foi preciso.
 
@@ -296,3 +296,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (B13) ~~O banco ordena os textos pelos bytes, com maiúsculas antes de minúsculas: a imagem `postgres:18-alpine` usa musl, que ignora a collation `en_US.utf8`. Um bairro ou restaurante em minúsculas ("lagoa da conceicao") aparece depois de "Trindade", e o repositório em memória, que usa `localeCompare`, ordena diferente. Decidir se a ordenação deve ignorar maiúsculas (ex.: `order by lower(name)` ou uma collation ICU).~~ Resolvido na B15: a ordem usa `lower(unaccent(...)) COLLATE "C"`, igual em qualquer Postgres, e o repositório em memória segue a mesma regra.
 - (D0) O `vite build` avisa que o JavaScript do site passa de 500 kB depois de minificado (686 kB, 209 kB com gzip), porque mapa, site e painel admin vão num arquivo só. O build funciona; decidir se vale separar o painel admin (e talvez o Leaflet) com `import()` dinâmico.
 - (D2) Os testes do frontend dependem do `VITE_API_URL` no ambiente: o `src/config.ts` valida a configuração ao ser importado, e sem `.env` (como num clone novo) 7 arquivos de teste falham antes de rodar. O CI define a variável no workflow. Decidir se os testes devem deixar de depender dela (ex.: `test.env` no `vite.config.ts`).
+- (D3) O bloqueio do `seed` olha só o `NODE_ENV`. Com o `DATABASE_URL` do Neon exportado no terminal e o `.env` local com `NODE_ENV=development`, um `npm run seed` apagaria os restaurantes de produção. O README manda dar `unset DATABASE_URL` logo depois dos comandos; decidir se o `seed` também deve recusar um banco que não esteja em `localhost`.
