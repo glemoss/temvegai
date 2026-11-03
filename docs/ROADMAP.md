@@ -247,6 +247,17 @@ Workflow que, depois dos checks verdes num push na `main`, roda as migrations pe
 
 ---
 
+## Fase M — Melhorias
+
+Melhorias no cadastro do painel admin e no site público, notadas pelo dono ao testar o site publicado na D5. Começa depois da fase D. As etapas ainda não estão definidas: cada item abaixo precisa das decisões indicadas antes de virar etapa.
+
+- **Limite da descrição.** O campo `description` não tem limite de tamanho (no banco é `text`, e nem a API nem o formulário limitam). Decidir o número de caracteres e se o formulário mostra um contador.
+- **Telefone padronizado.** O `phone` é texto livre. O formulário passa a padronizar a entrada (ex.: máscara `(48) 99999-9999`, aceitando fixo e celular). Decidir se a API também valida e guarda num formato único, e o que fazer com os telefones já cadastrados.
+- **Endereço em campos separados.** O endereço é um campo de texto só (`address`). Passa a ser separado em logradouro, número e CEP (e talvez complemento), com o CEP preenchendo o resto. É mudança no modelo de dados do `SPEC.md`: precisa de migration que converta os endereços existentes, e muda o formulário, a busca no Nominatim e o painel de detalhes. Para o CEP há APIs gratuitas e sem chave, como o ViaCEP e a BrasilAPI (que às vezes devolve também a coordenada), sem SLA; como no Nominatim (A2), o CEP sairia do navegador do admin para um serviço de terceiros.
+- **Rota até o restaurante.** O painel de detalhes do site ganha um botão que abre o restaurante num app de mapa, já com a rota traçada até ele, a partir da latitude e longitude cadastradas, sem dependência nova (links como `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>`, `https://maps.apple.com/?daddr=<lat>,<lng>` e `https://waze.com/ul?ll=<lat>,<lng>&navigate=yes`). Decidir quais apps oferecer: um botão só (Google Maps, que abre o app no celular quando instalado), uma lista para escolher, ou o app padrão do sistema (Apple Maps no iPhone).
+
+---
+
 ## Depois da v1 (não planejado ainda)
 
 Domínio próprio, API em container (ex.: Cloud Run) se a Vercel deixar de bastar, aplicativo mobile.
