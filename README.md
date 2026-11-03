@@ -236,6 +236,31 @@ npx vercel deploy --prod
 
 O CLI liga um projeto por pasta, no `.vercel/project.json`, e os dois projetos são publicados a partir da raiz. Ligar um desliga o outro. Por isso cada publicação acima começa com `npx vercel link --yes --project <nome>`. Para ver qual está ligado agora: `cat .vercel/project.json`.
 
+### Deploy automático
+
+Todo push na `main` com os checks verdes é publicado sozinho pelo workflow `Deploy` (`.github/workflows/deploy.yml`). Ele roda depois que o workflow `CI` termina e, nesta ordem:
+
+1. aplica as migrations pendentes no Neon, pela conexão **direta**;
+2. publica a API;
+3. publica o site.
+
+Se o CI falhar, o `Deploy` aparece como pulado. Se um passo falhar, os seguintes não rodam: uma migration com erro não deixa a API nova entrar no ar. Pull requests rodam só o CI.
+
+**Cada migration precisa funcionar também com a versão anterior da API**, porque ela é aplicada enquanto a API antiga ainda está no ar. Para renomear ou remover uma coluna, por exemplo, primeiro uma etapa cria a nova e passa a usar só ela; a remoção da antiga fica para um deploy seguinte.
+
+Os secrets ficam no environment `production` do GitHub (**Settings → Environments → New environment**), com **Deployment branches and tags** limitado à `main`, para que um workflow de outra branch não leia o endereço do banco nem o token:
+
+| Secret | Valor |
+|---|---|
+| `VERCEL_API_TOKEN` | Token criado em **Vercel → Account Settings → Tokens**, com acesso só ao `temvegai-api` |
+| `VERCEL_APP_TOKEN` | Outro token, com acesso só ao `temvegai-app` |
+| `VERCEL_ORG_ID` | `orgId` do `.vercel/project.json` (o mesmo nos dois projetos) |
+| `VERCEL_API_PROJECT_ID` | `projectId` do `.vercel/project.json` com o `temvegai-api` ligado |
+| `VERCEL_APP_PROJECT_ID` | `projectId` do `.vercel/project.json` com o `temvegai-app` ligado |
+| `DATABASE_URL` | Endereço **direto** do Neon (sem `-pooler`), com `sslmode=verify-full` |
+
+Com `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID` no ambiente, o CLI publica no projeto indicado sem precisar do `vercel link`. Cada token só alcança o seu projeto; quando um vencer, o passo de deploy dele falha com erro de autenticação, e basta criar outro e trocar o secret. A versão do CLI fica fixa no workflow. Os comandos manuais acima continuam valendo, por exemplo para publicar sem passar por um commit.
+
 ## Comandos
 
 ### API

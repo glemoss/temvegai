@@ -241,7 +241,7 @@ Arquivo de entrada da função da Vercel, que exporta o app em vez de chamar `li
 **Pronto quando:** o mapa carrega no endereço público; recarregar `/admin` abre o painel; o login funciona no Chrome e no Firefox (que bloqueia cookies de terceiros); criar, editar e remover funcionam; e o limite de tentativas do login vê o IP de quem acessa.
 Conferido: pelo site (navegador → borda do site → borda da API → função) e direto na API, o `remoteAddress` nos logs da função é o IP de quem acessa, então o `TRUST_PROXY` continua `1`. O rewrite de um projeto da Vercel para outro não acrescenta um proxy à contagem.
 
-### [ ] D6 — Deploy automático
+### [x] D6 — Deploy automático
 Workflow que, depois dos checks verdes num push na `main`, roda as migrations pendentes no Neon pela conexão direta e publica a API e depois o site com a CLI da Vercel (`npx`, sem entrar no `package.json`). Tokens e endereços do banco ficam nos secrets do GitHub. Como as migrations rodam antes do código novo, cada migration precisa funcionar também com a versão anterior da API.
 **Pronto quando:** um commit na `main` aparece publicado sem passo manual; um commit com teste quebrado não é publicado; e uma migration nova é aplicada no Neon antes de a API que depende dela entrar no ar.
 

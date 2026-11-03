@@ -1,0 +1,58 @@
+name: Deploy
+
+# Runs after CI finishes on main, so only a commit with green checks goes live.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer push waits instead of cutting one in half.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The commit CI checked, not whatever main points to now.
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      # Migrations run before the new API goes live, so each one must also
+      # work with the API version that is still running.
+      - name: Run pending migrations
+        run: npm run migrate
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Both projects deploy from the repository root; each one's Root
+      # Directory setting picks its folder. Each token only reaches its project.
+      - name: Deploy API
+        run: npx --yes vercel@64.7.0 deploy --prod --yes --token "$VERCEL_TOKEN"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+      - name: Deploy site
+        run: npx --yes vercel@64.7.0 deploy --prod --yes --token "$VERCEL_TOKEN"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_APP_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_APP_TOKEN }}
