@@ -1,0 +1,8 @@
+# The Vercel CLI uploads from the repository root and does not read
+# .gitignore. Local secrets and build outputs never leave the machine.
+.env
+node_modules
+dist
+coverage
+.vercel
+.claude
