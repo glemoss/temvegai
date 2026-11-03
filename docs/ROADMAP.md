@@ -244,6 +244,7 @@ Conferido: pelo site (navegador → borda do site → borda da API → função)
 ### [x] D6 — Deploy automático
 Workflow que, depois dos checks verdes num push na `main`, roda as migrations pendentes no Neon pela conexão direta e publica a API e depois o site com a CLI da Vercel (`npx`, sem entrar no `package.json`). Tokens e endereços do banco ficam nos secrets do GitHub. Como as migrations rodam antes do código novo, cada migration precisa funcionar também com a versão anterior da API.
 **Pronto quando:** um commit na `main` aparece publicado sem passo manual; um commit com teste quebrado não é publicado; e uma migration nova é aplicada no Neon antes de a API que depende dela entrar no ar.
+Conferido: o merge do PR #7 publicou a API e o site pelo workflow `Deploy`, com as migrations (`Already up to date.`) antes dos dois deploys. Os secrets ficam no environment `production`, liberado só para a `main`, com um token da Vercel por projeto. O deploy só roda com o CI verde (`conclusion == 'success'`); um commit com teste quebrado ainda não foi mandado de propósito. Uma migration aplicada pelo workflow só vai acontecer com a primeira migration da fase M.
 
 ---
 
