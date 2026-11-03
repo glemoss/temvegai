@@ -145,6 +145,37 @@ select email from users;
 
 **Não rode o `seed` no Neon.** Ele apaga os restaurantes, e o bloqueio dele olha só o `NODE_ENV`, que continua `development` no `.env` local. Por isso o `unset DATABASE_URL` logo depois dos comandos. Em produção, os restaurantes entram pelo painel admin.
 
+### API na Vercel
+
+A API fica no projeto `temvegai-api` da Vercel, em `https://temvegai-api.vercel.app`, no plano gratuito (Hobby). A entrada é o `backend/api/index.ts`, uma função que monta o app (o mesmo `composeApp` do `server.ts`) sem chamar `listen`. O `backend/vercel.json` manda todos os caminhos para ela, põe a função em São Paulo (`gru1`), perto do banco, e desliga o deploy automático pelo Git, para que nenhum deploy de prévia use o banco de produção. O único arquivo estático é o `backend/public/robots.txt`: sem uma pasta `public`, a Vercel serviria a pasta `backend` inteira como arquivos.
+
+Configuração do projeto (**Settings**):
+
+| Onde | Valor |
+|---|---|
+| Root Directory | `backend` |
+| Framework Preset | Other |
+| Node.js Version | 24.x (o `engines` do `package.json` também fixa `24.x`, e ele vence o painel) |
+
+Variáveis de ambiente, só em **Production**:
+
+| Variável | Valor |
+|---|---|
+| `DATABASE_URL` | Endereço **com pooler** do Neon, com `sslmode=verify-full` |
+| `JWT_SECRET` | Segredo próprio de produção, diferente do local (`openssl rand -base64 48`) |
+| `NODE_ENV` | `production` |
+| `CORS_ORIGIN` | Endereço do site |
+| `TRUST_PROXY` | `1` |
+| `NODE_OPTIONS` | `--experimental-require-module`. O carregador de funções da Vercel desliga o `require()` de pacotes ESM, que o Node 24 aceita; sem a flag, o `@fastify/static` (usado pelo `/docs`) quebra ao carregar o `content-disposition` |
+
+Para publicar, a partir da **raiz** do repositório (a Root Directory já aponta para `backend`), com o projeto ligado por `npx vercel link`:
+
+```sh
+npx vercel deploy --prod
+```
+
+O CLI não lê o `.gitignore`: o `.vercelignore` da raiz impede que os `.env` locais, `node_modules` e `dist` sejam enviados. Para conferir a lista antes de publicar, use `npx vercel deploy --dry`.
+
 ## Comandos
 
 ### API
