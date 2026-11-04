@@ -277,7 +277,6 @@ export function RestaurantMap({
         details, so the pins stand out, and the names under the streets.
         {r} asks for the double resolution tiles on high density screens. */}
       <TileLayer
-        className="restaurant-map-tiles"
         url={`https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(config.cartoKey)}`}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
       />
