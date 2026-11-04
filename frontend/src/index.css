@@ -117,6 +117,12 @@ body,
   font-family: var(--font-body);
 }
 
+/* A little more contrast on the CARTO tiles, so streets and parks read
+   better; the pins are in another pane and keep their colors. */
+.restaurant-map-tiles {
+  filter: contrast(1.15);
+}
+
 /* Leaflet sizes its buttons without counting the border, which
    Tailwind's reset would otherwise include. */
 .leaflet-bar a {
