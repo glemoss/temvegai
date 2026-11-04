@@ -254,7 +254,7 @@ Melhorias no cadastro do painel admin e no site público, notadas pelo dono ao t
 
 Com o deploy automático (D6), cada migration é aplicada enquanto a API anterior ainda está no ar, então precisa funcionar com ela. Por isso a troca do `address` pelos campos separados é feita em duas etapas: a M5 cria e preenche os campos novos e mantém o `address`; a M6, num deploy seguinte, remove o `address`.
 
-### [ ] M0 — Página "não encontrada"
+### [x] M0 — Página "não encontrada"
 Rota para qualquer caminho sem página, no site e dentro do `/admin` (ex.: `/xyz`, `/admin/xyz`), que mostra o cabeçalho do site, uma mensagem em português e um link para o mapa. Hoje esses caminhos recebem o `index.html` pelo fallback da SPA (D5) e a página fica em branco.
 **Pronto quando:** `/xyz` e `/admin/xyz` mostram a página com o cabeçalho e o link leva ao mapa; `/`, `/admin` e `/admin/login` continuam iguais. Com testes.
 
