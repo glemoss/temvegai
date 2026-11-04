@@ -258,7 +258,7 @@ Com o deploy automático (D6), cada migration é aplicada enquanto a API anterio
 Rota para qualquer caminho sem página, no site e dentro do `/admin` (ex.: `/xyz`, `/admin/xyz`), que mostra o cabeçalho do site, uma mensagem em português e um link para o mapa. Hoje esses caminhos recebem o `index.html` pelo fallback da SPA (D5) e a página fica em branco.
 **Pronto quando:** `/xyz` e `/admin/xyz` mostram a página com o cabeçalho e o link leva ao mapa; `/`, `/admin` e `/admin/login` continuam iguais. Com testes.
 
-### [ ] M1 — Rota até o restaurante
+### [x] M1 — Rota até o restaurante
 Botão "Como chegar" no painel de detalhes, que abre o Google Maps numa nova aba com a rota até a latitude e longitude cadastradas (`https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>`). No celular, o link abre o app do Google Maps quando ele está instalado. Sem dependência nova.
 **Pronto quando:** o botão aparece no painel de qualquer restaurante e o link tem a coordenada dele. Com testes.
 

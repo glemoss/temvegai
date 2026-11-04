@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { Navigation, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Restaurant } from './api/restaurants';
@@ -83,7 +83,7 @@ export function RestaurantDetails({
       </h2>
       <Badge
         variant="secondary"
-        className="mb-3 flex gap-1.5 py-1 pr-3 pl-2 text-sm font-semibold [&>svg]:size-[1.1rem]"
+        className="mb-3 flex gap-[0.31875rem] py-[0.2125rem] pr-[0.6375rem] pl-[0.425rem] text-[0.74375rem] font-semibold [&>svg]:size-[0.935rem]"
       >
         <LeafIcon type={restaurant.type} />
         {TYPE_LABELS[restaurant.type]}
@@ -102,15 +102,36 @@ export function RestaurantDetails({
             </dd>
           </>
         )}
-        {restaurant.phone && (
-          <>
-            <dt className={TERM}>Telefone</dt>
-            <dd className={DESCRIPTION}>
-              <a className={LINK} href={`tel:${restaurant.phone}`}>
-                {restaurant.phone}
-              </a>
-            </dd>
-          </>
+        {(restaurant.phone || restaurant.instagram) && (
+          // Phone and Instagram side by side, in a smaller font.
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            {restaurant.phone && (
+              <div>
+                <dt className={TERM}>Telefone</dt>
+                <dd className={DESCRIPTION}>
+                  <a className={LINK} href={`tel:${restaurant.phone}`}>
+                    {restaurant.phone}
+                  </a>
+                </dd>
+              </div>
+            )}
+            {restaurant.instagram && (
+              <div>
+                <dt className={TERM}>Instagram</dt>
+                <dd className={DESCRIPTION}>
+                  <a
+                    className={LINK}
+                    href={`https://www.instagram.com/${restaurant.instagram}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Acessar @${restaurant.instagram} no Instagram`}
+                  >
+                    Acessar
+                  </a>
+                </dd>
+              </div>
+            )}
+          </div>
         )}
         {restaurant.website && (
           <>
@@ -127,22 +148,18 @@ export function RestaurantDetails({
             </dd>
           </>
         )}
-        {restaurant.instagram && (
-          <>
-            <dt className={TERM}>Instagram</dt>
-            <dd className={DESCRIPTION}>
-              <a
-                className={LINK}
-                href={`https://www.instagram.com/${restaurant.instagram}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {`@${restaurant.instagram}`}
-              </a>
-            </dd>
-          </>
-        )}
       </dl>
+      {/* On phones, the link opens the Google Maps app when it is installed. */}
+      <Button asChild className="mt-1">
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Navigation aria-hidden="true" />
+          Como chegar
+        </a>
+      </Button>
     </aside>
   );
 }

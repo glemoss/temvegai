@@ -50,7 +50,9 @@ describe('RestaurantDetails', () => {
     expect(html).toContain('href="https://www.mandarina.com.br/"');
     expect(html).toContain('>mandarina.com.br</a>');
     expect(html).toContain('href="https://www.instagram.com/mandarinafloripa"');
-    expect(html).toContain('@mandarinafloripa');
+    expect(html).toContain(
+      'aria-label="Acessar @mandarinafloripa no Instagram">Acessar</a>',
+    );
   });
 
   it('links to the saved website when it uses http', () => {
@@ -84,9 +86,32 @@ describe('RestaurantDetails', () => {
     expect(html).not.toContain('Instagram');
   });
 
+  it('shows the phone and the Instagram side by side', () => {
+    const html = render();
+
+    expect(html).toMatch(
+      /<div class="grid grid-cols-2[^"]*"><div><dt[^>]*>Telefone<\/dt>.*<\/div><div><dt[^>]*>Instagram<\/dt>/,
+    );
+  });
+
   it('opens external links in a new tab', () => {
     const html = render();
 
-    expect(html.match(/target="_blank" rel="noreferrer"/g)).toHaveLength(2);
+    expect(html.match(/target="_blank" rel="noreferrer"/g)).toHaveLength(3);
+  });
+
+  it('links to the directions to the restaurant on Google Maps', () => {
+    const html = render();
+
+    expect(html).toContain(
+      'href="https://www.google.com/maps/dir/?api=1&amp;destination=-27.661458,-48.499222" target="_blank" rel="noreferrer"',
+    );
+    expect(html).toContain('Como chegar</a>');
+  });
+
+  it('uses the coordinates of the restaurant in the directions', () => {
+    const html = render({ latitude: -27.5969, longitude: -48.5495 });
+
+    expect(html).toContain('destination=-27.5969,-48.5495"');
   });
 });
