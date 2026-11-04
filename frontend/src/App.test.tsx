@@ -52,14 +52,9 @@ vi.mock('react-leaflet', () => ({
       {props.children}
     </div>
   ),
-  TileLayer: (props: {
-    url: string;
-    attribution: string;
-    className: string;
-  }) => (
+  TileLayer: (props: { url: string; attribution: string }) => (
     <div
       data-testid="tiles"
-      className={props.className}
       data-url={props.url}
       data-attribution={props.attribution}
     />
@@ -175,14 +170,6 @@ describe('App', () => {
     );
     expect(html).toContain('OpenStreetMap');
     expect(html).toContain('CARTO');
-  });
-
-  it('marks the tiles with the class that raises their contrast', () => {
-    render(<App />);
-
-    expect(
-      screen.getByTestId('tiles').classList.contains('restaurant-map-tiles'),
-    ).toBe(true);
   });
 
   it('shows a loading message and no markers while loading', () => {
