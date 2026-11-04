@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
-import { config } from './config';
 import type { Neighborhood } from './api/neighborhoods';
 import type { Restaurant } from './api/restaurants';
 import { useNeighborhoods } from './useNeighborhoods';
@@ -36,6 +35,11 @@ const fakeMap = vi.hoisted(() => ({
 vi.mock('leaflet', () => ({
   divIcon: (options: { className: string }) => options,
 }));
+// MapLibre needs WebGL, which the tests don't have; CartoBasemap.test.tsx
+// covers the basemap itself.
+vi.mock('./CartoBasemap', () => ({
+  CartoBasemap: () => <div data-testid="basemap" />,
+}));
 vi.mock('react-leaflet', () => ({
   useMap: () => fakeMap,
   useMapEvents: () => fakeMap,
@@ -51,13 +55,6 @@ vi.mock('react-leaflet', () => ({
     >
       {props.children}
     </div>
-  ),
-  TileLayer: (props: { url: string; attribution: string }) => (
-    <div
-      data-testid="tiles"
-      data-url={props.url}
-      data-attribution={props.attribution}
-    />
   ),
   ZoomControl: () => null,
   Marker: (props: {
@@ -162,14 +159,10 @@ describe('App', () => {
     expect(html).toContain('data-zoom="12"');
   });
 
-  it('uses CARTO Voyager tiles with the key and attribution', () => {
+  it('draws the CARTO basemap under the markers', () => {
     const html = renderToString(<App />);
 
-    expect(html).toContain(
-      `data-url="https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(config.cartoKey)}"`,
-    );
-    expect(html).toContain('OpenStreetMap');
-    expect(html).toContain('CARTO');
+    expect(html).toContain('data-testid="basemap"');
   });
 
   it('shows a loading message and no markers while loading', () => {
