@@ -19,7 +19,9 @@ jobs:
         working-directory: ${{ matrix.dir }}
     env:
       # The frontend config is validated on import, so its tests need it.
+      # They do not load map tiles, so any CARTO key will do.
       VITE_API_URL: http://localhost:3000
+      VITE_CARTO_KEY: ci
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

@@ -87,11 +87,12 @@ cp .env.example .env
 npm run dev
 ```
 
-O `.env` do frontend tem uma variável:
+O `.env` do frontend tem duas variáveis:
 
 | Variável | Para que serve |
 |---|---|
 | `VITE_API_URL` | Endereço da API (padrão: `http://localhost:3000`). O site não abre se ela estiver faltando |
+| `VITE_CARTO_KEY` | Chave dos tiles do mapa da CARTO, grátis em [carto.com/basemaps/apikey](https://carto.com/basemaps/apikey) (chega por e-mail, sem conta). O site não abre se ela estiver faltando |
 
 O site fica em `http://localhost:5173` e busca os restaurantes na API, então a API precisa estar no ar. Sem ela, o mapa abre com uma mensagem de erro.
 
@@ -210,11 +211,16 @@ Depois, confira no painel (**Settings**):
 | Node.js Version | 24.x |
 | Git | nenhum repositório conectado |
 
-Variável de ambiente, só em **Production** (não é sensível: o valor vai no JavaScript público):
+Variáveis de ambiente, só em **Production** (não são sensíveis: os valores vão no JavaScript público):
 
 ```sh
-npx vercel env add VITE_API_URL production   # valor: /api
+npx vercel env add VITE_API_URL production --no-sensitive     # valor: /api
+npx vercel env add VITE_CARTO_KEY production --no-sensitive   # valor: a chave da CARTO
 ```
+
+A Vercel recusa guardar como secreta (`--sensitive`) uma variável com o prefixo `VITE_`, porque o valor vai para o JavaScript público.
+
+Uma variável nova precisa estar na Vercel antes do merge na `main`: sem ela, o deploy automático publica um site que não abre.
 
 O Vite lê a variável no build, que roda na Vercel; o `frontend/.env` local não é enviado. Para publicar:
 

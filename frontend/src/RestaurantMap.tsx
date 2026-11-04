@@ -15,6 +15,7 @@ import {
   useMapEvents,
 } from 'react-leaflet';
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
+import { config } from './config';
 import { pinSvg } from './leaf';
 
 const FLORIANOPOLIS_CENTER: LatLngTuple = [-27.5954, -48.548];
@@ -272,9 +273,13 @@ export function RestaurantMap({
         zoomInTitle="Aproximar"
         zoomOutTitle="Afastar"
       />
+      {/* CARTO Voyager: OpenStreetMap data in soft colors and with fewer
+        details, so the pins stand out, and the names under the streets.
+        {r} asks for the double resolution tiles on high density screens. */}
       <TileLayer
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        className="restaurant-map-tiles"
+        url={`https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(config.cartoKey)}`}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
       />
       <BoundsWatcher onChange={onBoundsChange} />
       <FocusBounds

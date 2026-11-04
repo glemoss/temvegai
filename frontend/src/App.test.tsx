@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
+import { config } from './config';
 import type { Neighborhood } from './api/neighborhoods';
 import type { Restaurant } from './api/restaurants';
 import { useNeighborhoods } from './useNeighborhoods';
@@ -51,9 +52,14 @@ vi.mock('react-leaflet', () => ({
       {props.children}
     </div>
   ),
-  TileLayer: (props: { url: string; attribution: string }) => (
+  TileLayer: (props: {
+    url: string;
+    attribution: string;
+    className: string;
+  }) => (
     <div
       data-testid="tiles"
+      className={props.className}
       data-url={props.url}
       data-attribution={props.attribution}
     />
@@ -161,13 +167,22 @@ describe('App', () => {
     expect(html).toContain('data-zoom="12"');
   });
 
-  it('uses OpenStreetMap tiles with attribution', () => {
+  it('uses CARTO Voyager tiles with the key and attribution', () => {
     const html = renderToString(<App />);
 
     expect(html).toContain(
-      'data-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"',
+      `data-url="https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(config.cartoKey)}"`,
     );
     expect(html).toContain('OpenStreetMap');
+    expect(html).toContain('CARTO');
+  });
+
+  it('marks the tiles with the class that raises their contrast', () => {
+    render(<App />);
+
+    expect(
+      screen.getByTestId('tiles').classList.contains('restaurant-map-tiles'),
+    ).toBe(true);
   });
 
   it('shows a loading message and no markers while loading', () => {

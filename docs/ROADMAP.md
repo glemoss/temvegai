@@ -285,6 +285,10 @@ Depois que a M5 estiver no ar, migration que remove o `address`, que deixa de se
 
 ---
 
+### [x] M7 — Mapa minimalista
+O mapa do site passa a usar os tiles Voyager da CARTO, com os nomes por baixo das ruas (`rastertiles/voyager_labels_under`), cores suaves e menos informação que os do OpenStreetMap, para os pins se destacarem, e um pouco mais de contraste por CSS (`contrast(1.15)`). A CARTO exige uma chave grátis, em `VITE_CARTO_KEY`, validada na inicialização como a `VITE_API_URL`; sem ela os tiles vêm com marca d'água. O mapa do painel admin continua com o OpenStreetMap. Sem dependência nova. Feita antes da M1, a pedido do dono.
+**Pronto quando:** o mapa do site mostra o Voyager sem marca d'água e com o crédito do OpenStreetMap e da CARTO, o do admin continua igual, e o site não abre sem a chave. Com testes.
+
 ## Depois da v1 (não planejado ainda)
 
 Domínio próprio, API em container (ex.: Cloud Run) se a Vercel deixar de bastar, aplicativo mobile.
@@ -339,3 +343,5 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (D4) O carregador de funções da Vercel no Node 24 sobe o processo sem o `require()` de pacotes ESM, que o Node 24 aceita sozinho ([vercel/vercel#17770](https://github.com/vercel/vercel/issues/17770)). O `@fastify/static`, usado pelo Swagger UI do `/docs`, faz `require()` do `content-disposition` 3, que é só ESM, e a função quebrava ao carregar. Resolvido com `NODE_OPTIONS=--experimental-require-module` nas variáveis da Vercel. Quando a Vercel corrigir, a variável pode sair; se o `/docs` deixar de ser servido em produção (pendência da B10), ela também deixa de ser necessária.
 - (D4) O Knex usa o pool padrão (mínimo de 2 conexões) também na função da Vercel, que é congelada entre requisições. Com o pooler do Neon funcionou; se aparecerem erros de conexão encerrada depois de um tempo parada, configurar `pool: { min: 0 }` e um `idleTimeoutMillis` curto.
 - (D5) Pelo site, `/api/docs` abre o HTML do Swagger UI, mas ele pede os arquivos em `/docs/static/...`, fora do `/api`, e o fallback da SPA devolve o `index.html` do site no lugar deles: a documentação só funciona direto na API (`https://temvegai-api.vercel.app/docs`). Entra na decisão da (B10) sobre esconder ou proteger o `/docs` em produção.
+- (M7) Os tiles em imagem só permitem filtros que mudam todas as cores juntas. Para escolher a cor de cada elemento (parques, água, ruas) com os verdes da marca, o caminho são os tiles vetoriais da CARTO, com a mesma chave, desenhados pelo `maplibre-gl` e ligados ao Leaflet por mais um pacote: duas dependências novas e um JavaScript maior. Decidir se vira uma etapa.
+- (M7) A chave da CARTO vai no JavaScript público do site, e qualquer um pode copiá-la e gastar o limite gratuito dela. Conferir no painel da CARTO se dá para restringir a chave ao domínio do site.
