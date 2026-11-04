@@ -56,7 +56,7 @@ Não implementar, nem deixar "preparado":
 | Frontend | React + Vite |
 | Interface do frontend | shadcn/ui (componentes copiados para `src/components/ui`) sobre Tailwind CSS (`tailwindcss` + `@tailwindcss/vite`), com `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `tw-animate-css` e `sonner` (avisos) |
 | Rotas do frontend | React Router (site público em `/`, painel em `/admin`) |
-| Mapa | Leaflet (react-leaflet); no site, tiles CARTO Voyager com os nomes por baixo das ruas (dados do OpenStreetMap, chave grátis em `VITE_CARTO_KEY`); no painel admin, tiles do OpenStreetMap |
+| Mapa | Leaflet (react-leaflet); no site, o estilo vetorial CARTO Voyager (dados do OpenStreetMap, chave grátis em `VITE_CARTO_KEY`), desenhado pelo MapLibre GL (`maplibre-gl`, ligado ao Leaflet por `@maplibre/maplibre-gl-leaflet`), com cores próprias em `mapColors.ts`; no painel admin, tiles do OpenStreetMap |
 | Geocodificação | Nominatim (OpenStreetMap), chamado pelo painel admin para marcar o endereço no mapa e preencher o endereço do ponto clicado |
 | Gerenciador de pacotes | npm |
 | Hospedagem | Vercel, com site e API em dois projetos; o site repassa `/api/*` para a API |
@@ -109,7 +109,7 @@ Estas escolhas não vieram do dono do projeto; foram assumidas para destravar o 
 1. **Origem dos dados**: cadastro manual pelo admin, pelo painel (o seed serve só para desenvolvimento).
 2. **Tipos de restaurante**: inclui lugares com opções veganas, não só os 100% veganos.
 3. **Coordenadas**: colunas simples de latitude/longitude, sem PostGIS.
-4. **Mapa**: Leaflet com dados do OpenStreetMap, por ser gratuito. O site usa o estilo Voyager da CARTO, com cores suaves e menos informação, para os pins se destacarem; ele exige uma chave grátis (até 5 milhões de requisições por mês para projetos não comerciais). O painel admin continua com os tiles do OpenStreetMap, mais detalhados, para acertar o ponto do restaurante.
+4. **Mapa**: Leaflet com dados do OpenStreetMap, por ser gratuito. O site usa o estilo Voyager da CARTO, com cores suaves e menos informação, para os pins se destacarem. Ele é vetorial, desenhado pelo MapLibre, para trocar as cores de cada elemento (parques, água...) sem copiar o estilo: o site carrega o estilo oficial, que a CARTO mantém atualizado, e aplica as cores por cima. O MapLibre deixa o JavaScript do site bem maior. O estilo exige uma chave grátis (até 5 milhões de requisições por mês para projetos não comerciais). O painel admin continua com os tiles do OpenStreetMap, mais detalhados, para acertar o ponto do restaurante.
 5. **Sessão do admin**: o login devolve um JWT em cookie `httpOnly`, que o JavaScript da página não consegue ler. A sessão expira em 7 dias. Isso exige que, em produção, site e API fiquem no mesmo domínio (ex.: `site.com` e `api.site.com`). Sem domínio próprio, o site na Vercel repassa `/api/*` para a API, e o navegador vê um domínio só.
 6. **Criação de admins**: por comando no terminal (`npm run create-admin`), sem tela de cadastro.
 7. **Idioma**: código e nomes em inglês; textos da interface em português.
