@@ -250,14 +250,38 @@ Conferido: o merge do PR #7 publicou a API e o site pelo workflow `Deploy`, com 
 
 ## Fase M — Melhorias
 
-Melhorias no cadastro do painel admin e no site público, notadas pelo dono ao testar o site publicado na D5. Começa depois da fase D. As etapas ainda não estão definidas: cada item abaixo precisa das decisões indicadas antes de virar etapa.
+Melhorias no cadastro do painel admin e no site público, notadas pelo dono ao testar o site publicado na D5. Começa depois da fase D. As etapas pequenas vêm primeiro; o endereço em campos separados, que muda o modelo de dados, fica por último.
 
-- **Limite da descrição.** O campo `description` não tem limite de tamanho (no banco é `text`, e nem a API nem o formulário limitam). Decidir o número de caracteres e se o formulário mostra um contador.
-- **Telefone padronizado.** O `phone` é texto livre. O formulário passa a padronizar a entrada (ex.: máscara `(48) 99999-9999`, aceitando fixo e celular). Decidir se a API também valida e guarda num formato único, e o que fazer com os telefones já cadastrados.
-- **Endereço em campos separados.** O endereço é um campo de texto só (`address`). Passa a ser separado em logradouro, número e CEP (e talvez complemento), com o CEP preenchendo o resto. É mudança no modelo de dados do `SPEC.md`: precisa de migration que converta os endereços existentes, e muda o formulário, a busca no Nominatim e o painel de detalhes. Para o CEP há APIs gratuitas e sem chave, como o ViaCEP e a BrasilAPI (que às vezes devolve também a coordenada), sem SLA; como no Nominatim (A2), o CEP sairia do navegador do admin para um serviço de terceiros.
-- **Rota até o restaurante.** O painel de detalhes do site ganha um botão que abre o restaurante num app de mapa, já com a rota traçada até ele, a partir da latitude e longitude cadastradas, sem dependência nova (links como `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>`, `https://maps.apple.com/?daddr=<lat>,<lng>` e `https://waze.com/ul?ll=<lat>,<lng>&navigate=yes`). Decidir quais apps oferecer: um botão só (Google Maps, que abre o app no celular quando instalado), uma lista para escolher, ou o app padrão do sistema (Apple Maps no iPhone).
-- **Pin clicado no centro.** Clicar num pin centraliza o restaurante no espaço do mapa que sobra visível com o painel de detalhes aberto, e não no centro da tela inteira. Hoje (F9) o mapa só se move no celular, e só quando o painel cobriria o pin, levando-o para 10rem abaixo do cabeçalho; no desktop não se move. Decidir se vale também para o restaurante escolhido nas sugestões da busca (hoje centralizado na tela, com o mesmo ajuste do celular) e se o zoom muda junto.
-- **Página "não encontrada".** Um endereço que não existe no site (ex.: `/docs`, `/xyz`) recebe o `index.html` pelo fallback da SPA (D5), mas o `src/main.tsx` não tem rota para ele, e a página fica em branco. Uma rota para os outros caminhos passa a mostrar uma mensagem em português e um link para o mapa. Decidir se vale também para endereços dentro do `/admin` e se a página mostra o cabeçalho do site.
+Com o deploy automático (D6), cada migration é aplicada enquanto a API anterior ainda está no ar, então precisa funcionar com ela. Por isso a troca do `address` pelos campos separados é feita em duas etapas: a M5 cria e preenche os campos novos e mantém o `address`; a M6, num deploy seguinte, remove o `address`.
+
+### [ ] M0 — Página "não encontrada"
+Rota para qualquer caminho sem página, no site e dentro do `/admin` (ex.: `/xyz`, `/admin/xyz`), que mostra o cabeçalho do site, uma mensagem em português e um link para o mapa. Hoje esses caminhos recebem o `index.html` pelo fallback da SPA (D5) e a página fica em branco.
+**Pronto quando:** `/xyz` e `/admin/xyz` mostram a página com o cabeçalho e o link leva ao mapa; `/`, `/admin` e `/admin/login` continuam iguais. Com testes.
+
+### [ ] M1 — Rota até o restaurante
+Botão "Como chegar" no painel de detalhes, que abre o Google Maps numa nova aba com a rota até a latitude e longitude cadastradas (`https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>`). No celular, o link abre o app do Google Maps quando ele está instalado. Sem dependência nova.
+**Pronto quando:** o botão aparece no painel de qualquer restaurante e o link tem a coordenada dele. Com testes.
+
+### [ ] M2 — Restaurante no centro da área visível
+Clicar num pin, ou escolher um restaurante nas sugestões da busca, centraliza o restaurante no espaço do mapa que sobra visível com o painel de detalhes aberto, no celular (acima do painel) e no desktop (à esquerda dele). O zoom não muda no clique, e a sugestão mantém o zoom que já usa. Substitui a regra da F9, em que o mapa só se move no celular e leva o pin para 10rem abaixo do cabeçalho.
+**Pronto quando:** no celular e no desktop, o pin clicado e o restaurante escolhido na busca ficam no centro da área livre, sem ficar atrás do painel nem do cabeçalho. Com testes da conta do deslocamento.
+
+### [ ] M3 — Limite da descrição
+`description` com no máximo 300 caracteres, na API (Zod, com mensagem em português) e no formulário do admin, que mostra um contador (`120/300`). Sem migration: a coluna continua `text`. Antes do deploy, conferir no Neon se algum restaurante passa de 300 (`select name, length(description) from restaurants where length(description) > 300`); um que passe só precisa ser encurtado na próxima edição, e o contador mostra quanto sobra.
+**Pronto quando:** a API recusa uma descrição de 301 caracteres com 400 e aceita uma de 300; o formulário mostra o contador e não deixa salvar acima do limite. Com testes.
+
+### [ ] M4 — Telefone padronizado
+O formulário do admin usa máscara para telefone fixo e celular (`(48) 3333-4444` e `(48) 99999-8888`). A API aceita só 10 ou 11 dígitos, ignorando a pontuação, e guarda só os dígitos. O site e o painel formatam o número na exibição. Uma migration converte os telefones existentes para dígitos; um que não fique com 10 ou 11 dígitos continua como está e aparece na saída da migration, para o admin corrigir. O rollback formata os dígitos de volta. O seed passa a guardar só dígitos. Sem dependência nova para a máscara.
+**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local; a API recusa `123` e aceita `(48) 99999-8888`, guardando `48999998888`; o site mostra o telefone formatado, e a API anterior continua funcionando com os telefones convertidos. Com testes.
+
+### [ ] M5 — Endereço em campos separados
+O endereço passa a ter logradouro (`street`, obrigatório), número (`number`, opcional, para "s/n"), complemento (`complement`, opcional) e CEP (`postal_code`). Migration que cria as colunas, separa os endereços existentes no que der (o que não der fica todo no logradouro, para o admin revisar) e **mantém** o `address`, que a API passa a montar a partir dos campos, para que a API anterior continue funcionando durante o deploy. As colunas novas ficam opcionais no banco nesta etapa: a API anterior grava só o `address`, e os endereços existentes não têm CEP. A API nova exige logradouro e CEP no criar e no editar.
+No formulário, digitar o CEP preenche logradouro e bairro pelo ViaCEP, chamado do navegador do admin, sem chave e sem dependência nova; o bairro segue a regra da A6. A busca da coordenada no Nominatim usa os campos novos, e clicar no mapa preenche logradouro, número, bairro e também o CEP quando o Nominatim devolver (em parte do Brasil ele vem vazio ou genérico, e o admin confere). O painel de detalhes mostra o endereço montado com o CEP. O `SPEC.md` é atualizado: modelo de dados e a linha de geocodificação da stack, com o ViaCEP, que recebe o CEP digitado, como o Nominatim recebe o endereço (A2).
+**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local com os restaurantes do seed separados; criar e editar exigem CEP; o CEP preenche logradouro e bairro; o clique no mapa preenche o CEP quando ele existe; e a API anterior continua lendo e gravando `address` depois da migration. Com testes.
+
+### [ ] M6 — Remover a coluna `address`
+Depois que a M5 estiver no ar, migration que remove o `address`, que deixa de ser montado pela API, e torna o `street` obrigatório no banco; um restaurante gravado pela API anterior durante o deploy da M5, só com o `address`, tem o logradouro preenchido a partir dele antes. O rollback recria a coluna a partir dos campos separados.
+**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local; nada no backend nem no frontend usa mais o `address`; e o deploy automático aplica a migration antes da API nova, o que também confirma o último item da D6.
 
 ---
 
