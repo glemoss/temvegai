@@ -60,7 +60,7 @@ describe('CartoBasemap', () => {
     expect(glMap.setPaintProperty).toHaveBeenCalledWith(
       'water',
       'fill-color',
-      '#94c1e1',
+      '#a3c9e2',
     );
   });
 
