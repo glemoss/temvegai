@@ -1,8 +1,15 @@
 name: CI
 
+# Branches are checked through their pull request, so a push only runs here
+# on main. Documentation-only changes skip the checks, and with them the deploy.
 on:
   push:
+    branches: [main]
+    paths-ignore: &docs
+      - '**.md'
+      - 'docs/**'
   pull_request:
+    paths-ignore: *docs
 
 permissions:
   contents: read
