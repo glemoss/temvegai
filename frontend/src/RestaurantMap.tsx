@@ -26,13 +26,13 @@ const INITIAL_ZOOM = 12;
 const FOCUS_MAX_ZOOM = 16;
 const FOCUS_PADDING = 32;
 
-// On narrow screens the details panel covers the bottom of the map, up to
-// 60% of its height (see RestaurantDetails). The selected restaurant's pin
-// tip goes this far below the header, but stays above the panel.
+// The details panel covers the bottom of the map on narrow screens, up to
+// 60% of its height, and its right side on wide screens (see
+// RestaurantDetails). The selected restaurant goes to the middle of what
+// is left below the header.
 const NARROW_SCREEN = '(width < 40rem)';
 const DETAILS_MAX_HEIGHT = 0.6;
-const PIN_GAP_BELOW_HEADER_REM = 10;
-const PIN_MARGIN_ABOVE_DETAILS = 16;
+const DETAILS_WIDTH_REM = 24;
 
 // Keeps the selected restaurant's pin in front of the pins around it.
 const SELECTED_Z_INDEX_OFFSET = 1000;
@@ -68,42 +68,39 @@ function prefersReducedMotion(): boolean {
   );
 }
 
-// The height, from the top of the map, where the selected restaurant's pin
-// tip goes on narrow screens.
-export function selectedPinY({
+// The part of the map, in pixels from its top left corner, that is not
+// behind the header or the details panel.
+export function visibleArea({
+  mapWidth,
   mapHeight,
   headerBottom,
   remSize,
+  narrow,
 }: {
+  mapWidth: number;
   mapHeight: number;
   headerBottom: number;
   remSize: number;
-}): number {
-  return Math.min(
-    headerBottom + PIN_GAP_BELOW_HEADER_REM * remSize,
-    detailsTop(mapHeight) - PIN_MARGIN_ABOVE_DETAILS,
-  );
+  narrow: boolean;
+}): { left: number; top: number; right: number; bottom: number } {
+  return {
+    left: 0,
+    top: headerBottom,
+    right: narrow ? mapWidth : mapWidth - DETAILS_WIDTH_REM * remSize,
+    bottom: narrow ? mapHeight * (1 - DETAILS_MAX_HEIGHT) : mapHeight,
+  };
 }
 
-function detailsTop(mapHeight: number): number {
-  return mapHeight * (1 - DETAILS_MAX_HEIGHT);
-}
-
-// Where the selected pin tip goes on this map, or undefined on wide
-// screens, where the details panel is on the side.
-function pinYAboveDetails(
-  map: LeafletMap,
-  header: HTMLElement | null,
-): number | undefined {
-  if (!header || !window.matchMedia?.(NARROW_SCREEN)?.matches) {
-    return undefined;
-  }
+function mapVisibleArea(map: LeafletMap, header: HTMLElement | null) {
+  const size = map.getSize();
   const mapTop = map.getContainer().getBoundingClientRect().top;
-  return selectedPinY({
-    mapHeight: map.getSize().y,
-    headerBottom: header.getBoundingClientRect().bottom - mapTop,
+  return visibleArea({
+    mapWidth: size.x,
+    mapHeight: size.y,
+    headerBottom: header ? header.getBoundingClientRect().bottom - mapTop : 0,
     remSize:
       parseFloat(getComputedStyle(document.documentElement).fontSize) || 16,
+    narrow: window.matchMedia?.(NARROW_SCREEN)?.matches ?? false,
   });
 }
 
@@ -137,7 +134,7 @@ function BoundsWatcher({
 
 // Moves the map to `bounds` whenever it changes, and back to the initial
 // view when `bounds` is cleared. When `bounds` is the selected restaurant,
-// narrow screens put it above the details panel instead of in the middle.
+// it goes to the middle of the area the details panel leaves visible.
 function FocusBounds({
   bounds,
   isSelected,
@@ -152,9 +149,10 @@ function FocusBounds({
 
   useEffect(() => {
     if (bounds) {
-      const pinY = isSelected
-        ? pinYAboveDetails(map, headerRef.current)
+      const area = isSelected
+        ? mapVisibleArea(map, headerRef.current)
         : undefined;
+      const size = map.getSize();
       map.fitBounds(
         [
           [bounds.minLat, bounds.minLng],
@@ -163,13 +161,10 @@ function FocusBounds({
         {
           maxZoom: FOCUS_MAX_ZOOM,
           padding: [FOCUS_PADDING, FOCUS_PADDING],
-          // A larger bottom padding moves the point up from the middle
-          // to `pinY`.
-          ...(pinY !== undefined && {
-            paddingBottomRight: [
-              FOCUS_PADDING,
-              map.getSize().y + FOCUS_PADDING - 2 * pinY,
-            ],
+          // Leaflet centers the bounds in what the padding leaves.
+          ...(area && {
+            paddingTopLeft: [area.left, area.top],
+            paddingBottomRight: [size.x - area.right, size.y - area.bottom],
           }),
           animate: !prefersReducedMotion(),
         },
@@ -192,8 +187,8 @@ interface RestaurantMarkersProps {
   onSelect: (restaurant: Restaurant) => void;
 }
 
-// On narrow screens, a clicked pin that the details panel would cover is
-// moved up to where a restaurant chosen in the search goes.
+// A clicked pin moves, without changing the zoom, to where a restaurant
+// chosen in the search goes.
 function RestaurantMarkers({
   restaurants,
   selectedId,
@@ -204,15 +199,18 @@ function RestaurantMarkers({
 
   function select(restaurant: Restaurant) {
     onSelect(restaurant);
-    const pinY = pinYAboveDetails(map, headerRef.current);
-    if (pinY === undefined) return;
-    const tipY = map.latLngToContainerPoint([
+    const area = mapVisibleArea(map, headerRef.current);
+    const tip = map.latLngToContainerPoint([
       restaurant.latitude,
       restaurant.longitude,
-    ]).y;
-    if (tipY > detailsTop(map.getSize().y) - PIN_MARGIN_ABOVE_DETAILS) {
-      map.panBy([0, tipY - pinY], { animate: !prefersReducedMotion() });
-    }
+    ]);
+    map.panBy(
+      [
+        tip.x - (area.left + area.right) / 2,
+        tip.y - (area.top + area.bottom) / 2,
+      ],
+      { animate: !prefersReducedMotion() },
+    );
   }
 
   return restaurants.map((restaurant) => {
@@ -236,8 +234,7 @@ interface RestaurantMapProps {
   // Whether `focusBounds` is the selected restaurant.
   focusIsSelected: boolean;
   selectedId: string | undefined;
-  // The header over the map, below which the selected pin is placed on
-  // narrow screens.
+  // The header over the map, below which the selected pin is placed.
   headerRef: RefObject<HTMLElement | null>;
   onSelect: (restaurant: Restaurant) => void;
   onBoundsChange: (bounds: MapBounds) => void;

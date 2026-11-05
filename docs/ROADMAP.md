@@ -262,7 +262,7 @@ Rota para qualquer caminho sem página, no site e dentro do `/admin` (ex.: `/xyz
 Botão "Como chegar" no painel de detalhes, que abre o Google Maps numa nova aba com a rota até a latitude e longitude cadastradas (`https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>`). No celular, o link abre o app do Google Maps quando ele está instalado. Sem dependência nova.
 **Pronto quando:** o botão aparece no painel de qualquer restaurante e o link tem a coordenada dele. Com testes.
 
-### [ ] M2 — Restaurante no centro da área visível
+### [x] M2 — Restaurante no centro da área visível
 Clicar num pin, ou escolher um restaurante nas sugestões da busca, centraliza o restaurante no espaço do mapa que sobra visível com o painel de detalhes aberto, no celular (acima do painel) e no desktop (à esquerda dele). O zoom não muda no clique, e a sugestão mantém o zoom que já usa. Substitui a regra da F9, em que o mapa só se move no celular e leva o pin para 10rem abaixo do cabeçalho.
 **Pronto quando:** no celular e no desktop, o pin clicado e o restaurante escolhido na busca ficam no centro da área livre, sem ficar atrás do painel nem do cabeçalho. Com testes da conta do deslocamento.
 

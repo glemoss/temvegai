@@ -1,24 +1,43 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { selectedPinY } from './RestaurantMap';
+import { visibleArea } from './RestaurantMap';
 
-describe('selectedPinY', () => {
-  it('puts the pin 10rem below the header', () => {
+describe('visibleArea', () => {
+  it('leaves the space between the header and the panel on narrow screens', () => {
+    // The panel starts at 40% of 900px.
     expect(
-      selectedPinY({ mapHeight: 900, headerBottom: 150, remSize: 16 }),
-    ).toBe(310);
+      visibleArea({
+        mapWidth: 390,
+        mapHeight: 900,
+        headerBottom: 150,
+        remSize: 16,
+        narrow: true,
+      }),
+    ).toEqual({ left: 0, top: 150, right: 390, bottom: 360 });
+  });
+
+  it('leaves the space left of the panel and below the header on wide screens', () => {
+    // The panel is 24rem wide.
+    expect(
+      visibleArea({
+        mapWidth: 1280,
+        mapHeight: 800,
+        headerBottom: 140,
+        remSize: 16,
+        narrow: false,
+      }),
+    ).toEqual({ left: 0, top: 140, right: 896, bottom: 800 });
   });
 
   it('follows the size of the text', () => {
     expect(
-      selectedPinY({ mapHeight: 1000, headerBottom: 150, remSize: 20 }),
-    ).toBe(350);
-  });
-
-  it('keeps the pin above the details panel on short screens', () => {
-    // The panel starts at 40% of 667px.
-    expect(
-      selectedPinY({ mapHeight: 667, headerBottom: 150, remSize: 16 }),
-    ).toBeCloseTo(266.8 - 16);
+      visibleArea({
+        mapWidth: 1280,
+        mapHeight: 800,
+        headerBottom: 140,
+        remSize: 20,
+        narrow: false,
+      }).right,
+    ).toBe(800);
   });
 });
