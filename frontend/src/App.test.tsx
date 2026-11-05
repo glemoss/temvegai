@@ -24,7 +24,7 @@ const fakeMap = vi.hoisted(() => ({
   // A 400 by 800 map at the top of the page.
   getSize: () => ({ x: 400, y: 800 }),
   getContainer: () => ({ getBoundingClientRect: () => ({ top: 0 }) }),
-  latLngToContainerPoint: vi.fn(),
+  latLngToContainerPoint: vi.fn(() => ({ x: 200, y: 400 })),
   panBy: vi.fn(),
 }));
 
@@ -716,9 +716,11 @@ describe('App empty state', () => {
   });
 });
 
-// jsdom lays nothing out, so the header ends at the top of the map and the
-// selected pin goes 10rem (160px) below it, above the panel, which starts
-// at 320px.
+// jsdom lays nothing out, so the header ends at the top of the map. On
+// narrow screens the visible area is the 400 by 320 space above the panel,
+// which starts at 40% of the 800px map, with its middle at (200, 160). On
+// wide screens it is the 16px left of the 24rem (384px) panel, with its
+// middle at (8, 400).
 describe('App on narrow screens', () => {
   beforeEach(() => {
     vi.stubGlobal('matchMedia', (query: string) => ({
@@ -739,7 +741,7 @@ describe('App on narrow screens', () => {
     vi.unstubAllGlobals();
   });
 
-  it('puts the chosen restaurant above the details panel', () => {
+  it('puts the chosen restaurant in the middle of the area above the panel', () => {
     render(<App />);
 
     fireEvent.change(screen.getByLabelText('Nome'), {
@@ -753,8 +755,9 @@ describe('App on narrow screens', () => {
         [-27.5969, -48.5495],
       ],
       expect.objectContaining({
-        padding: [32, 32],
-        paddingBottomRight: [32, 512],
+        maxZoom: 16,
+        paddingTopLeft: [0, 0],
+        paddingBottomRight: [0, 480],
       }),
     );
   });
@@ -772,7 +775,7 @@ describe('App on narrow screens', () => {
     );
   });
 
-  it('moves a clicked pin that the details panel would cover', () => {
+  it('moves a clicked pin that the panel would cover up to the middle of the area above it', () => {
     fakeMap.latLngToContainerPoint.mockReturnValue({ x: 200, y: 600 });
     render(<App />);
 
@@ -782,28 +785,53 @@ describe('App on narrow screens', () => {
     expect(screen.getByRole('heading', { name: 'Mandarina' })).toBeTruthy();
   });
 
-  it('leaves a clicked pin above the details panel where it is', () => {
-    fakeMap.latLngToContainerPoint.mockReturnValue({ x: 200, y: 250 });
+  it('also moves a clicked pin that is already above the panel', () => {
+    fakeMap.latLngToContainerPoint.mockReturnValue({ x: 150, y: 250 });
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
 
-    expect(fakeMap.panBy).not.toHaveBeenCalled();
+    expect(fakeMap.panBy).toHaveBeenCalledWith([-50, 90], { animate: true });
   });
 });
 
 describe('App on wide screens', () => {
-  it('does not move a clicked pin', () => {
+  beforeEach(() => {
     vi.mocked(useRestaurants).mockReturnValue({
       status: 'success',
       restaurants,
     });
+    vi.mocked(useRestaurantSuggestions).mockReturnValue({
+      status: 'success',
+      restaurants: [restaurants[1]!],
+    });
     fakeMap.panBy.mockClear();
+  });
+
+  it('puts the chosen restaurant in the middle of the area left of the panel', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Nome'), {
+      target: { value: 'gira' },
+    });
+    fireEvent.click(screen.getByRole('option', { name: /Girassol/ }));
+
+    expect(fakeMap.fitBounds).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        maxZoom: 16,
+        paddingTopLeft: [0, 0],
+        paddingBottomRight: [384, 0],
+      }),
+    );
+  });
+
+  it('moves a clicked pin to the middle of the area left of the panel', () => {
     fakeMap.latLngToContainerPoint.mockReturnValue({ x: 200, y: 600 });
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
 
-    expect(fakeMap.panBy).not.toHaveBeenCalled();
+    expect(fakeMap.panBy).toHaveBeenCalledWith([192, 200], { animate: true });
   });
 });
