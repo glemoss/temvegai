@@ -17,6 +17,7 @@ Um aplicativo mobile virá depois e vai consumir a mesma API. Por isso a API é 
 - Ver detalhes de um restaurante (nome, descrição, endereço, bairro, tipo, contato, horário), com a indicação de aberto ou fechado no momento, pelo horário de Florianópolis.
 - Filtrar por tipo, por bairro e por nome.
 - Buscar apenas os restaurantes dentro da área visível do mapa.
+- Ver a própria localização no mapa, pedida pelo botão "Minha localização" e usada só no navegador.
 - Login de admin com e-mail e senha (entrar, sair, consultar a sessão atual).
 - Contas de admin criadas por um comando no terminal do servidor; não existe cadastro público.
 - Endpoints de escrita (criar, editar, remover) na API, exigindo admin logado.

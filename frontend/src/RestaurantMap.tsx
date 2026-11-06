@@ -5,8 +5,10 @@ import {
   type LatLngTuple,
   type Map as LeafletMap,
 } from 'leaflet';
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useEffectEvent, useRef, type RefObject } from 'react';
 import {
+  Circle,
+  CircleMarker,
   MapContainer,
   Marker,
   ZoomControl,
@@ -16,6 +18,8 @@ import {
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
 import { CartoBasemap } from './CartoBasemap';
 import { pinSvg } from './leaf';
+import { UserLocationControl } from './UserLocationControl';
+import { useUserLocation, type UserPosition } from './useUserLocation';
 
 const FLORIANOPOLIS_CENTER: LatLngTuple = [-27.5954, -48.548];
 const INITIAL_ZOOM = 12;
@@ -33,6 +37,10 @@ const FOCUS_PADDING = 32;
 const NARROW_SCREEN = '(width < 40rem)';
 const DETAILS_MAX_HEIGHT = 0.6;
 const DETAILS_WIDTH_REM = 24;
+
+// The visitor's location: a dot of a fixed size and, around it, how far
+// off it may be.
+const USER_LOCATION_COLOR = '#1a73e8';
 
 // Keeps the selected restaurant's pin in front of the pins around it.
 const SELECTED_Z_INDEX_OFFSET = 1000;
@@ -69,29 +77,37 @@ function prefersReducedMotion(): boolean {
 }
 
 // The part of the map, in pixels from its top left corner, that is not
-// behind the header or the details panel.
+// behind the header or, when it is open, the details panel.
 export function visibleArea({
   mapWidth,
   mapHeight,
   headerBottom,
   remSize,
   narrow,
+  detailsOpen = true,
 }: {
   mapWidth: number;
   mapHeight: number;
   headerBottom: number;
   remSize: number;
   narrow: boolean;
+  detailsOpen?: boolean;
 }): { left: number; top: number; right: number; bottom: number } {
+  const narrowPanel = detailsOpen && narrow;
+  const widePanel = detailsOpen && !narrow;
   return {
     left: 0,
     top: headerBottom,
-    right: narrow ? mapWidth : mapWidth - DETAILS_WIDTH_REM * remSize,
-    bottom: narrow ? mapHeight * (1 - DETAILS_MAX_HEIGHT) : mapHeight,
+    right: widePanel ? mapWidth - DETAILS_WIDTH_REM * remSize : mapWidth,
+    bottom: narrowPanel ? mapHeight * (1 - DETAILS_MAX_HEIGHT) : mapHeight,
   };
 }
 
-function mapVisibleArea(map: LeafletMap, header: HTMLElement | null) {
+function mapVisibleArea(
+  map: LeafletMap,
+  header: HTMLElement | null,
+  detailsOpen = true,
+) {
   const size = map.getSize();
   const mapTop = map.getContainer().getBoundingClientRect().top;
   return visibleArea({
@@ -101,6 +117,7 @@ function mapVisibleArea(map: LeafletMap, header: HTMLElement | null) {
     remSize:
       parseFloat(getComputedStyle(document.documentElement).fontSize) || 16,
     narrow: window.matchMedia?.(NARROW_SCREEN)?.matches ?? false,
+    detailsOpen,
   });
 }
 
@@ -178,6 +195,93 @@ function FocusBounds({
   }, [map, bounds, isSelected, headerRef]);
 
   return null;
+}
+
+// The visitor's location, once the button asks for it. The map goes to
+// it, in the middle of the area left visible, only when the button is
+// clicked, so following the visitor does not fight someone dragging the
+// map; it zooms in to the street unless it is already closer.
+function UserLocation({
+  detailsOpen,
+  headerRef,
+}: {
+  detailsOpen: boolean;
+  headerRef: RefObject<HTMLElement | null>;
+}) {
+  const map = useMap();
+  const { state, locate } = useUserLocation();
+  // Whether the map still has to go to the location, which the browser
+  // may take a while to find after the click.
+  const goPending = useRef(false);
+  const position = state.status === 'located' ? state.position : null;
+
+  function goTo({ latitude, longitude }: UserPosition) {
+    const zoom = Math.max(map.getZoom(), FOCUS_MAX_ZOOM);
+    const area = mapVisibleArea(map, headerRef.current, detailsOpen);
+    const size = map.getSize();
+    // Where the map's center must be for the location to land in the
+    // middle of the visible area.
+    const center = map.unproject(
+      map
+        .project([latitude, longitude], zoom)
+        .add([
+          size.x / 2 - (area.left + area.right) / 2,
+          size.y / 2 - (area.top + area.bottom) / 2,
+        ]),
+      zoom,
+    );
+    map.setView(center, zoom, { animate: !prefersReducedMotion() });
+  }
+
+  const goToPending = useEffectEvent((found: UserPosition) => {
+    if (!goPending.current) return;
+    goPending.current = false;
+    goTo(found);
+  });
+
+  useEffect(() => {
+    if (position) goToPending(position);
+  }, [position]);
+
+  function handleLocate() {
+    if (position) {
+      goTo(position);
+      return;
+    }
+    goPending.current = true;
+    locate();
+  }
+
+  return (
+    <>
+      <UserLocationControl status={state.status} onLocate={handleLocate} />
+      {position && (
+        <>
+          <Circle
+            center={[position.latitude, position.longitude]}
+            radius={position.accuracy}
+            interactive={false}
+            pathOptions={{
+              stroke: false,
+              fillColor: USER_LOCATION_COLOR,
+              fillOpacity: 0.15,
+            }}
+          />
+          <CircleMarker
+            center={[position.latitude, position.longitude]}
+            radius={7}
+            interactive={false}
+            pathOptions={{
+              color: '#fff',
+              weight: 3,
+              fillColor: USER_LOCATION_COLOR,
+              fillOpacity: 1,
+            }}
+          />
+        </>
+      )}
+    </>
+  );
 }
 
 interface RestaurantMarkersProps {
@@ -276,6 +380,10 @@ export function RestaurantMap({
       <FocusBounds
         bounds={focusBounds}
         isSelected={focusIsSelected}
+        headerRef={headerRef}
+      />
+      <UserLocation
+        detailsOpen={selectedId !== undefined}
         headerRef={headerRef}
       />
       <RestaurantMarkers
