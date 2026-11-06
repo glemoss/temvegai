@@ -32,7 +32,7 @@ const restaurants = [
     neighborhood: 'Centro',
     latitude: -27.598715,
     longitude: -48.549385,
-    phone: '(48) 3879-3078',
+    phone: '4838793078',
     instagram: 'mandarinafloripa',
     opening_hours: week([days('monday', 'friday'), '10:30', '14:30']),
   },
@@ -43,7 +43,7 @@ const restaurants = [
     neighborhood: 'Campeche',
     latitude: -27.689461,
     longitude: -48.48593,
-    phone: '(48) 99105-9986',
+    phone: '48991059986',
     instagram: 'girassolveg20',
     opening_hours: week(
       [days('monday', 'saturday'), '11:30', '22:00'],
@@ -57,7 +57,7 @@ const restaurants = [
     neighborhood: 'Rio Tavares',
     latitude: -27.661458,
     longitude: -48.499222,
-    phone: '(48) 99124-2935',
+    phone: '48991242935',
     instagram: 'kairu.veg',
     opening_hours: week(
       [days('monday'), '19:00', '23:00'],
@@ -71,7 +71,7 @@ const restaurants = [
     neighborhood: 'Centro',
     latitude: -27.598363,
     longitude: -48.548877,
-    phone: '(48) 99134-1771',
+    phone: '48991341771',
     instagram: 'desvioveg',
     opening_hours: week(
       [days('monday', 'saturday'), '11:00', '23:00'],
@@ -85,7 +85,7 @@ const restaurants = [
     neighborhood: 'Centro',
     latitude: -27.596349,
     longitude: -48.550833,
-    phone: '(48) 3223-2511',
+    phone: '4832232511',
     instagram: 'restaurantenaturaltsanthe',
     opening_hours: week([days('monday', 'friday'), '11:00', '14:00']),
   },
@@ -96,7 +96,7 @@ const restaurants = [
     neighborhood: 'Centro',
     latitude: -27.598471,
     longitude: -48.548734,
-    phone: '(48) 99618-4851',
+    phone: '48996184851',
     instagram: 'bugiocentro',
     opening_hours: week(
       [days('monday', 'wednesday'), '18:00', '02:00'],
@@ -125,7 +125,7 @@ const restaurants = [
     neighborhood: 'Centro',
     latitude: -27.598632,
     longitude: -48.549069,
-    phone: '(48) 99144-6859',
+    phone: '48991446859',
     instagram: 'janelabar.floripacentro',
     opening_hours: week(
       [days('tuesday'), '17:00', '23:00'],

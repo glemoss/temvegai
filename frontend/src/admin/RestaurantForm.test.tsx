@@ -237,6 +237,36 @@ describe('RestaurantForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('masks the phone as it is typed and sends only the digits', async () => {
+    const { onSubmit } = renderForm();
+    fillRequired();
+
+    type('Telefone', '4833334444');
+    expect(inputValue('Telefone')).toBe('(48) 3333-4444');
+    type('Telefone', '(48) 3333-44448');
+    expect(inputValue('Telefone')).toBe('(48) 33334-4448');
+
+    submit();
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ phone: '48333344448' }),
+      ),
+    );
+  });
+
+  it('does not send a phone without 10 or 11 digits', () => {
+    const { onSubmit } = renderForm();
+    fillRequired();
+    type('Telefone', '123');
+
+    submit();
+
+    expect(inputValue('Telefone')).toBe('(12) 3');
+    expect(screen.getByText('Informe DDD e número.')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('sends no opening hours when every day is empty', async () => {
     const { onSubmit } = renderForm();
     fillRequired();

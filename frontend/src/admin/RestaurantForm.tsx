@@ -24,6 +24,7 @@ import {
   type RestaurantInput,
   type RestaurantType,
 } from '../api/restaurants';
+import { maskPhone } from '../phone';
 import { TYPE_LABELS } from '../restaurantTypeLabels';
 import { useNeighborhoods } from '../useNeighborhoods';
 import { LocationPicker } from './LocationPicker';
@@ -598,8 +599,20 @@ export function RestaurantForm({
         </div>
       </fieldset>
 
-      <Field label="Telefone" error={errors.phone}>
-        {(props) => <Input type="tel" {...props} {...text('phone')} />}
+      <Field
+        label="Telefone"
+        error={errors.phone}
+        hint="Com DDD, como (48) 3333-4444 ou (48) 99999-8888."
+      >
+        {(props) => (
+          <Input
+            type="tel"
+            inputMode="tel"
+            {...props}
+            {...text('phone')}
+            onChange={(event) => set('phone', maskPhone(event.target.value))}
+          />
+        )}
       </Field>
 
       <Field

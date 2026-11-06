@@ -58,10 +58,22 @@ describe('parseRestaurantForm', () => {
       success: true,
       input: {
         description: 'Comida caseira',
-        phone: '(48) 99999-0000',
+        phone: '48999990000',
         website: 'https://mandarina.com.br',
         instagram: 'mandarina.floripa',
       },
+    });
+  });
+
+  it('accepts a landline and a mobile, with the area code', () => {
+    expect(
+      parseRestaurantForm({ ...valid, phone: '(48) 3333-4444' }),
+    ).toMatchObject({ success: true, input: { phone: '4833334444' } });
+    expect(errorsOf({ ...valid, phone: '(48) 3333-444' })).toEqual({
+      phone: 'Informe DDD e número.',
+    });
+    expect(errorsOf({ ...valid, phone: '123' })).toEqual({
+      phone: 'Informe DDD e número.',
     });
   });
 
@@ -184,7 +196,7 @@ describe('toRestaurantFormValues', () => {
     neighborhood: 'Campeche',
     latitude: -27.661458,
     longitude: -48.499222,
-    phone: '(48) 99999-0000',
+    phone: '48999990000',
     website: 'https://mandarina.com.br',
     instagram: 'mandarinafloripa',
     openingHours: {
@@ -207,6 +219,12 @@ describe('toRestaurantFormValues', () => {
       instagram: 'mandarinafloripa',
       openingHours: restaurant.openingHours,
     });
+  });
+
+  it('shows a phone kept out of the 10 or 11 digits with the mask', () => {
+    expect(
+      toRestaurantFormValues({ ...restaurant, phone: '3333-44' }),
+    ).toMatchObject({ phone: '(33) 3344' });
   });
 
   it('leaves empty the fields the restaurant does not have', () => {

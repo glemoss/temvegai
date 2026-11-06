@@ -9,6 +9,7 @@ import type {
   TimeInterval,
   WeeklyHours,
 } from '../api/restaurants';
+import { maskPhone } from '../phone';
 
 // The inputs hold text, as typed; an empty time is a field not filled yet.
 export interface RestaurantFormValues {
@@ -70,7 +71,7 @@ export function toRestaurantFormValues(
     neighborhood: restaurant.neighborhood,
     latitude: String(restaurant.latitude),
     longitude: String(restaurant.longitude),
-    phone: restaurant.phone ?? '',
+    phone: maskPhone(restaurant.phone ?? ''),
     website: restaurant.website ?? '',
     instagram: restaurant.instagram ?? '',
     openingHours: restaurant.openingHours ?? emptyWeek,
@@ -119,6 +120,12 @@ const instagramUsername = z
   .string()
   .transform((value) => value.replace(/^@/, ''))
   .pipe(z.string().regex(/^[A-Za-z0-9._]{1,30}$/, 'Usuário inválido.'));
+
+// Sent as digits only, as the API stores it.
+const phoneDigits = z
+  .string()
+  .transform((value) => value.replace(/\D/g, ''))
+  .pipe(z.string().regex(/^\d{10,11}$/, 'Informe DDD e número.'));
 
 function time(message: string) {
   return z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, message);
@@ -182,7 +189,7 @@ const fieldsSchema = z.object({
   neighborhood: requiredText('Informe o bairro.'),
   latitude: coordinate(90),
   longitude: coordinate(180),
-  phone: optionalText(),
+  phone: optionalText(phoneDigits),
   website: optionalText(website),
   instagram: optionalText(instagramUsername),
 });

@@ -14,7 +14,7 @@ const kairu: Restaurant = {
   neighborhood: 'Rio Tavares',
   latitude: -27.661458,
   longitude: -48.499222,
-  phone: '(48) 99124-2935',
+  phone: '48991242935',
   website: null,
   instagram: 'kairu.veg',
   openingHours: {

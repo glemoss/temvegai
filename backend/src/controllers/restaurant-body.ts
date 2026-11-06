@@ -29,6 +29,17 @@ const instagramUsername = z
     z.string().regex(/^[A-Za-z0-9._]{1,30}$/, 'Usuário do Instagram inválido'),
   );
 
+// Brazilian landline or mobile with area code, as "(48) 3333-4444" or
+// "(48) 99999-8888"; the punctuation is ignored and only the digits stored.
+const phoneDigits = z
+  .string()
+  .transform((value) => value.replace(/[\s().-]/g, ''))
+  .pipe(
+    z
+      .string()
+      .regex(/^\d{10,11}$/, 'Telefone deve ter 10 ou 11 dígitos, com DDD'),
+  );
+
 const time = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Horário deve estar no formato HH:MM');
@@ -88,7 +99,11 @@ export const restaurantBodySchema = z.strictObject({
   neighborhood: requiredText,
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
-  phone: optionalText(),
+  phone: optionalText(phoneDigits).meta({
+    pattern: '^[\\d\\s().-]+$',
+    description:
+      'DDD e número, com 10 ou 11 dígitos; a pontuação é ignorada e só os dígitos são salvos.',
+  }),
   website: optionalText(website).meta({
     format: 'uri',
     description: 'Endereço completo, com `http://` ou `https://`.',
