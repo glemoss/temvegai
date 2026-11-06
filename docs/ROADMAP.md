@@ -293,6 +293,10 @@ O mapa do site passa a usar os tiles Voyager da CARTO, com os nomes por baixo da
 O mapa do site troca os tiles em imagem do Voyager pelo estilo vetorial Voyager oficial da CARTO (`gl/voyager-gl-style/style.json`, com a mesma `VITE_CARTO_KEY`), desenhado pelo `maplibre-gl` dentro do Leaflet, ligado por `@maplibre/maplibre-gl-leaflet` (as duas dependências aprovadas pelo dono). As cores das camadas do estilo são trocadas por cima, a partir de `mapColors.ts`, com uma paleta própria no clima do MapTiler Basic, que o dono pediu (fundo bege, ruas brancas, parques num verde claro da marca, água azul, nomes nas cores de texto da marca), que o dono ajusta com a ajuda do Maputnik; fontes e ícones continuam vindo da CARTO. O mapa do painel admin continua com o OpenStreetMap. Substitui a ideia de trocar para o MapTiler, descartada pelo dono: o plano grátis dele é bem menor (100 mil requisições por mês) e os tiles em imagem também não deixam trocar as cores.
 **Pronto quando:** o site mostra o Voyager vetorial com as cores do `mapColors.ts` e os créditos do OpenStreetMap e da CARTO, o admin continua igual, o site não abre sem a chave, e o `build` gera o worker do MapLibre. Com testes.
 
+### [x] M9 — Localização do visitante
+Botão "Minha localização" no mapa do site, acima do zoom. Ao clicar, o navegador pede permissão e o mapa mostra um ponto azul na posição do visitante, com um círculo da precisão, e centraliza nele na área visível, com zoom 16 (ou o atual, se já for maior). O ponto acompanha o visitante enquanto a página está aberta, mas o mapa só se move no clique. A localização não sai do navegador, nem para a API. Permissão negada, posição indisponível ou navegador sem suporte mostram um aviso em português ao lado do botão. O painel admin fica igual. Sem dependência nova: usa a Geolocation API do navegador. Feita antes da M5, a pedido do dono.
+**Pronto quando:** o botão aparece no mapa; clicar mostra o ponto e centraliza nele; permissão negada mostra o aviso; e o admin continua igual. Com testes.
+
 ## Depois da v1 (não planejado ainda)
 
 Domínio próprio, API em container (ex.: Cloud Run) se a Vercel deixar de bastar, aplicativo mobile.

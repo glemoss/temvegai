@@ -40,4 +40,20 @@ describe('visibleArea', () => {
       }).right,
     ).toBe(800);
   });
+
+  it.each([true, false])(
+    'leaves all the space below the header when the panel is closed (narrow: %s)',
+    (narrow) => {
+      expect(
+        visibleArea({
+          mapWidth: 1280,
+          mapHeight: 800,
+          headerBottom: 140,
+          remSize: 16,
+          narrow,
+          detailsOpen: false,
+        }),
+      ).toEqual({ left: 0, top: 140, right: 1280, bottom: 800 });
+    },
+  );
 });

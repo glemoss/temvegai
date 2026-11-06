@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,6 +32,13 @@ const fakeMap = vi.hoisted(() => ({
   getContainer: () => ({ getBoundingClientRect: () => ({ top: 0 }) }),
   latLngToContainerPoint: vi.fn(() => ({ x: 200, y: 400 })),
   panBy: vi.fn(),
+  getZoom: vi.fn(() => 12),
+  // Every location projects to the same point, and unprojecting gives the
+  // point back, so the tests see where the map's center was moved.
+  project: vi.fn(() => ({
+    add: ([x, y]: [number, number]) => ({ x: 1000 + x, y: 2000 + y }),
+  })),
+  unproject: ({ x, y }: { x: number; y: number }) => [x, y],
 }));
 
 // Leaflet needs a real browser to lay out the map, so the map components
@@ -39,6 +52,15 @@ vi.mock('leaflet', () => ({
 // covers the basemap itself.
 vi.mock('./CartoBasemap', () => ({
   CartoBasemap: () => <div data-testid="basemap" />,
+}));
+// The location button, as a plain button and its message; its own test
+// covers the Leaflet control.
+vi.mock('./UserLocationControl', () => ({
+  UserLocationControl: (props: { status: string; onLocate: () => void }) => (
+    <button type="button" data-status={props.status} onClick={props.onLocate}>
+      Minha localização
+    </button>
+  ),
 }));
 vi.mock('react-leaflet', () => ({
   useMap: () => fakeMap,
@@ -57,6 +79,16 @@ vi.mock('react-leaflet', () => ({
     </div>
   ),
   ZoomControl: () => null,
+  Circle: (props: { center: [number, number]; radius: number }) => (
+    <div
+      data-testid="user-accuracy"
+      data-center={props.center.join(',')}
+      data-radius={props.radius}
+    />
+  ),
+  CircleMarker: (props: { center: [number, number] }) => (
+    <div data-testid="user-location" data-center={props.center.join(',')} />
+  ),
   Marker: (props: {
     position: [number, number];
     icon: { className: string };
@@ -833,5 +865,123 @@ describe('App on wide screens', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
 
     expect(fakeMap.panBy).toHaveBeenCalledWith([192, 200], { animate: true });
+  });
+});
+
+describe('App visitor location', () => {
+  // The position callback of the last watchPosition call.
+  let report: (latitude: number, longitude: number, accuracy: number) => void;
+  const watchPosition = vi.fn((success: PositionCallback) => {
+    report = (latitude, longitude, accuracy) =>
+      act(() =>
+        success({
+          coords: { latitude, longitude, accuracy },
+        } as GeolocationPosition),
+      );
+    return 1;
+  });
+
+  beforeEach(() => {
+    vi.stubGlobal('navigator', {
+      geolocation: { watchPosition, clearWatch: vi.fn() },
+    });
+    vi.mocked(useRestaurants).mockReturnValue({
+      status: 'success',
+      restaurants,
+    });
+    watchPosition.mockClear();
+    fakeMap.getZoom.mockReturnValue(12);
+    fakeMap.project.mockClear();
+  });
+
+  // Unmounted first, since unmounting stops watching the location.
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  function locate() {
+    fireEvent.click(screen.getByRole('button', { name: 'Minha localização' }));
+  }
+
+  it('asks for the location only when the button is clicked', () => {
+    render(<App />);
+
+    expect(watchPosition).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('user-location')).toBeNull();
+
+    locate();
+
+    expect(watchPosition).toHaveBeenCalledOnce();
+  });
+
+  it('shows the location with its accuracy and moves the map to it', () => {
+    render(<App />);
+
+    locate();
+    report(-27.6, -48.52, 25);
+
+    expect(
+      screen.getByTestId('user-location').getAttribute('data-center'),
+    ).toBe('-27.6,-48.52');
+    expect(
+      screen.getByTestId('user-accuracy').getAttribute('data-radius'),
+    ).toBe('25');
+    expect(fakeMap.project).toHaveBeenCalledWith([-27.6, -48.52], 16);
+    // Without the panel, the visible area is the whole map.
+    expect(fakeMap.setView).toHaveBeenCalledWith([1000, 2000], 16, {
+      animate: true,
+    });
+  });
+
+  it('keeps a zoom already closer than the street', () => {
+    fakeMap.getZoom.mockReturnValue(18);
+    render(<App />);
+
+    locate();
+    report(-27.6, -48.52, 25);
+
+    expect(fakeMap.setView).toHaveBeenCalledWith([1000, 2000], 18, {
+      animate: true,
+    });
+  });
+
+  it('follows the visitor without moving the map again', () => {
+    render(<App />);
+
+    locate();
+    report(-27.6, -48.52, 25);
+    report(-27.61, -48.53, 10);
+
+    expect(
+      screen.getByTestId('user-location').getAttribute('data-center'),
+    ).toBe('-27.61,-48.53');
+    expect(fakeMap.setView).toHaveBeenCalledOnce();
+  });
+
+  it('moves the map back to the location when the button is clicked again', () => {
+    render(<App />);
+
+    locate();
+    report(-27.6, -48.52, 25);
+    report(-27.61, -48.53, 10);
+    locate();
+
+    expect(watchPosition).toHaveBeenCalledOnce();
+    expect(fakeMap.setView).toHaveBeenCalledTimes(2);
+    expect(fakeMap.project).toHaveBeenLastCalledWith([-27.61, -48.53], 16);
+  });
+
+  it('puts the location in the middle of the area left of an open panel', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Mandarina' }));
+
+    locate();
+    report(-27.6, -48.52, 25);
+
+    // The visible area is 16px wide: its middle is 192px left of the map's.
+    expect(fakeMap.setView).toHaveBeenCalledWith([1192, 2000], 16, {
+      animate: true,
+    });
   });
 });
