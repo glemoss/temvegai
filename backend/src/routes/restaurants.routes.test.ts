@@ -370,6 +370,30 @@ describe('POST /restaurants', () => {
     });
   });
 
+  it('accepts a description of 300 characters and refuses one of 301', async () => {
+    await setup();
+
+    const accepted = await asAdmin({
+      method: 'POST',
+      url: '/restaurants',
+      payload: { ...body, description: 'a'.repeat(300) },
+    });
+    const refused = await asAdmin({
+      method: 'POST',
+      url: '/restaurants',
+      payload: { ...body, description: 'a'.repeat(301) },
+    });
+
+    expect(accepted.statusCode).toBe(201);
+    expect(refused.statusCode).toBe(400);
+    expect(refused.json().error.details).toEqual([
+      {
+        field: 'description',
+        message: 'Descrição deve ter no máximo 300 caracteres',
+      },
+    ]);
+  });
+
   it('responds with the validation messages in Portuguese', async () => {
     await setup();
 
@@ -446,6 +470,24 @@ describe('PUT /restaurants/:id', () => {
     expect(response.statusCode).toBe(400);
     expect((await getRestaurant(kairu.id)).json()).toMatchObject({
       restaurant: { name: kairu.name },
+    });
+  });
+
+  it('refuses a description of 301 characters', async () => {
+    await setup();
+
+    const response = await asAdmin({
+      method: 'PUT',
+      url: `/restaurants/${kairu.id}`,
+      payload: { ...body, description: 'a'.repeat(301) },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [expect.objectContaining({ field: 'description' })],
+      },
     });
   });
 

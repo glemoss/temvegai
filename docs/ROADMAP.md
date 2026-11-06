@@ -266,7 +266,7 @@ Botão "Como chegar" no painel de detalhes, que abre o Google Maps numa nova aba
 Clicar num pin, ou escolher um restaurante nas sugestões da busca, centraliza o restaurante no espaço do mapa que sobra visível com o painel de detalhes aberto, no celular (acima do painel) e no desktop (à esquerda dele). O zoom não muda no clique, e a sugestão mantém o zoom que já usa. Substitui a regra da F9, em que o mapa só se move no celular e leva o pin para 10rem abaixo do cabeçalho.
 **Pronto quando:** no celular e no desktop, o pin clicado e o restaurante escolhido na busca ficam no centro da área livre, sem ficar atrás do painel nem do cabeçalho. Com testes da conta do deslocamento.
 
-### [ ] M3 — Limite da descrição
+### [x] M3 — Limite da descrição
 `description` com no máximo 300 caracteres, na API (Zod, com mensagem em português) e no formulário do admin, que mostra um contador (`120/300`). Sem migration: a coluna continua `text`. Antes do deploy, conferir no Neon se algum restaurante passa de 300 (`select name, length(description) from restaurants where length(description) > 300`); um que passe só precisa ser encurtado na próxima edição, e o contador mostra quanto sobra.
 **Pronto quando:** a API recusa uma descrição de 301 caracteres com 400 e aceita uma de 300; o formulário mostra o contador e não deixa salvar acima do limite. Com testes.
 

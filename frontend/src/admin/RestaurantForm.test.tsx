@@ -202,6 +202,41 @@ describe('RestaurantForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('limits the description and counts its characters', () => {
+    renderForm();
+    expect(screen.getByLabelText('Descrição').getAttribute('maxlength')).toBe(
+      '300',
+    );
+    const counter = () =>
+      document.getElementById(
+        screen
+          .getByLabelText('Descrição')
+          .getAttribute('aria-describedby')
+          ?.split(' ')[0] ?? '',
+      )?.textContent;
+
+    expect(counter()).toBe('0/300');
+
+    type('Descrição', ' Cozinha vegana. ');
+
+    expect(counter()).toBe('17/300');
+  });
+
+  // A description saved before the limit may be longer; it must be
+  // shortened before saving.
+  it('does not send a saved description over the limit', () => {
+    const { onSubmit } = renderForm({
+      initialValues: { ...emptyRestaurantForm, description: 'a'.repeat(301) },
+    });
+    fillRequired();
+
+    submit();
+
+    expect(screen.getByText('301/300')).toBeTruthy();
+    expect(screen.getByText('Use no máximo 300 caracteres.')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('sends no opening hours when every day is empty', async () => {
     const { onSubmit } = renderForm();
     fillRequired();

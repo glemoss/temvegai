@@ -92,6 +92,17 @@ describe('parseRestaurantForm', () => {
     });
   });
 
+  it('accepts a description of up to 300 characters, trimmed', () => {
+    const description = ` ${'a'.repeat(300)} `;
+    expect(parseRestaurantForm({ ...valid, description })).toMatchObject({
+      success: true,
+      input: { description: 'a'.repeat(300) },
+    });
+    expect(errorsOf({ ...valid, description: 'a'.repeat(301) })).toEqual({
+      description: 'Use no máximo 300 caracteres.',
+    });
+  });
+
   it('sends no hours when every day is empty', () => {
     expect(parseRestaurantForm(valid)).toMatchObject({
       success: true,

@@ -30,6 +30,9 @@ export interface RestaurantFormValues {
 // "openingHours.monday.0.opens", the same paths the API reports.
 export type FormErrors = Record<string, string>;
 
+// Counted after trimming, as the API counts it.
+export const DESCRIPTION_MAX_LENGTH = 300;
+
 export const emptyWeek: WeeklyHours = {
   monday: [],
   tuesday: [],
@@ -166,7 +169,14 @@ const weeklyHours = z.object({
 
 const fieldsSchema = z.object({
   name: requiredText('Informe o nome.'),
-  description: optionalText(),
+  description: optionalText(
+    z
+      .string()
+      .max(
+        DESCRIPTION_MAX_LENGTH,
+        `Use no máximo ${DESCRIPTION_MAX_LENGTH} caracteres.`,
+      ),
+  ),
   type: z.enum(['fully_vegan', 'vegan_options'], { error: 'Escolha o tipo.' }),
   address: requiredText('Informe o endereço.'),
   neighborhood: requiredText('Informe o bairro.'),

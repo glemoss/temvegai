@@ -79,7 +79,7 @@ Tabela `restaurants`:
 |---|---|---|
 | id | uuid | chave primária |
 | name | text | obrigatório |
-| description | text | opcional |
+| description | text | opcional, até 300 caracteres |
 | type | text | `fully_vegan` ou `vegan_options` |
 | address | text | obrigatório |
 | neighborhood | text | obrigatório |

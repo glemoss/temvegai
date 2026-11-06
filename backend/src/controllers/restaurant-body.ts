@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 const requiredText = z.string().trim().min(1, 'Campo obrigatório');
 
+export const DESCRIPTION_MAX_LENGTH = 300;
+
 // A missing field and an empty value are both stored as null, so a PUT
 // without an optional field clears it.
 function optionalText(format: z.ZodType<string, string> = z.string()) {
@@ -73,7 +75,14 @@ const weeklyHours = z.strictObject({
 // misspelled field fails instead of being treated as missing.
 export const restaurantBodySchema = z.strictObject({
   name: requiredText,
-  description: optionalText(),
+  description: optionalText(
+    z
+      .string()
+      .max(
+        DESCRIPTION_MAX_LENGTH,
+        `Descrição deve ter no máximo ${DESCRIPTION_MAX_LENGTH} caracteres`,
+      ),
+  ),
   type: z.enum(['fully_vegan', 'vegan_options']),
   address: requiredText,
   neighborhood: requiredText,
