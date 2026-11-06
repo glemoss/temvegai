@@ -30,6 +30,7 @@ import { LocationPicker } from './LocationPicker';
 import { NewNeighborhoodDialog } from './NewNeighborhoodDialog';
 import { OpeningHoursInput } from './OpeningHoursInput';
 import {
+  DESCRIPTION_MAX_LENGTH,
   parseRestaurantForm,
   toFormErrors,
   type FormErrors,
@@ -103,7 +104,7 @@ type TextField = Exclude<keyof RestaurantFormValues, 'type' | 'openingHours'>;
 interface FieldProps {
   label: string;
   error: string | undefined;
-  hint?: string;
+  hint?: ReactNode;
   required?: boolean;
   children: (props: {
     id: string;
@@ -434,6 +435,8 @@ export function RestaurantForm({
     failure ??
     otherError ??
     (Object.keys(errors).length > 0 ? 'Corrija os campos indicados.' : null);
+  // As typed, the length the field limits.
+  const descriptionLength = values.description.length;
 
   return (
     <form
@@ -479,8 +482,29 @@ export function RestaurantForm({
         </p>
       </div>
 
-      <Field label="Descrição" error={errors.description}>
-        {(props) => <Textarea rows={3} {...props} {...text('description')} />}
+      <Field
+        label="Descrição"
+        error={errors.description}
+        hint={
+          <span
+            className={
+              descriptionLength > DESCRIPTION_MAX_LENGTH
+                ? 'text-destructive'
+                : undefined
+            }
+          >
+            {descriptionLength}/{DESCRIPTION_MAX_LENGTH}
+          </span>
+        }
+      >
+        {(props) => (
+          <Textarea
+            rows={3}
+            maxLength={DESCRIPTION_MAX_LENGTH}
+            {...props}
+            {...text('description')}
+          />
+        )}
       </Field>
 
       <Field
