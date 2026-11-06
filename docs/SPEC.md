@@ -60,7 +60,7 @@ Não implementar, nem deixar "preparado":
 | Geocodificação | Nominatim (OpenStreetMap), chamado pelo painel admin para marcar o endereço no mapa e preencher o endereço do ponto clicado |
 | Gerenciador de pacotes | npm |
 | Hospedagem | Vercel, com site e API em dois projetos; o site repassa `/api/*` para a API |
-| CI/CD | GitHub Actions (checks em todo push e pull request; deploy na `main`) |
+| CI/CD | GitHub Actions (checks em todo pull request e push na `main`, exceto quando só muda documentação; deploy na `main`) |
 
 ## Estrutura do repositório
 
