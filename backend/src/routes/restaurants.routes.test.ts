@@ -18,7 +18,7 @@ const kairu: Restaurant = {
   neighborhood: 'Rio Tavares',
   latitude: -27.661458,
   longitude: -48.499222,
-  phone: '(48) 99124-2935',
+  phone: '48991242935',
   website: null,
   instagram: 'kairu.veg',
   openingHours: {
@@ -42,7 +42,7 @@ const body = {
   neighborhood: 'Trindade',
   latitude: -27.5865,
   longitude: -48.5226,
-  phone: '(48) 3333-4444',
+  phone: '4833334444',
   website: 'https://novoveg.com',
   instagram: 'novoveg',
   openingHours: {
@@ -394,6 +394,42 @@ describe('POST /restaurants', () => {
     ]);
   });
 
+  it('stores only the digits of the phone', async () => {
+    await setup();
+
+    const response = await asAdmin({
+      method: 'POST',
+      url: '/restaurants',
+      payload: { ...body, phone: '(48) 99999-8888' },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      restaurant: { phone: '48999998888' },
+    });
+  });
+
+  it.each(['123', '(48) 3333-444', '(48) 99999-88888', '48 9999a-8888'])(
+    'refuses the phone %s',
+    async (phone) => {
+      await setup();
+
+      const response = await asAdmin({
+        method: 'POST',
+        url: '/restaurants',
+        payload: { ...body, phone },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error.details).toEqual([
+        {
+          field: 'phone',
+          message: 'Telefone deve ter 10 ou 11 dígitos, com DDD',
+        },
+      ]);
+    },
+  );
+
   it('responds with the validation messages in Portuguese', async () => {
     await setup();
 
@@ -488,6 +524,29 @@ describe('PUT /restaurants/:id', () => {
         code: 'VALIDATION_ERROR',
         details: [expect.objectContaining({ field: 'description' })],
       },
+    });
+  });
+
+  it('stores only the digits of the phone and refuses 123', async () => {
+    await setup();
+
+    const accepted = await asAdmin({
+      method: 'PUT',
+      url: `/restaurants/${kairu.id}`,
+      payload: { ...body, phone: '(48) 3333-4444' },
+    });
+    const refused = await asAdmin({
+      method: 'PUT',
+      url: `/restaurants/${kairu.id}`,
+      payload: { ...body, phone: '123' },
+    });
+
+    expect(accepted.json()).toMatchObject({
+      restaurant: { phone: '4833334444' },
+    });
+    expect(refused.statusCode).toBe(400);
+    expect((await getRestaurant(kairu.id)).json()).toMatchObject({
+      restaurant: { phone: '4833334444' },
     });
   });
 

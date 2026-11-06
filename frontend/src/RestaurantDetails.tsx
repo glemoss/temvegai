@@ -6,6 +6,7 @@ import type { Restaurant } from './api/restaurants';
 import { displayWebsite } from './displayWebsite';
 import { LeafIcon } from './leaf';
 import { OpeningHours } from './OpeningHours';
+import { displayPhone } from './phone';
 import { TYPE_LABELS } from './restaurantTypeLabels';
 
 // The labels of the fields, and the values below them.
@@ -110,7 +111,7 @@ export function RestaurantDetails({
                 <dt className={TERM}>Telefone</dt>
                 <dd className={DESCRIPTION}>
                   <a className={LINK} href={`tel:${restaurant.phone}`}>
-                    {restaurant.phone}
+                    {displayPhone(restaurant.phone)}
                   </a>
                 </dd>
               </div>

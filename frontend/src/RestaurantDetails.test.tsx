@@ -12,7 +12,7 @@ const restaurant: Restaurant = {
   neighborhood: 'Centro',
   latitude: -27.661458,
   longitude: -48.499222,
-  phone: '(48) 3333-4444',
+  phone: '4833334444',
   website: 'https://www.mandarina.com.br/',
   instagram: 'mandarinafloripa',
   openingHours: {
@@ -46,7 +46,7 @@ describe('RestaurantDetails', () => {
     expect(html).toContain(
       '<span>Segunda a sexta</span><span>10h30–14h30</span>',
     );
-    expect(html).toContain('href="tel:(48) 3333-4444"');
+    expect(html).toContain('href="tel:4833334444"');
     expect(html).toContain('href="https://www.mandarina.com.br/"');
     expect(html).toContain('>mandarina.com.br</a>');
     expect(html).toContain('href="https://www.instagram.com/mandarinafloripa"');
@@ -92,6 +92,13 @@ describe('RestaurantDetails', () => {
     expect(html).toMatch(
       /<div class="grid grid-cols-2[^"]*"><div><dt[^>]*>Telefone<\/dt>.*<\/div><div><dt[^>]*>Instagram<\/dt>/,
     );
+  });
+
+  it('shows the phone formatted and calls its digits', () => {
+    const html = render();
+
+    expect(html).toContain('href="tel:4833334444"');
+    expect(html).toContain('>(48) 3333-4444</a>');
   });
 
   it('opens external links in a new tab', () => {

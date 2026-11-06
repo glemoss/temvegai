@@ -31,7 +31,7 @@ const data: RestaurantData = {
   neighborhood: 'Trindade',
   latitude: -27.5865,
   longitude: -48.5226,
-  phone: '(48) 3333-4444',
+  phone: '4833334444',
   website: 'https://novoveg.com',
   instagram: 'novoveg',
   openingHours: {

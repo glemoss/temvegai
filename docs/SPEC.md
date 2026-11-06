@@ -85,7 +85,7 @@ Tabela `restaurants`:
 | neighborhood | text | obrigatório |
 | latitude | numeric | obrigatório |
 | longitude | numeric | obrigatório |
-| phone | text | opcional |
+| phone | text | opcional; só dígitos, com DDD: 10 (fixo) ou 11 (celular) |
 | website | text | opcional |
 | instagram | text | opcional |
 | opening_hours | jsonb | opcional; horário semanal estruturado (ver abaixo) |
