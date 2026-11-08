@@ -301,6 +301,28 @@ Botão "Minha localização" no mapa do site, acima do zoom. Ao clicar, o navega
 O botão "Como chegar" passa a mandar ao Google Maps o texto `Nome, endereço, Florianópolis` no lugar da latitude e longitude (`https://www.google.com/maps/dir/?api=1&destination=<texto>`), para o destino aparecer com o nome do restaurante, e não como "Pin". Sem dependência nova e sem migration. Feita antes da M5, a pedido do dono.
 **Pronto quando:** o link de qualquer restaurante tem o nome e o endereço dele, e o app do Google Maps mostra o nome do restaurante no destino. Com testes.
 
+---
+
+## Fase S — Sugestões
+
+O visitante sugere um restaurante pelo nome ou por um link, a IA pesquisa e preenche um rascunho, e o admin revisa e aprova no painel. A própria tabela `suggestions` serve de fila, e o processamento roda logo depois de responder ao visitante, com `waitUntil`; uma falha é processada de novo pelo admin. Vercel Queues (beta, prende à Vercel) e cron no GitHub Actions (sugestão demora a ficar pronta) foram comparados e descartados pelo dono. Começa depois da M5 e da M6, para o rascunho já usar o endereço em campos separados.
+
+### [ ] S0 — Tabela e envio de sugestões
+Migration da tabela `suggestions` conforme o `SPEC.md`. `POST /suggestions` público, com o texto validado por Zod (até 500 caracteres) e limite de envios por IP com `@fastify/rate-limit`. `GET /suggestions` e `POST /suggestions/:id/reject` só para admin. Use cases, repositório Knex e em memória.
+**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local; o visitante cria uma sugestão com 201; passar do limite responde 429; só o admin lista e recusa. Com testes.
+
+### [ ] S1 — Rascunho com IA
+Interface `RestaurantDraftGenerator` e implementação com o Gemini, com a busca do Google e saída estruturada no formato do formulário. `ProcessSuggestionUseCase` leva a sugestão de `pending` a `processing` e depois a `ready`, com o rascunho validado por Zod, ou a `failed`, com o erro. O `POST /suggestions` dispara o processamento com `waitUntil`, e `POST /suggestions/:id/process` deixa o admin processar de novo. Teto diário de processamentos, para não esgotar a cota gratuita. `GEMINI_API_KEY` validada na inicialização e no `.env.example`. A coordenada não vem da IA. Dependências a aprovar: `@vercel/functions` e `@google/genai` (ou `fetch` direto, sem dependência).
+**Pronto quando:** uma sugestão real vira um rascunho `ready` no banco local; um erro da IA deixa a sugestão `failed` com a mensagem; processar de novo funciona. Com testes, usando um gerador em memória.
+
+### [ ] S2 — Seção "Sugestões" no painel
+Lista das sugestões com status, texto do visitante e rascunho. "Revisar" abre o formulário de criação já existente, preenchido com o rascunho; salvar cria o restaurante e marca a sugestão `approved` com o `restaurant_id`. "Recusar" com confirmação, e "Processar de novo" nas `failed`.
+**Pronto quando:** aprovar cria o restaurante no mapa, recusar tira a sugestão das pendentes, e uma `failed` pode ser processada de novo. Com testes.
+
+### [ ] S3 — Botão "Sugerir" no site
+Botão ao lado do botão de filtros, que abre um diálogo com o campo de texto e um contador (`120/500`). Avisos em português para sucesso, limite de envios atingido e erro.
+**Pronto quando:** o visitante envia uma sugestão pelo site e ela aparece no painel. Com testes.
+
 ## Depois da v1 (não planejado ainda)
 
 Domínio próprio, API em container (ex.: Cloud Run) se a Vercel deixar de bastar, aplicativo mobile.
@@ -364,3 +386,5 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (M7) A chave da CARTO vai no JavaScript público do site, e qualquer um pode copiá-la e gastar o limite gratuito dela. Conferir no painel da CARTO se dá para restringir a chave ao domínio do site.
 - (M4) ~~Em produção, a migration roda no deploy automático (D6), e o aviso de um telefone que ficou fora dos 10 ou 11 dígitos só aparece no log desse job. Antes do deploy, dá para conferir no Neon (`select name, phone from restaurants where phone is not null and length(regexp_replace(phone, '\D', '', 'g')) not in (10, 11)`). No formulário, esse telefone abre com a máscara aplicada aos dígitos que tem e precisa ser corrigido antes de salvar.~~ Resolvido antes do deploy da M4: o dono conferiu no Neon, e nenhum telefone fica fora dos 10 ou 11 dígitos.
 - (M10) O Google procura o destino pelo texto e não recebe mais a coordenada: um nome diferente do cadastro dele leva só ao endereço, e um nome ou endereço ambíguo pode levar a outro lugar. O dono testou com o Kairú (duas unidades) e funcionou. Se algum restaurante cair no lugar errado, a saída é guardar o Place ID do Google (coluna nova, preenchida no painel admin) e mandá-lo em `destination_place_id`.
+- (S) O plano gratuito do Gemini tem cotas por minuto, por dia e de buscas no Google, que mudam com frequência; conferir os números na S1. Nele o Google pode usar o que é enviado para melhorar os produtos dele; são dados públicos de restaurante, mas entra na conversa da política de privacidade, com a fonte (F5) e o Nominatim (A2).
+- (S) Se a função cair no meio do processamento, a sugestão fica presa em `processing`. Decidir na S1 se "Processar de novo" também vale para uma `processing` antiga.
