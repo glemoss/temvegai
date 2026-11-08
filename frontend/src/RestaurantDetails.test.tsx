@@ -111,14 +111,19 @@ describe('RestaurantDetails', () => {
     const html = render();
 
     expect(html).toContain(
-      'href="https://www.google.com/maps/dir/?api=1&amp;destination=-27.661458,-48.499222" target="_blank" rel="noreferrer"',
+      'href="https://www.google.com/maps/dir/?api=1&amp;destination=Mandarina%2C%20Rua%20das%20Flores%2C%20100%2C%20Florian%C3%B3polis" target="_blank" rel="noreferrer"',
     );
     expect(html).toContain('Como chegar</a>');
   });
 
-  it('uses the coordinates of the restaurant in the directions', () => {
-    const html = render({ latitude: -27.5969, longitude: -48.5495 });
+  it('uses the name and address of the restaurant in the directions', () => {
+    const html = render({
+      name: 'Bugio & Cia',
+      address: 'Rua Victor Meirelles, 112',
+    });
 
-    expect(html).toContain('destination=-27.5969,-48.5495"');
+    expect(html).toContain(
+      'destination=Bugio%20%26%20Cia%2C%20Rua%20Victor%20Meirelles%2C%20112%2C%20Florian%C3%B3polis"',
+    );
   });
 });

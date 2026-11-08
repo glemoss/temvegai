@@ -150,10 +150,12 @@ export function RestaurantDetails({
           </>
         )}
       </dl>
-      {/* On phones, the link opens the Google Maps app when it is installed. */}
+      {/* On phones, the link opens the Google Maps app when it is installed.
+          Searching by name and address shows the restaurant as the
+          destination, instead of an unnamed pin at the coordinates. */}
       <Button asChild className="mt-1">
         <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`}
+          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${restaurant.name}, ${restaurant.address}, Florianópolis`)}`}
           target="_blank"
           rel="noreferrer"
         >
