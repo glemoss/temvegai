@@ -244,15 +244,13 @@ Conferido: pelo site (navegador → borda do site → borda da API → função)
 ### [x] D6 — Deploy automático
 Workflow que, depois dos checks verdes num push na `main`, roda as migrations pendentes no Neon pela conexão direta e publica a API e depois o site com a CLI da Vercel (`npx`, sem entrar no `package.json`). Tokens e endereços do banco ficam nos secrets do GitHub. Como as migrations rodam antes do código novo, cada migration precisa funcionar também com a versão anterior da API.
 **Pronto quando:** um commit na `main` aparece publicado sem passo manual; um commit com teste quebrado não é publicado; e uma migration nova é aplicada no Neon antes de a API que depende dela entrar no ar.
-Conferido: o merge do PR #7 publicou a API e o site pelo workflow `Deploy`, com as migrations (`Already up to date.`) antes dos dois deploys. Os secrets ficam no environment `production`, liberado só para a `main`, com um token da Vercel por projeto. O deploy só roda com o CI verde (`conclusion == 'success'`); um commit com teste quebrado ainda não foi mandado de propósito. Uma migration aplicada pelo workflow só vai acontecer com a primeira migration da fase M.
+Conferido: o merge do PR #7 publicou a API e o site pelo workflow `Deploy`, com as migrations (`Already up to date.`) antes dos dois deploys. Os secrets ficam no environment `production`, liberado só para a `main`, com um token da Vercel por projeto. O deploy só roda com o CI verde (`conclusion == 'success'`); um commit com teste quebrado ainda não foi mandado de propósito. Conferido também no merge do PR #18 (M4): o workflow aplicou a migration `normalize_phone_digits` no Neon (`Batch 2 applied`) antes de publicar a API.
 
 ---
 
 ## Fase M — Melhorias
 
-Melhorias no cadastro do painel admin e no site público, notadas pelo dono ao testar o site publicado na D5. Começa depois da fase D. As etapas pequenas vêm primeiro; o endereço em campos separados, que muda o modelo de dados, fica por último.
-
-Com o deploy automático (D6), cada migration é aplicada enquanto a API anterior ainda está no ar, então precisa funcionar com ela. Por isso a troca do `address` pelos campos separados é feita em duas etapas: a M5 cria e preenche os campos novos e mantém o `address`; a M6, num deploy seguinte, remove o `address`.
+Melhorias no cadastro do painel admin e no site público, notadas pelo dono ao testar o site publicado na D5. Começa depois da fase D.
 
 ### [x] M0 — Página "não encontrada"
 Rota para qualquer caminho sem página, no site e dentro do `/admin` (ex.: `/xyz`, `/admin/xyz`), que mostra o cabeçalho do site, uma mensagem em português e um link para o mapa. Hoje esses caminhos recebem o `index.html` pelo fallback da SPA (D5) e a página fica em branco.
@@ -274,17 +272,6 @@ Clicar num pin, ou escolher um restaurante nas sugestões da busca, centraliza o
 O formulário do admin usa máscara para telefone fixo e celular (`(48) 3333-4444` e `(48) 99999-8888`). A API aceita só 10 ou 11 dígitos, ignorando a pontuação, e guarda só os dígitos. O site e o painel formatam o número na exibição. Uma migration converte os telefones existentes para dígitos; um que não fique com 10 ou 11 dígitos continua como está e aparece na saída da migration, para o admin corrigir. O rollback formata os dígitos de volta. O seed passa a guardar só dígitos. Sem dependência nova para a máscara.
 **Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local; a API recusa `123` e aceita `(48) 99999-8888`, guardando `48999998888`; o site mostra o telefone formatado, e a API anterior continua funcionando com os telefones convertidos. Com testes.
 
-### [ ] M5 — Endereço em campos separados
-O endereço passa a ter logradouro (`street`, obrigatório), número (`number`, opcional, para "s/n"), complemento (`complement`, opcional) e CEP (`postal_code`). Migration que cria as colunas, separa os endereços existentes no que der (o que não der fica todo no logradouro, para o admin revisar) e **mantém** o `address`, que a API passa a montar a partir dos campos, para que a API anterior continue funcionando durante o deploy. As colunas novas ficam opcionais no banco nesta etapa: a API anterior grava só o `address`, e os endereços existentes não têm CEP. A API nova exige logradouro e CEP no criar e no editar.
-No formulário, digitar o CEP preenche logradouro e bairro pelo ViaCEP, chamado do navegador do admin, sem chave e sem dependência nova; o bairro segue a regra da A6. A busca da coordenada no Nominatim usa os campos novos, e clicar no mapa preenche logradouro, número, bairro e também o CEP quando o Nominatim devolver (em parte do Brasil ele vem vazio ou genérico, e o admin confere). O painel de detalhes mostra o endereço montado com o CEP, e o link de rota da M10 passa a usar esse endereço montado. O `SPEC.md` é atualizado: modelo de dados e a linha de geocodificação da stack, com o ViaCEP, que recebe o CEP digitado, como o Nominatim recebe o endereço (A2).
-**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local com os restaurantes do seed separados; criar e editar exigem CEP; o CEP preenche logradouro e bairro; o clique no mapa preenche o CEP quando ele existe; e a API anterior continua lendo e gravando `address` depois da migration. Com testes.
-
-### [ ] M6 — Remover a coluna `address`
-Depois que a M5 estiver no ar, migration que remove o `address`, que deixa de ser montado pela API, e torna o `street` obrigatório no banco; um restaurante gravado pela API anterior durante o deploy da M5, só com o `address`, tem o logradouro preenchido a partir dele antes. O rollback recria a coluna a partir dos campos separados.
-**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local; nada no backend nem no frontend usa mais o `address`; e o deploy automático aplica a migration antes da API nova, o que também confirma o último item da D6.
-
----
-
 ### [x] M7 — Mapa minimalista
 O mapa do site passa a usar os tiles Voyager da CARTO, com os nomes por baixo das ruas (`rastertiles/voyager_labels_under`), cores suaves e menos informação que os do OpenStreetMap, para os pins se destacarem. A CARTO exige uma chave grátis, em `VITE_CARTO_KEY`, validada na inicialização como a `VITE_API_URL`; sem ela os tiles vêm com marca d'água. O mapa do painel admin continua com o OpenStreetMap. Sem dependência nova. Feita antes da M1, a pedido do dono.
 **Pronto quando:** o mapa do site mostra o Voyager sem marca d'água e com o crédito do OpenStreetMap e da CARTO, o do admin continua igual, e o site não abre sem a chave. Com testes.
@@ -294,18 +281,18 @@ O mapa do site troca os tiles em imagem do Voyager pelo estilo vetorial Voyager 
 **Pronto quando:** o site mostra o Voyager vetorial com as cores do `mapColors.ts` e os créditos do OpenStreetMap e da CARTO, o admin continua igual, o site não abre sem a chave, e o `build` gera o worker do MapLibre. Com testes.
 
 ### [x] M9 — Localização do visitante
-Botão "Minha localização" no mapa do site, acima do zoom. Ao clicar, o navegador pede permissão e o mapa mostra um ponto azul na posição do visitante, com um círculo da precisão, e centraliza nele na área visível, com zoom 16 (ou o atual, se já for maior). O ponto acompanha o visitante enquanto a página está aberta, mas o mapa só se move no clique. A localização não sai do navegador, nem para a API. Permissão negada, posição indisponível ou navegador sem suporte mostram um aviso em português ao lado do botão. O painel admin fica igual. Sem dependência nova: usa a Geolocation API do navegador. Feita antes da M5, a pedido do dono.
+Botão "Minha localização" no mapa do site, acima do zoom. Ao clicar, o navegador pede permissão e o mapa mostra um ponto azul na posição do visitante, com um círculo da precisão, e centraliza nele na área visível, com zoom 16 (ou o atual, se já for maior). O ponto acompanha o visitante enquanto a página está aberta, mas o mapa só se move no clique. A localização não sai do navegador, nem para a API. Permissão negada, posição indisponível ou navegador sem suporte mostram um aviso em português ao lado do botão. O painel admin fica igual. Sem dependência nova: usa a Geolocation API do navegador.
 **Pronto quando:** o botão aparece no mapa; clicar mostra o ponto e centraliza nele; permissão negada mostra o aviso; e o admin continua igual. Com testes.
 
 ### [x] M10 — Rota pelo nome do restaurante
-O botão "Como chegar" passa a mandar ao Google Maps o texto `Nome, endereço, Florianópolis` no lugar da latitude e longitude (`https://www.google.com/maps/dir/?api=1&destination=<texto>`), para o destino aparecer com o nome do restaurante, e não como "Pin". Sem dependência nova e sem migration. Feita antes da M5, a pedido do dono.
+O botão "Como chegar" passa a mandar ao Google Maps o texto `Nome, endereço, Florianópolis` no lugar da latitude e longitude (`https://www.google.com/maps/dir/?api=1&destination=<texto>`), para o destino aparecer com o nome do restaurante, e não como "Pin". Sem dependência nova e sem migration.
 **Pronto quando:** o link de qualquer restaurante tem o nome e o endereço dele, e o app do Google Maps mostra o nome do restaurante no destino. Com testes.
 
 ---
 
 ## Fase S — Sugestões
 
-O visitante sugere um restaurante pelo nome ou por um link, a IA pesquisa e preenche um rascunho, e o admin revisa e aprova no painel. A própria tabela `suggestions` serve de fila, e o processamento roda logo depois de responder ao visitante, com `waitUntil`; uma falha é processada de novo pelo admin. Vercel Queues (beta, prende à Vercel) e cron no GitHub Actions (sugestão demora a ficar pronta) foram comparados e descartados pelo dono. Começa depois da M5 e da M6, para o rascunho já usar o endereço em campos separados.
+O visitante sugere um restaurante pelo nome ou por um link, a IA pesquisa e preenche um rascunho, e o admin revisa e aprova no painel. A própria tabela `suggestions` serve de fila, e o processamento roda logo depois de responder ao visitante, com `waitUntil`; uma falha é processada de novo pelo admin. Vercel Queues (beta, prende à Vercel) e cron no GitHub Actions (sugestão demora a ficar pronta) foram comparados e descartados pelo dono.
 
 ### [ ] S0 — Tabela e envio de sugestões
 Migration da tabela `suggestions` conforme o `SPEC.md`. `POST /suggestions` público, com o texto validado por Zod (até 500 caracteres) e limite de envios por IP com `@fastify/rate-limit`. `GET /suggestions` e `POST /suggestions/:id/reject` só para admin. Use cases, repositório Knex e em memória.
