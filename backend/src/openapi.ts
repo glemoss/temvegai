@@ -6,6 +6,7 @@ import { querySchema as listRestaurantsQuery } from './controllers/list-restaura
 import { bodySchema as createSuggestionBody } from './controllers/create-suggestion.controller.js';
 import { bodySchema as loginBody } from './controllers/login.controller.js';
 import { paramsSchema as rejectSuggestionParams } from './controllers/reject-suggestion.controller.js';
+import { paramsSchema as retrySuggestionParams } from './controllers/retry-suggestion.controller.js';
 import { restaurantBodySchema } from './controllers/restaurant-body.js';
 import { paramsSchema as updateRestaurantParams } from './controllers/update-restaurant.controller.js';
 import { SESSION_COOKIE_NAME } from './controllers/session-cookie.js';
@@ -173,7 +174,7 @@ export const openApiDocument: OpenApiDocument = {
         tags: ['suggestions'],
         summary: 'Envia a sugestão de um restaurante',
         description:
-          'Aberta ao visitante, sem login. O texto (`text`), com o nome ou um link do restaurante, tem até 300 caracteres depois de tirar os espaços das pontas. Cada IP envia até 5 sugestões por hora.',
+          'Aberta ao visitante, sem login. O texto (`text`), com o nome ou um link do restaurante, tem até 300 caracteres depois de tirar os espaços das pontas. Cada IP envia até 5 sugestões por hora. Depois da resposta, a IA pesquisa o restaurante e a sugestão passa a `processing` e termina em `ready`, com o rascunho (`draft`), ou em `failed`, com o motivo (`error`). São até 20 processamentos por dia; os que passam disso terminam em `failed`.',
         requestBody: jsonBody(createSuggestionBody),
         responses: {
           201: { description: 'Sugestão criada, com status `pending`' },
@@ -200,6 +201,30 @@ export const openApiDocument: OpenApiDocument = {
           409: {
             description:
               'A sugestão não pode ser recusada no status atual (INVALID_SUGGESTION_STATUS)',
+          },
+        },
+      },
+    },
+    '/suggestions/{id}/process': {
+      post: {
+        tags: ['suggestions'],
+        summary: 'Processa de novo uma sugestão',
+        description:
+          'Vale para sugestões `failed` e para as `processing` sem atualização há mais de 10 minutos, que ficaram presas; as demais respondem 409. A sugestão volta a `pending` e a IA a processa depois da resposta.',
+        security: adminOnly,
+        parameters: toParameters(retrySuggestionParams, 'path'),
+        responses: {
+          202: {
+            description: 'Sugestão de volta na fila, com status `pending`',
+          },
+          400: errorResponses[400],
+          401: errorResponses[401],
+          404: {
+            description: 'Sugestão não encontrada (SUGGESTION_NOT_FOUND)',
+          },
+          409: {
+            description:
+              'A sugestão não pode ser processada de novo no status atual (INVALID_SUGGESTION_STATUS)',
           },
         },
       },

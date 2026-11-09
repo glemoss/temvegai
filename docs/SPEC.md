@@ -62,7 +62,7 @@ Não implementar, nem deixar "preparado":
 | Rotas do frontend | React Router (site público em `/`, painel em `/admin`) |
 | Mapa | Leaflet (react-leaflet); no site, o estilo vetorial CARTO Voyager (dados do OpenStreetMap, chave grátis em `VITE_CARTO_KEY`), desenhado pelo MapLibre GL (`maplibre-gl`, ligado ao Leaflet por `@maplibre/maplibre-gl-leaflet`), com cores próprias em `mapColors.ts`; no painel admin, tiles do OpenStreetMap |
 | Geocodificação | Nominatim (OpenStreetMap), chamado pelo painel admin para marcar o endereço no mapa e preencher o endereço do ponto clicado |
-| IA | Gemini API (plano gratuito), com a busca do Google, chamada pela API para gerar o rascunho das sugestões (`GEMINI_API_KEY`). O texto do visitante vai para o Google, como o endereço vai para o Nominatim. O processamento roda depois da resposta ao visitante, com `waitUntil` (`@vercel/functions`). SDK `@google/genai` ou `fetch` direto: decidir na S1 |
+| IA | Gemini API (`gemini-3.8-flash`), com a busca do Google, chamada pela API com `fetch` direto, sem SDK, para gerar o rascunho das sugestões (`GEMINI_API_KEY`). A busca não existe no plano gratuito: o projeto do Google precisa de faturamento ativo (5 mil buscas grátis por mês nos modelos Gemini 3; os tokens são cobrados desde o primeiro), e o teto de 20 processamentos por dia mantém o custo previsível. O texto do visitante vai para o Google, como o endereço vai para o Nominatim. O processamento roda depois da resposta ao visitante, com `waitUntil` (`@vercel/functions`) |
 | Gerenciador de pacotes | npm |
 | Hospedagem | Vercel, com site e API em dois projetos; o site repassa `/api/*` para a API |
 | CI/CD | GitHub Actions (checks em todo pull request e push na `main`, exceto quando só muda documentação; deploy na `main`) |
@@ -108,9 +108,10 @@ Tabela `suggestions`:
 | draft | jsonb | opcional; rascunho do restaurante gerado pela IA, nulo até processar |
 | error | text | opcional; motivo da falha no processamento |
 | restaurant_id | uuid | opcional; restaurante criado na aprovação |
+| processing_started_at | timestamptz | opcional; quando a IA começou a processar pela última vez |
 | created_at / updated_at | timestamptz | |
 
-A tabela também é a fila: uma sugestão nova entra como `pending`, passa a `processing` enquanto a IA trabalha e termina em `ready` (com rascunho) ou `failed` (com o erro). O admin leva uma `ready` a `approved` e recusa (`rejected`) uma `pending`, `ready` ou `failed`; uma `failed` volta a `pending` quando ele pede para processar de novo.
+A tabela também é a fila: uma sugestão nova entra como `pending`, passa a `processing` enquanto a IA trabalha e termina em `ready` (com rascunho) ou `failed` (com o erro). O admin leva uma `ready` a `approved` e recusa (`rejected`) uma `pending`, `ready` ou `failed`; uma `failed` volta a `pending` quando ele pede para processar de novo, e uma `processing` sem atualização há mais de 10 minutos também, porque ficou presa quando a função caiu no meio. São até 20 processamentos por dia, contados por `processing_started_at` desde a meia-noite de Florianópolis; os que passam disso terminam em `failed`. No rascunho, só o nome é obrigatório: um campo que a IA não acha, ou que não passa nas regras do formulário, fica nulo.
 
 Tabela `users` (só admins):
 

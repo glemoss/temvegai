@@ -24,6 +24,8 @@ export const serverEnvSchema = databaseEnvSchema.extend({
   // entries are trusted, so the client IP cannot be forged; 0 ignores the
   // header and uses the address of the connection.
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  // Key of the Gemini API, which drafts the suggested restaurants.
+  GEMINI_API_KEY: z.string().min(1),
 });
 
 export class InvalidEnvError extends Error {
