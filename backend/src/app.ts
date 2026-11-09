@@ -10,13 +10,16 @@ import Fastify, {
 } from 'fastify';
 import { z } from 'zod';
 import { CreateRestaurantController } from './controllers/create-restaurant.controller.js';
+import { CreateSuggestionController } from './controllers/create-suggestion.controller.js';
 import { DeleteRestaurantController } from './controllers/delete-restaurant.controller.js';
 import { GetCurrentAdminController } from './controllers/get-current-admin.controller.js';
 import { GetRestaurantController } from './controllers/get-restaurant.controller.js';
 import { ListNeighborhoodsController } from './controllers/list-neighborhoods.controller.js';
 import { ListRestaurantsController } from './controllers/list-restaurants.controller.js';
+import { ListSuggestionsController } from './controllers/list-suggestions.controller.js';
 import { LoginController } from './controllers/login.controller.js';
 import { LogoutController } from './controllers/logout.controller.js';
+import { RejectSuggestionController } from './controllers/reject-suggestion.controller.js';
 import {
   SESSION_COOKIE_NAME,
   SESSION_MAX_AGE_SECONDS,
@@ -25,20 +28,25 @@ import { UpdateRestaurantController } from './controllers/update-restaurant.cont
 import { errorHandler, notFoundHandler } from './error-handler.js';
 import { openApiDocument } from './openapi.js';
 import type { RestaurantRepository } from './repositories/restaurant.repository.js';
+import type { SuggestionRepository } from './repositories/suggestion.repository.js';
 import type { UserRepository } from './repositories/user.repository.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { healthRoutes, type DatabaseCheck } from './routes/health.routes.js';
 import { neighborhoodsRoutes } from './routes/neighborhoods.routes.js';
 import { restaurantsRoutes } from './routes/restaurants.routes.js';
+import { suggestionsRoutes } from './routes/suggestions.routes.js';
 import { FastifyJwtTokenIssuer } from './services/fastify-jwt-token-issuer.js';
 import type { PasswordHasher } from './services/password-hasher.js';
 import { CreateRestaurantUseCase } from './use-cases/create-restaurant.use-case.js';
+import { CreateSuggestionUseCase } from './use-cases/create-suggestion.use-case.js';
 import { DeleteRestaurantUseCase } from './use-cases/delete-restaurant.use-case.js';
 import { GetCurrentAdminUseCase } from './use-cases/get-current-admin.use-case.js';
 import { GetRestaurantUseCase } from './use-cases/get-restaurant.use-case.js';
 import { ListNeighborhoodsUseCase } from './use-cases/list-neighborhoods.use-case.js';
 import { ListRestaurantsUseCase } from './use-cases/list-restaurants.use-case.js';
+import { ListSuggestionsUseCase } from './use-cases/list-suggestions.use-case.js';
 import { LoginUseCase } from './use-cases/login.use-case.js';
+import { RejectSuggestionUseCase } from './use-cases/reject-suggestion.use-case.js';
 import { UpdateRestaurantUseCase } from './use-cases/update-restaurant.use-case.js';
 
 // Validation messages of the API in Portuguese, like the rest of its errors.
@@ -47,6 +55,7 @@ z.config(z.locales.ptBR());
 export interface AppDependencies {
   checkDatabase: DatabaseCheck;
   restaurantRepository: RestaurantRepository;
+  suggestionRepository: SuggestionRepository;
   userRepository: UserRepository;
   passwordHasher: PasswordHasher;
   jwtSecret: string;
@@ -58,6 +67,7 @@ export function buildApp(
   {
     checkDatabase,
     restaurantRepository,
+    suggestionRepository,
     userRepository,
     passwordHasher,
     jwtSecret,
@@ -85,6 +95,15 @@ export function buildApp(
   );
   const listNeighborhoodsController = new ListNeighborhoodsController(
     new ListNeighborhoodsUseCase(restaurantRepository),
+  );
+  const createSuggestionController = new CreateSuggestionController(
+    new CreateSuggestionUseCase(suggestionRepository),
+  );
+  const listSuggestionsController = new ListSuggestionsController(
+    new ListSuggestionsUseCase(suggestionRepository),
+  );
+  const rejectSuggestionController = new RejectSuggestionController(
+    new RejectSuggestionUseCase(suggestionRepository),
   );
   const loginController = new LoginController(
     new LoginUseCase(
@@ -134,6 +153,11 @@ export function buildApp(
     deleteRestaurantController,
   });
   app.register(neighborhoodsRoutes, { listNeighborhoodsController });
+  app.register(suggestionsRoutes, {
+    createSuggestionController,
+    listSuggestionsController,
+    rejectSuggestionController,
+  });
   app.register(authRoutes, {
     loginController,
     logoutController,

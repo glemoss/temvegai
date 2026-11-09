@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from './app.js';
 import { InMemoryRestaurantRepository } from './repositories/in-memory/in-memory-restaurant.repository.js';
+import { InMemorySuggestionRepository } from './repositories/in-memory/in-memory-suggestion.repository.js';
 import { InMemoryUserRepository } from './repositories/in-memory/in-memory-user.repository.js';
 
 const frontendOrigin = 'http://localhost:5173';
@@ -13,6 +14,7 @@ beforeEach(async () => {
   app = buildApp({
     checkDatabase: async () => true,
     restaurantRepository: new InMemoryRestaurantRepository(),
+    suggestionRepository: new InMemorySuggestionRepository(),
     userRepository: new InMemoryUserRepository(),
     passwordHasher: {
       hash: async (plain) => `hashed:${plain}`,

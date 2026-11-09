@@ -1,7 +1,9 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { InvalidCredentialsError } from './use-cases/errors/invalid-credentials.error.js';
+import { InvalidSuggestionStatusError } from './use-cases/errors/invalid-suggestion-status.error.js';
 import { RestaurantNotFoundError } from './use-cases/errors/restaurant-not-found.error.js';
+import { SuggestionNotFoundError } from './use-cases/errors/suggestion-not-found.error.js';
 import { UnauthenticatedError } from './use-cases/errors/unauthenticated.error.js';
 
 interface ErrorBody {
@@ -56,6 +58,23 @@ export function errorHandler(
       .send(errorBody('RESTAURANT_NOT_FOUND', 'Restaurante não encontrado.'));
   }
 
+  if (error instanceof SuggestionNotFoundError) {
+    return reply
+      .status(404)
+      .send(errorBody('SUGGESTION_NOT_FOUND', 'Sugestão não encontrada.'));
+  }
+
+  if (error instanceof InvalidSuggestionStatusError) {
+    return reply
+      .status(409)
+      .send(
+        errorBody(
+          'INVALID_SUGGESTION_STATUS',
+          'A sugestão não pode ser alterada no status atual.',
+        ),
+      );
+  }
+
   if (error instanceof InvalidCredentialsError) {
     return reply
       .status(401)
@@ -68,7 +87,8 @@ export function errorHandler(
       .send(errorBody('UNAUTHENTICATED', 'Não autenticado.'));
   }
 
-  // Raised by @fastify/rate-limit when the login attempts are exceeded.
+  // Raised by @fastify/rate-limit when the login attempts or the suggestions
+  // sent are exceeded.
   if (error.statusCode === 429) {
     return reply
       .status(429)
