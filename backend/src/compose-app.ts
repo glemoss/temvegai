@@ -4,6 +4,7 @@ import { buildApp } from './app.js';
 import type { serverEnvSchema } from './config/env.js';
 import { createDatabase, isDatabaseReachable } from './database/connection.js';
 import { KnexRestaurantRepository } from './repositories/knex/knex-restaurant.repository.js';
+import { KnexSuggestionRepository } from './repositories/knex/knex-suggestion.repository.js';
 import { KnexUserRepository } from './repositories/knex/knex-user.repository.js';
 import { Argon2PasswordHasher } from './services/argon2-password-hasher.js';
 import { trustProxyHops } from './trust-proxy.js';
@@ -27,6 +28,7 @@ export function composeApp(
     {
       checkDatabase: () => isDatabaseReachable(db),
       restaurantRepository: new KnexRestaurantRepository(db),
+      suggestionRepository: new KnexSuggestionRepository(db),
       userRepository: new KnexUserRepository(db),
       passwordHasher: new Argon2PasswordHasher(),
       jwtSecret: env.JWT_SECRET,

@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { paramsSchema as deleteRestaurantParams } from './controllers/delete-restaurant.controller.js';
 import { paramsSchema as getRestaurantParams } from './controllers/get-restaurant.controller.js';
 import { querySchema as listRestaurantsQuery } from './controllers/list-restaurants.controller.js';
+import { bodySchema as createSuggestionBody } from './controllers/create-suggestion.controller.js';
 import { bodySchema as loginBody } from './controllers/login.controller.js';
+import { paramsSchema as rejectSuggestionParams } from './controllers/reject-suggestion.controller.js';
 import { restaurantBodySchema } from './controllers/restaurant-body.js';
 import { paramsSchema as updateRestaurantParams } from './controllers/update-restaurant.controller.js';
 import { SESSION_COOKIE_NAME } from './controllers/session-cookie.js';
@@ -73,6 +75,7 @@ export const openApiDocument: OpenApiDocument = {
   tags: [
     { name: 'restaurants', description: 'Restaurantes' },
     { name: 'neighborhoods', description: 'Bairros' },
+    { name: 'suggestions', description: 'Sugestões de restaurantes' },
     { name: 'auth', description: 'Sessão do admin' },
     { name: 'health', description: 'Estado da API' },
   ],
@@ -154,6 +157,51 @@ export const openApiDocument: OpenApiDocument = {
         description:
           'Cada bairro vem uma vez só, sem diferenciar maiúsculas nem acentos, com a área (`bounds`) que cobre os seus restaurantes. O nome é a grafia usada pela maioria dos restaurantes do bairro (no empate, a com acento) e serve para o filtro `neighborhood` de `GET /restaurants`.',
         responses: { 200: { description: 'Lista de bairros' } },
+      },
+    },
+    '/suggestions': {
+      get: {
+        tags: ['suggestions'],
+        summary: 'Lista as sugestões, das mais novas para as mais antigas',
+        security: adminOnly,
+        responses: {
+          200: { description: 'Lista de sugestões' },
+          401: errorResponses[401],
+        },
+      },
+      post: {
+        tags: ['suggestions'],
+        summary: 'Envia a sugestão de um restaurante',
+        description:
+          'Aberta ao visitante, sem login. O texto (`text`), com o nome ou um link do restaurante, tem até 300 caracteres depois de tirar os espaços das pontas. Cada IP envia até 5 sugestões por hora.',
+        requestBody: jsonBody(createSuggestionBody),
+        responses: {
+          201: { description: 'Sugestão criada, com status `pending`' },
+          400: errorResponses[400],
+          429: { description: 'Muitos envios (TOO_MANY_REQUESTS)' },
+        },
+      },
+    },
+    '/suggestions/{id}/reject': {
+      post: {
+        tags: ['suggestions'],
+        summary: 'Recusa uma sugestão',
+        description:
+          'Vale para sugestões `pending`, `ready` ou `failed`; as demais respondem 409.',
+        security: adminOnly,
+        parameters: toParameters(rejectSuggestionParams, 'path'),
+        responses: {
+          200: { description: 'Sugestão recusada' },
+          400: errorResponses[400],
+          401: errorResponses[401],
+          404: {
+            description: 'Sugestão não encontrada (SUGGESTION_NOT_FOUND)',
+          },
+          409: {
+            description:
+              'A sugestão não pode ser recusada no status atual (INVALID_SUGGESTION_STATUS)',
+          },
+        },
       },
     },
     '/auth/login': {

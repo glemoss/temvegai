@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import type { Restaurant } from '../entities/restaurant.js';
 import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memory-restaurant.repository.js';
+import { InMemorySuggestionRepository } from '../repositories/in-memory/in-memory-suggestion.repository.js';
 import { InMemoryUserRepository } from '../repositories/in-memory/in-memory-user.repository.js';
 import type { FastifyInstance, InjectOptions } from 'fastify';
 
@@ -69,6 +70,7 @@ async function setup() {
   app = buildApp({
     checkDatabase: async () => true,
     restaurantRepository: new InMemoryRestaurantRepository([kairu]),
+    suggestionRepository: new InMemorySuggestionRepository(),
     userRepository,
     passwordHasher: {
       hash: async (plain) => `hashed:${plain}`,

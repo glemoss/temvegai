@@ -21,7 +21,7 @@ Um aplicativo mobile virá depois e vai consumir a mesma API. Por isso a API é 
 - Login de admin com e-mail e senha (entrar, sair, consultar a sessão atual).
 - Contas de admin criadas por um comando no terminal do servidor; não existe cadastro público.
 - Endpoints de escrita (criar, editar, remover) na API, exigindo admin logado.
-- Sugestão de restaurante pelo visitante, sem conta: um texto livre (nome ou link, até 500 caracteres), enviado pelo botão "Sugerir", ao lado do botão de filtros.
+- Sugestão de restaurante pelo visitante, sem conta: um texto livre (nome ou link, até 300 caracteres), enviado pelo botão "Sugerir", ao lado do botão de filtros.
 - Rascunho da sugestão gerado por IA: depois de receber a sugestão, a API pesquisa o restaurante com o Gemini e a busca do Google e preenche um rascunho do formulário. A coordenada não vem da IA; o admin localiza pelo endereço, como no cadastro.
 - Painel admin em `/admin`, dentro do mesmo frontend:
   - tela de login com e-mail e senha;
@@ -55,7 +55,7 @@ Não implementar, nem deixar "preparado":
 | Validação | Zod |
 | Hash de senha | argon2 |
 | Sessão | JWT em cookie `httpOnly` (`@fastify/jwt` + `@fastify/cookie`) |
-| Limite de tentativas | `@fastify/rate-limit`, só na rota de login |
+| Limite de tentativas | `@fastify/rate-limit`, só no login e no envio de sugestões |
 | Testes | Vitest |
 | Frontend | React + Vite |
 | Interface do frontend | shadcn/ui (componentes copiados para `src/components/ui`) sobre Tailwind CSS (`tailwindcss` + `@tailwindcss/vite`), com `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `tw-animate-css` e `sonner` (avisos) |
@@ -103,14 +103,14 @@ Tabela `suggestions`:
 | Coluna | Tipo | Observação |
 |---|---|---|
 | id | uuid | chave primária |
-| text | text | obrigatório, até 500 caracteres; o que o visitante enviou |
+| text | text | obrigatório, até 300 caracteres; o que o visitante enviou |
 | status | text | `pending`, `processing`, `ready`, `failed`, `approved` ou `rejected` |
 | draft | jsonb | opcional; rascunho do restaurante gerado pela IA, nulo até processar |
 | error | text | opcional; motivo da falha no processamento |
 | restaurant_id | uuid | opcional; restaurante criado na aprovação |
 | created_at / updated_at | timestamptz | |
 
-A tabela também é a fila: uma sugestão nova entra como `pending`, passa a `processing` enquanto a IA trabalha e termina em `ready` (com rascunho) ou `failed` (com o erro). O admin leva uma `ready` a `approved` ou `rejected`, e uma `failed` volta a `pending` quando ele pede para processar de novo.
+A tabela também é a fila: uma sugestão nova entra como `pending`, passa a `processing` enquanto a IA trabalha e termina em `ready` (com rascunho) ou `failed` (com o erro). O admin leva uma `ready` a `approved` e recusa (`rejected`) uma `pending`, `ready` ou `failed`; uma `failed` volta a `pending` quando ele pede para processar de novo.
 
 Tabela `users` (só admins):
 

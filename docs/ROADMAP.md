@@ -294,9 +294,9 @@ O botão "Como chegar" passa a mandar ao Google Maps o texto `Nome, endereço, F
 
 O visitante sugere um restaurante pelo nome ou por um link, a IA pesquisa e preenche um rascunho, e o admin revisa e aprova no painel. A própria tabela `suggestions` serve de fila, e o processamento roda logo depois de responder ao visitante, com `waitUntil`; uma falha é processada de novo pelo admin. Vercel Queues (beta, prende à Vercel) e cron no GitHub Actions (sugestão demora a ficar pronta) foram comparados e descartados pelo dono.
 
-### [ ] S0 — Tabela e envio de sugestões
-Migration da tabela `suggestions` conforme o `SPEC.md`. `POST /suggestions` público, com o texto validado por Zod (até 500 caracteres) e limite de envios por IP com `@fastify/rate-limit`. `GET /suggestions` e `POST /suggestions/:id/reject` só para admin. Use cases, repositório Knex e em memória.
-**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local; o visitante cria uma sugestão com 201; passar do limite responde 429; só o admin lista e recusa. Com testes.
+### [x] S0 — Tabela e envio de sugestões
+Migration da tabela `suggestions` conforme o `SPEC.md`. `POST /suggestions` público, com o texto validado por Zod (até 300 caracteres) e limite de envios por IP com `@fastify/rate-limit`. `GET /suggestions` e `POST /suggestions/:id/reject` só para admin. Use cases, repositório Knex e em memória.
+**Pronto quando:** `migrate`, `migrate:rollback` e `migrate` de novo rodam no banco local; o visitante cria uma sugestão com 201; passar do limite responde 429; só o admin lista e recusa. Com testes. Decidido pelo dono: texto de até 300 caracteres (o `SPEC.md` previa 500), 5 envios por hora por IP, e a recusa vale para `pending`, `ready` e `failed` (as demais respondem 409).
 
 ### [ ] S1 — Rascunho com IA
 Interface `RestaurantDraftGenerator` e implementação com o Gemini, com a busca do Google e saída estruturada no formato do formulário. `ProcessSuggestionUseCase` leva a sugestão de `pending` a `processing` e depois a `ready`, com o rascunho validado por Zod, ou a `failed`, com o erro. O `POST /suggestions` dispara o processamento com `waitUntil`, e `POST /suggestions/:id/process` deixa o admin processar de novo. Teto diário de processamentos, para não esgotar a cota gratuita. `GEMINI_API_KEY` validada na inicialização e no `.env.example`. A coordenada não vem da IA. Dependências a aprovar: `@vercel/functions` e `@google/genai` (ou `fetch` direto, sem dependência).
@@ -307,7 +307,7 @@ Lista das sugestões com status, texto do visitante e rascunho. "Revisar" abre o
 **Pronto quando:** aprovar cria o restaurante no mapa, recusar tira a sugestão das pendentes, e uma `failed` pode ser processada de novo. Com testes.
 
 ### [ ] S3 — Botão "Sugerir" no site
-Botão ao lado do botão de filtros, que abre um diálogo com o campo de texto e um contador (`120/500`). Avisos em português para sucesso, limite de envios atingido e erro.
+Botão ao lado do botão de filtros, que abre um diálogo com o campo de texto e um contador (`120/300`). Avisos em português para sucesso, limite de envios atingido e erro.
 **Pronto quando:** o visitante envia uma sugestão pelo site e ela aparece no painel. Com testes.
 
 ## Depois da v1 (não planejado ainda)
@@ -375,3 +375,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (M10) O Google procura o destino pelo texto e não recebe mais a coordenada: um nome diferente do cadastro dele leva só ao endereço, e um nome ou endereço ambíguo pode levar a outro lugar. O dono testou com o Kairú (duas unidades) e funcionou. Se algum restaurante cair no lugar errado, a saída é guardar o Place ID do Google (coluna nova, preenchida no painel admin) e mandá-lo em `destination_place_id`.
 - (S) O plano gratuito do Gemini tem cotas por minuto, por dia e de buscas no Google, que mudam com frequência; conferir os números na S1. Nele o Google pode usar o que é enviado para melhorar os produtos dele; são dados públicos de restaurante, mas entra na conversa da política de privacidade, com a fonte (F5) e o Nominatim (A2).
 - (S) Se a função cair no meio do processamento, a sugestão fica presa em `processing`. Decidir na S1 se "Processar de novo" também vale para uma `processing` antiga.
+- (S0) O limite de 5 sugestões por hora por IP fica na memória do processo, como o do login (B8): na Vercel, cada instância conta separado. Um envio inválido (400) também conta no limite.
