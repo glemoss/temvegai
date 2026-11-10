@@ -3,6 +3,7 @@ import { buildApp, type AppDependencies } from '../app.js';
 import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memory-restaurant.repository.js';
 import { InMemorySuggestionRepository } from '../repositories/in-memory/in-memory-suggestion.repository.js';
 import { InMemoryUserRepository } from '../repositories/in-memory/in-memory-user.repository.js';
+import { InMemoryRestaurantDraftGenerator } from '../services/in-memory-restaurant-draft-generator.js';
 
 function dependencies(checkDatabase: () => Promise<boolean>): AppDependencies {
   return {
@@ -14,6 +15,8 @@ function dependencies(checkDatabase: () => Promise<boolean>): AppDependencies {
       hash: async (plain) => `hashed:${plain}`,
       verify: async (hash, plain) => hash === `hashed:${plain}`,
     },
+    restaurantDraftGenerator: new InMemoryRestaurantDraftGenerator(),
+    runInBackground: () => {},
     jwtSecret: 'a'.repeat(32),
     cookieSecure: false,
     corsOrigin: 'http://localhost:5173',

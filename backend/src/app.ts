@@ -20,6 +20,8 @@ import { ListSuggestionsController } from './controllers/list-suggestions.contro
 import { LoginController } from './controllers/login.controller.js';
 import { LogoutController } from './controllers/logout.controller.js';
 import { RejectSuggestionController } from './controllers/reject-suggestion.controller.js';
+import { RetrySuggestionController } from './controllers/retry-suggestion.controller.js';
+import type { RunInBackground } from './controllers/run-in-background.js';
 import {
   SESSION_COOKIE_NAME,
   SESSION_MAX_AGE_SECONDS,
@@ -37,6 +39,7 @@ import { restaurantsRoutes } from './routes/restaurants.routes.js';
 import { suggestionsRoutes } from './routes/suggestions.routes.js';
 import { FastifyJwtTokenIssuer } from './services/fastify-jwt-token-issuer.js';
 import type { PasswordHasher } from './services/password-hasher.js';
+import type { RestaurantDraftGenerator } from './services/restaurant-draft-generator.js';
 import { CreateRestaurantUseCase } from './use-cases/create-restaurant.use-case.js';
 import { CreateSuggestionUseCase } from './use-cases/create-suggestion.use-case.js';
 import { DeleteRestaurantUseCase } from './use-cases/delete-restaurant.use-case.js';
@@ -46,7 +49,9 @@ import { ListNeighborhoodsUseCase } from './use-cases/list-neighborhoods.use-cas
 import { ListRestaurantsUseCase } from './use-cases/list-restaurants.use-case.js';
 import { ListSuggestionsUseCase } from './use-cases/list-suggestions.use-case.js';
 import { LoginUseCase } from './use-cases/login.use-case.js';
+import { ProcessSuggestionUseCase } from './use-cases/process-suggestion.use-case.js';
 import { RejectSuggestionUseCase } from './use-cases/reject-suggestion.use-case.js';
+import { RetrySuggestionUseCase } from './use-cases/retry-suggestion.use-case.js';
 import { UpdateRestaurantUseCase } from './use-cases/update-restaurant.use-case.js';
 
 // Validation messages of the API in Portuguese, like the rest of its errors.
@@ -58,6 +63,8 @@ export interface AppDependencies {
   suggestionRepository: SuggestionRepository;
   userRepository: UserRepository;
   passwordHasher: PasswordHasher;
+  restaurantDraftGenerator: RestaurantDraftGenerator;
+  runInBackground: RunInBackground;
   jwtSecret: string;
   cookieSecure: boolean;
   corsOrigin: string;
@@ -70,6 +77,8 @@ export function buildApp(
     suggestionRepository,
     userRepository,
     passwordHasher,
+    restaurantDraftGenerator,
+    runInBackground,
     jwtSecret,
     cookieSecure,
     corsOrigin,
@@ -96,14 +105,25 @@ export function buildApp(
   const listNeighborhoodsController = new ListNeighborhoodsController(
     new ListNeighborhoodsUseCase(restaurantRepository),
   );
+  const processSuggestion = new ProcessSuggestionUseCase(
+    suggestionRepository,
+    restaurantDraftGenerator,
+  );
   const createSuggestionController = new CreateSuggestionController(
     new CreateSuggestionUseCase(suggestionRepository),
+    processSuggestion,
+    runInBackground,
   );
   const listSuggestionsController = new ListSuggestionsController(
     new ListSuggestionsUseCase(suggestionRepository),
   );
   const rejectSuggestionController = new RejectSuggestionController(
     new RejectSuggestionUseCase(suggestionRepository),
+  );
+  const retrySuggestionController = new RetrySuggestionController(
+    new RetrySuggestionUseCase(suggestionRepository),
+    processSuggestion,
+    runInBackground,
   );
   const loginController = new LoginController(
     new LoginUseCase(
@@ -157,6 +177,7 @@ export function buildApp(
     createSuggestionController,
     listSuggestionsController,
     rejectSuggestionController,
+    retrySuggestionController,
   });
   app.register(authRoutes, {
     loginController,

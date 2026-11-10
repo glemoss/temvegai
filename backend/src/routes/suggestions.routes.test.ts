@@ -5,6 +5,10 @@ import type { Suggestion, SuggestionStatus } from '../entities/suggestion.js';
 import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memory-restaurant.repository.js';
 import { InMemorySuggestionRepository } from '../repositories/in-memory/in-memory-suggestion.repository.js';
 import { InMemoryUserRepository } from '../repositories/in-memory/in-memory-user.repository.js';
+import {
+  InMemoryRestaurantDraftGenerator,
+  draftNamed,
+} from '../services/in-memory-restaurant-draft-generator.js';
 import { trustProxyHops } from '../trust-proxy.js';
 
 const email = 'admin@temveg.ai';
@@ -20,8 +24,10 @@ function suggestionWith(
     id,
     text: 'Kairú, no Rio Tavares',
     status,
+    draft: null,
     error: null,
     restaurantId: null,
+    processingStartedAt: null,
     createdAt,
     updatedAt: createdAt,
   };
@@ -38,10 +44,24 @@ const processing = suggestionWith(
   new Date('2026-11-01T12:00:00Z'),
 );
 
+const failed: Suggestion = {
+  ...suggestionWith(
+    '5b7d1e3f-8a2c-4d6e-9f1b-3c5a7e9d2b40',
+    'failed',
+    new Date('2026-10-31T12:00:00Z'),
+  ),
+  error: 'O Gemini respondeu com erro 503.',
+};
+
 let app: FastifyInstance;
 let token: string;
+let backgroundTasks: Promise<unknown>[];
 
-async function setup(options: FastifyServerOptions = {}) {
+async function setup(
+  options: FastifyServerOptions = {},
+  restaurantDraftGenerator = new InMemoryRestaurantDraftGenerator(),
+) {
+  backgroundTasks = [];
   const userRepository = new InMemoryUserRepository();
   await userRepository.create({ email, passwordHash: `hashed:${password}` });
   app = buildApp(
@@ -51,11 +71,16 @@ async function setup(options: FastifyServerOptions = {}) {
       suggestionRepository: new InMemorySuggestionRepository([
         pending,
         processing,
+        failed,
       ]),
       userRepository,
       passwordHasher: {
         hash: async (plain) => `hashed:${plain}`,
         verify: async (hash, plain) => hash === `hashed:${plain}`,
+      },
+      restaurantDraftGenerator,
+      runInBackground: (task) => {
+        backgroundTasks.push(task());
       },
       jwtSecret: 'a'.repeat(32),
       cookieSecure: false,
@@ -75,6 +100,11 @@ async function setup(options: FastifyServerOptions = {}) {
     throw new Error('login did not set the session cookie');
   }
   token = cookie.value;
+}
+
+// Waits for the processing started by the requests made so far.
+async function settle() {
+  await Promise.all(backgroundTasks);
 }
 
 function suggest(payload: object, forwardedFor?: string) {
@@ -104,6 +134,20 @@ function reject(id: string) {
   });
 }
 
+function processAgain(id: string) {
+  return app.inject({
+    method: 'POST',
+    url: `/suggestions/${id}/process`,
+    cookies: { token },
+  });
+}
+
+async function findSuggestion(id: string): Promise<Suggestion | undefined> {
+  return (await listSuggestions())
+    .json()
+    .suggestions.find((suggestion: Suggestion) => suggestion.id === id);
+}
+
 afterEach(async () => {
   await app.close();
 });
@@ -120,8 +164,10 @@ describe('POST /suggestions', () => {
         id: expect.any(String),
         text: 'Kairú, no Rio Tavares',
         status: 'pending',
+        draft: null,
         error: null,
         restaurantId: null,
+        processingStartedAt: null,
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       },
@@ -170,7 +216,7 @@ describe('POST /suggestions', () => {
         message: 'Muitas tentativas. Tente novamente mais tarde.',
       },
     });
-    expect((await listSuggestions()).json().suggestions).toHaveLength(7);
+    expect((await listSuggestions()).json().suggestions).toHaveLength(8);
   });
 
   it('counts each X-Forwarded-For origin separately behind a trusted proxy', async () => {
@@ -189,10 +235,45 @@ describe('POST /suggestions', () => {
   });
 });
 
+describe('processing after POST /suggestions', () => {
+  it('drafts the restaurant after answering the visitor', async () => {
+    const generator = new InMemoryRestaurantDraftGenerator();
+    await setup({}, generator);
+
+    const response = await suggest({ text: 'Kairú, no Rio Tavares' });
+    await settle();
+
+    expect(generator.texts).toEqual(['Kairú, no Rio Tavares']);
+    expect(await findSuggestion(response.json().suggestion.id)).toMatchObject({
+      status: 'ready',
+      draft: draftNamed('Kairú, no Rio Tavares'),
+      error: null,
+      processingStartedAt: expect.any(String),
+    });
+  });
+
+  it('stores the failure of the AI', async () => {
+    await setup(
+      {},
+      new InMemoryRestaurantDraftGenerator('O Gemini respondeu com erro 429.'),
+    );
+
+    const response = await suggest({ text: 'Kairú' });
+    await settle();
+
+    expect(await findSuggestion(response.json().suggestion.id)).toMatchObject({
+      status: 'failed',
+      draft: null,
+      error: 'O Gemini respondeu com erro 429.',
+    });
+  });
+});
+
 describe('admin routes without a session', () => {
   it.each([
     { method: 'GET', url: '/suggestions' },
     { method: 'POST', url: `/suggestions/${pending.id}/reject` },
+    { method: 'POST', url: `/suggestions/${failed.id}/process` },
   ] as const)('$method $url responds 401', async ({ method, url }) => {
     await setup();
 
@@ -206,7 +287,7 @@ describe('admin routes without a session', () => {
       (await listSuggestions())
         .json()
         .suggestions.map(({ status }: Suggestion) => status),
-    ).toEqual(['pending', 'processing']);
+    ).toEqual(['pending', 'processing', 'failed']);
   });
 });
 
@@ -219,7 +300,7 @@ describe('GET /suggestions', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json().suggestions.map(({ id }: Suggestion) => id)).toEqual(
-      [created.suggestion.id, pending.id, processing.id],
+      [created.suggestion.id, pending.id, processing.id, failed.id],
     );
   });
 });
@@ -278,5 +359,69 @@ describe('POST /suggestions/:id/reject', () => {
     expect(response.json()).toMatchObject({
       error: { code: 'VALIDATION_ERROR' },
     });
+  });
+});
+
+describe('POST /suggestions/:id/process', () => {
+  it('puts a failed suggestion back in the queue and processes it', async () => {
+    await setup();
+
+    const response = await processAgain(failed.id);
+
+    expect(response.statusCode).toBe(202);
+    expect(response.json().suggestion).toMatchObject({
+      id: failed.id,
+      status: 'pending',
+    });
+
+    await settle();
+
+    expect(await findSuggestion(failed.id)).toMatchObject({
+      status: 'ready',
+      draft: draftNamed(failed.text),
+      error: null,
+    });
+  });
+
+  it('processes again a suggestion stuck in processing', async () => {
+    await setup();
+
+    const response = await processAgain(processing.id);
+    await settle();
+
+    expect(response.statusCode).toBe(202);
+    expect(await findSuggestion(processing.id)).toMatchObject({
+      status: 'ready',
+    });
+  });
+
+  it('responds 409 for a suggestion that cannot be processed again', async () => {
+    await setup();
+
+    const response = await processAgain(pending.id);
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({
+      error: { code: 'INVALID_SUGGESTION_STATUS' },
+    });
+  });
+
+  it('responds 404 for an unknown suggestion', async () => {
+    await setup();
+
+    const response = await processAgain(unknownId);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({
+      error: { code: 'SUGGESTION_NOT_FOUND' },
+    });
+  });
+
+  it('responds 400 for an invalid id', async () => {
+    await setup();
+
+    const response = await processAgain('not-a-uuid');
+
+    expect(response.statusCode).toBe(400);
   });
 });

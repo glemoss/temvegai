@@ -10,8 +10,10 @@ function suggestionWith(status: SuggestionStatus): Suggestion {
     id: '3f1c9a7e-2b4d-4e8f-a6c1-5d7e9b0a2c4f',
     text: 'Kairú, no Rio Tavares',
     status,
+    draft: null,
     error: null,
     restaurantId: null,
+    processingStartedAt: null,
     createdAt: new Date('2026-11-01T12:00:00Z'),
     updatedAt: new Date('2026-11-01T12:00:00Z'),
   };

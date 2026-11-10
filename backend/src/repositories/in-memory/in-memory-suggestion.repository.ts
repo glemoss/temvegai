@@ -3,7 +3,10 @@ import type {
   Suggestion,
   SuggestionStatus,
 } from '../../entities/suggestion.js';
-import type { SuggestionRepository } from '../suggestion.repository.js';
+import type {
+  ProcessingResult,
+  SuggestionRepository,
+} from '../suggestion.repository.js';
 
 export class InMemorySuggestionRepository implements SuggestionRepository {
   private readonly suggestions: Suggestion[];
@@ -18,8 +21,10 @@ export class InMemorySuggestionRepository implements SuggestionRepository {
       id: randomUUID(),
       text,
       status: 'pending',
+      draft: null,
       error: null,
       restaurantId: null,
+      processingStartedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -53,5 +58,46 @@ export class InMemorySuggestionRepository implements SuggestionRepository {
     suggestion.status = status;
     suggestion.updatedAt = new Date();
     return { ...suggestion };
+  }
+
+  async startProcessing(id: string): Promise<Suggestion | null> {
+    const suggestion = this.suggestions.find(
+      (stored) => stored.id === id && stored.status === 'pending',
+    );
+    if (!suggestion) {
+      return null;
+    }
+
+    const now = new Date();
+    suggestion.status = 'processing';
+    suggestion.error = null;
+    suggestion.processingStartedAt = now;
+    suggestion.updatedAt = now;
+    return { ...suggestion };
+  }
+
+  async finishProcessing(
+    id: string,
+    result: ProcessingResult,
+  ): Promise<Suggestion | null> {
+    const suggestion = this.suggestions.find(
+      (stored) => stored.id === id && stored.status === 'processing',
+    );
+    if (!suggestion) {
+      return null;
+    }
+
+    suggestion.status = result.status;
+    suggestion.draft = result.status === 'ready' ? result.draft : null;
+    suggestion.error = result.status === 'failed' ? result.error : null;
+    suggestion.updatedAt = new Date();
+    return { ...suggestion };
+  }
+
+  async countProcessingStartedSince(since: Date): Promise<number> {
+    return this.suggestions.filter(
+      ({ processingStartedAt }) =>
+        processingStartedAt !== null && processingStartedAt >= since,
+    ).length;
   }
 }

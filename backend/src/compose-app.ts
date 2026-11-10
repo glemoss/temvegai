@@ -1,3 +1,4 @@
+import { waitUntil } from '@vercel/functions';
 import type { FastifyInstance } from 'fastify';
 import type { z } from 'zod';
 import { buildApp } from './app.js';
@@ -7,6 +8,7 @@ import { KnexRestaurantRepository } from './repositories/knex/knex-restaurant.re
 import { KnexSuggestionRepository } from './repositories/knex/knex-suggestion.repository.js';
 import { KnexUserRepository } from './repositories/knex/knex-user.repository.js';
 import { Argon2PasswordHasher } from './services/argon2-password-hasher.js';
+import { GeminiRestaurantDraftGenerator } from './services/gemini-restaurant-draft-generator.js';
 import { trustProxyHops } from './trust-proxy.js';
 
 // The only place that picks the implementations, shared by the local server
@@ -31,6 +33,18 @@ export function composeApp(
       suggestionRepository: new KnexSuggestionRepository(db),
       userRepository: new KnexUserRepository(db),
       passwordHasher: new Argon2PasswordHasher(),
+      restaurantDraftGenerator: new GeminiRestaurantDraftGenerator(
+        env.GEMINI_API_KEY,
+      ),
+      // Outside Vercel, waitUntil does nothing and the task simply runs on the
+      // server that stays up. A failure has no request to answer, so it only
+      // goes to the log.
+      runInBackground: (task) =>
+        waitUntil(
+          task().catch((error: unknown) =>
+            app.log.error(error, 'Background task failed'),
+          ),
+        ),
       jwtSecret: env.JWT_SECRET,
       cookieSecure: env.NODE_ENV === 'production',
       corsOrigin: env.CORS_ORIGIN,

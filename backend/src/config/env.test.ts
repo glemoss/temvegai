@@ -10,10 +10,12 @@ import {
 const databaseUrl = 'postgres://user:secret@localhost:5432/temveg';
 const jwtSecret = 'a'.repeat(32);
 const corsOrigin = 'http://localhost:5173';
+const geminiApiKey = 'gemini-test-key';
 const required = {
   DATABASE_URL: databaseUrl,
   JWT_SECRET: jwtSecret,
   CORS_ORIGIN: corsOrigin,
+  GEMINI_API_KEY: geminiApiKey,
 };
 
 describe('loadEnv with the server schema', () => {
@@ -32,6 +34,7 @@ describe('loadEnv with the server schema', () => {
       NODE_ENV: 'production',
       CORS_ORIGIN: corsOrigin,
       TRUST_PROXY: 2,
+      GEMINI_API_KEY: geminiApiKey,
     });
   });
 
@@ -64,6 +67,13 @@ describe('loadEnv with the server schema', () => {
     expect(() => loadEnv(serverEnvSchema, {})).toThrow(/DATABASE_URL/);
     expect(() => loadEnv(serverEnvSchema, {})).toThrow(/JWT_SECRET/);
     expect(() => loadEnv(serverEnvSchema, {})).toThrow(/CORS_ORIGIN/);
+    expect(() => loadEnv(serverEnvSchema, {})).toThrow(/GEMINI_API_KEY/);
+  });
+
+  it('rejects an empty GEMINI_API_KEY', () => {
+    expect(() =>
+      loadEnv(serverEnvSchema, { ...required, GEMINI_API_KEY: '' }),
+    ).toThrow(/GEMINI_API_KEY/);
   });
 
   it('rejects a DATABASE_URL that is not a postgres url', () => {
@@ -144,6 +154,7 @@ describe('loadEnv with the database schema', () => {
     expect(() => loadEnv(databaseEnvSchema, {})).toThrow(/DATABASE_URL/);
     expect(() => loadEnv(databaseEnvSchema, {})).not.toThrow(/JWT_SECRET/);
     expect(() => loadEnv(databaseEnvSchema, {})).not.toThrow(/CORS_ORIGIN/);
+    expect(() => loadEnv(databaseEnvSchema, {})).not.toThrow(/GEMINI_API_KEY/);
   });
 });
 
