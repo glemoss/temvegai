@@ -44,6 +44,15 @@ const processing = suggestionWith(
   new Date('2026-11-01T12:00:00Z'),
 );
 
+const ready: Suggestion = {
+  ...suggestionWith(
+    '7e2a4c6b-1d3f-4b5a-8c7e-9f0a1b2c3d40',
+    'ready',
+    new Date('2026-10-30T12:00:00Z'),
+  ),
+  draft: draftNamed('Kairú'),
+};
+
 const failed: Suggestion = {
   ...suggestionWith(
     '5b7d1e3f-8a2c-4d6e-9f1b-3c5a7e9d2b40',
@@ -72,6 +81,7 @@ async function setup(
         pending,
         processing,
         failed,
+        ready,
       ]),
       userRepository,
       passwordHasher: {
@@ -130,6 +140,29 @@ function reject(id: string) {
   return app.inject({
     method: 'POST',
     url: `/suggestions/${id}/reject`,
+    cookies: { token },
+  });
+}
+
+const restaurantBody = {
+  name: 'Kairú',
+  description: null,
+  type: 'fully_vegan',
+  address: 'Rodovia Dr. Antônio Luiz Moura Gonzaga, 4703',
+  neighborhood: 'rio tavares',
+  latitude: -27.661458,
+  longitude: -48.499222,
+  phone: null,
+  website: null,
+  instagram: 'kairu.veg',
+  openingHours: null,
+};
+
+function approve(id: string, payload: object = restaurantBody) {
+  return app.inject({
+    method: 'POST',
+    url: `/suggestions/${id}/approve`,
+    payload,
     cookies: { token },
   });
 }
@@ -216,7 +249,7 @@ describe('POST /suggestions', () => {
         message: 'Muitas tentativas. Tente novamente mais tarde.',
       },
     });
-    expect((await listSuggestions()).json().suggestions).toHaveLength(8);
+    expect((await listSuggestions()).json().suggestions).toHaveLength(9);
   });
 
   it('counts each X-Forwarded-For origin separately behind a trusted proxy', async () => {
@@ -273,6 +306,7 @@ describe('admin routes without a session', () => {
   it.each([
     { method: 'GET', url: '/suggestions' },
     { method: 'POST', url: `/suggestions/${pending.id}/reject` },
+    { method: 'POST', url: `/suggestions/${ready.id}/approve` },
     { method: 'POST', url: `/suggestions/${failed.id}/process` },
   ] as const)('$method $url responds 401', async ({ method, url }) => {
     await setup();
@@ -287,7 +321,7 @@ describe('admin routes without a session', () => {
       (await listSuggestions())
         .json()
         .suggestions.map(({ status }: Suggestion) => status),
-    ).toEqual(['pending', 'processing', 'failed']);
+    ).toEqual(['pending', 'processing', 'failed', 'ready']);
   });
 });
 
@@ -300,7 +334,7 @@ describe('GET /suggestions', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json().suggestions.map(({ id }: Suggestion) => id)).toEqual(
-      [created.suggestion.id, pending.id, processing.id, failed.id],
+      [created.suggestion.id, pending.id, processing.id, failed.id, ready.id],
     );
   });
 });
@@ -354,6 +388,91 @@ describe('POST /suggestions/:id/reject', () => {
     await setup();
 
     const response = await reject('not-a-uuid');
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: { code: 'VALIDATION_ERROR' },
+    });
+  });
+});
+
+describe('POST /suggestions/:id/approve', () => {
+  it('creates the restaurant and approves the suggestion', async () => {
+    await setup();
+
+    const response = await approve(ready.id);
+
+    expect(response.statusCode).toBe(201);
+    const { suggestion, restaurant } = response.json();
+    expect(restaurant).toMatchObject({
+      ...restaurantBody,
+      id: expect.any(String),
+      neighborhood: 'Rio Tavares',
+    });
+    expect(suggestion).toMatchObject({
+      id: ready.id,
+      status: 'approved',
+      restaurantId: restaurant.id,
+    });
+    expect(
+      (
+        await app.inject({
+          method: 'GET',
+          url: `/restaurants/${restaurant.id}`,
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(await findSuggestion(ready.id)).toMatchObject({
+      status: 'approved',
+      restaurantId: restaurant.id,
+    });
+  });
+
+  it('responds 400 for an invalid restaurant', async () => {
+    await setup();
+
+    const response = await approve(ready.id, { ...restaurantBody, name: '' });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: [{ field: 'name', message: 'Campo obrigatório' }],
+      },
+    });
+    expect((await findSuggestion(ready.id))?.status).toBe('ready');
+  });
+
+  it('responds 409 for a suggestion that is not ready', async () => {
+    await setup();
+
+    const response = await approve(failed.id);
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({
+      error: { code: 'INVALID_SUGGESTION_STATUS' },
+    });
+    expect(
+      (await app.inject({ method: 'GET', url: '/restaurants' })).json()
+        .restaurants,
+    ).toEqual([]);
+  });
+
+  it('responds 404 for an unknown suggestion', async () => {
+    await setup();
+
+    const response = await approve(unknownId);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({
+      error: { code: 'SUGGESTION_NOT_FOUND' },
+    });
+  });
+
+  it('responds 400 for an invalid id', async () => {
+    await setup();
+
+    const response = await approve('not-a-uuid');
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toMatchObject({

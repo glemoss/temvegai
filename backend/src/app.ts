@@ -9,6 +9,7 @@ import Fastify, {
   type FastifyServerOptions,
 } from 'fastify';
 import { z } from 'zod';
+import { ApproveSuggestionController } from './controllers/approve-suggestion.controller.js';
 import { CreateRestaurantController } from './controllers/create-restaurant.controller.js';
 import { CreateSuggestionController } from './controllers/create-suggestion.controller.js';
 import { DeleteRestaurantController } from './controllers/delete-restaurant.controller.js';
@@ -40,6 +41,7 @@ import { suggestionsRoutes } from './routes/suggestions.routes.js';
 import { FastifyJwtTokenIssuer } from './services/fastify-jwt-token-issuer.js';
 import type { PasswordHasher } from './services/password-hasher.js';
 import type { RestaurantDraftGenerator } from './services/restaurant-draft-generator.js';
+import { ApproveSuggestionUseCase } from './use-cases/approve-suggestion.use-case.js';
 import { CreateRestaurantUseCase } from './use-cases/create-restaurant.use-case.js';
 import { CreateSuggestionUseCase } from './use-cases/create-suggestion.use-case.js';
 import { DeleteRestaurantUseCase } from './use-cases/delete-restaurant.use-case.js';
@@ -93,8 +95,9 @@ export function buildApp(
   const getRestaurantController = new GetRestaurantController(
     new GetRestaurantUseCase(restaurantRepository),
   );
+  const createRestaurant = new CreateRestaurantUseCase(restaurantRepository);
   const createRestaurantController = new CreateRestaurantController(
-    new CreateRestaurantUseCase(restaurantRepository),
+    createRestaurant,
   );
   const updateRestaurantController = new UpdateRestaurantController(
     new UpdateRestaurantUseCase(restaurantRepository),
@@ -119,6 +122,9 @@ export function buildApp(
   );
   const rejectSuggestionController = new RejectSuggestionController(
     new RejectSuggestionUseCase(suggestionRepository),
+  );
+  const approveSuggestionController = new ApproveSuggestionController(
+    new ApproveSuggestionUseCase(suggestionRepository, createRestaurant),
   );
   const retrySuggestionController = new RetrySuggestionController(
     new RetrySuggestionUseCase(suggestionRepository),
@@ -177,6 +183,7 @@ export function buildApp(
     createSuggestionController,
     listSuggestionsController,
     rejectSuggestionController,
+    approveSuggestionController,
     retrySuggestionController,
   });
   app.register(authRoutes, {

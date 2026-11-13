@@ -112,6 +112,20 @@ describe('InMemorySuggestionRepository', () => {
     ).toMatchObject({ status: 'failed', draft: null, error: 'Cota esgotada' });
   });
 
+  it('approves only a ready suggestion', async () => {
+    const repository = new InMemorySuggestionRepository([older]);
+    const created = await repository.create('Kairú');
+    const restaurantId = '6a2e5bcb-a4ae-4450-b16d-38e999a29c59';
+
+    expect(await repository.approve(created.id, restaurantId)).toBeNull();
+
+    const approved = await repository.approve(older.id, restaurantId);
+
+    expect(approved).toMatchObject({ status: 'approved', restaurantId });
+    expect(await repository.findById(older.id)).toEqual(approved);
+    expect(await repository.approve(older.id, restaurantId)).toBeNull();
+  });
+
   it('counts the suggestions started since a date', async () => {
     const repository = new InMemorySuggestionRepository([
       { ...older, processingStartedAt: new Date('2026-11-01T12:00:00Z') },
