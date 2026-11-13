@@ -1,22 +1,23 @@
 import type { RestaurantDraft } from '../entities/suggestion.js';
 import {
   RestaurantDraftGenerationError,
+  type GeneratedDraft,
   type RestaurantDraftGenerator,
 } from './restaurant-draft-generator.js';
 
-// Stands in for the AI in tests: drafts a restaurant named after the text,
-// or fails with the given message.
+// Stands in for the AI in tests: drafts a restaurant in Florianópolis named
+// after the text, or fails with the given message.
 export class InMemoryRestaurantDraftGenerator implements RestaurantDraftGenerator {
   readonly texts: string[] = [];
 
   constructor(private readonly failure?: string) {}
 
-  async generate(text: string): Promise<RestaurantDraft> {
+  async generate(text: string): Promise<GeneratedDraft> {
     this.texts.push(text);
     if (this.failure !== undefined) {
       throw new RestaurantDraftGenerationError(this.failure);
     }
-    return draftNamed(text);
+    return { draft: draftNamed(text), city: 'Florianópolis' };
   }
 }
 

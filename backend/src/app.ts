@@ -110,6 +110,7 @@ export function buildApp(
   );
   const processSuggestion = new ProcessSuggestionUseCase(
     suggestionRepository,
+    restaurantRepository,
     restaurantDraftGenerator,
   );
   const createSuggestionController = new CreateSuggestionController(

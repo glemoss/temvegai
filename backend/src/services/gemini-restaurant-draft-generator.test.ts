@@ -10,6 +10,7 @@ const fullDraft = {
   type: 'fully_vegan',
   address: 'Rodovia Dr. Antônio Luiz Moura Gonzaga, 4703',
   neighborhood: 'Rio Tavares',
+  city: 'Florianópolis',
   phone: '(48) 99999-8888',
   website: 'https://kairu.com.br',
   instagram: '@kairu.veg',
@@ -79,10 +80,10 @@ describe('GeminiRestaurantDraftGenerator', () => {
       geminiAnswer(JSON.stringify(fullDraft)),
     );
 
+    const { city, ...draft } = fullDraft;
     expect(await generator.generate('Kairú')).toEqual({
-      ...fullDraft,
-      phone: '48999998888',
-      instagram: 'kairu.veg',
+      draft: { ...draft, phone: '48999998888', instagram: 'kairu.veg' },
+      city,
     });
   });
 
@@ -101,7 +102,7 @@ describe('GeminiRestaurantDraftGenerator', () => {
       ),
     );
 
-    expect(await generator.generate('Kairú')).toMatchObject({
+    expect((await generator.generate('Kairú')).draft).toMatchObject({
       name: 'Kairú',
       address: fullDraft.address,
       type: null,
@@ -121,8 +122,20 @@ describe('GeminiRestaurantDraftGenerator', () => {
       geminiAnswer(JSON.stringify({ ...fullDraft, openingHours: closed })),
     );
 
-    expect((await generator.generate('Kairú')).openingHours).toBeNull();
+    expect((await generator.generate('Kairú')).draft.openingHours).toBeNull();
   });
+
+  it.each([null, '  ', 42])(
+    'returns no city when Gemini gives %j',
+    async (city) => {
+      const { generator } = generatorAnswering(
+        200,
+        geminiAnswer(JSON.stringify({ ...fullDraft, city })),
+      );
+
+      expect((await generator.generate('Kairú')).city).toBeNull();
+    },
+  );
 
   it('accepts the JSON inside a Markdown code block', async () => {
     const { generator } = generatorAnswering(
@@ -130,7 +143,7 @@ describe('GeminiRestaurantDraftGenerator', () => {
       geminiAnswer('```json\n' + JSON.stringify(fullDraft) + '\n```'),
     );
 
-    expect((await generator.generate('Kairú')).name).toBe('Kairú');
+    expect((await generator.generate('Kairú')).draft.name).toBe('Kairú');
   });
 
   it.each([

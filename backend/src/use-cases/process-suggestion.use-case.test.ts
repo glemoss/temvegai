@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { Suggestion, SuggestionStatus } from '../entities/suggestion.js';
+import type { Restaurant } from '../entities/restaurant.js';
+import type {
+  RestaurantDraft,
+  Suggestion,
+  SuggestionStatus,
+} from '../entities/suggestion.js';
+import { InMemoryRestaurantRepository } from '../repositories/in-memory/in-memory-restaurant.repository.js';
 import { InMemorySuggestionRepository } from '../repositories/in-memory/in-memory-suggestion.repository.js';
 import {
   InMemoryRestaurantDraftGenerator,
@@ -48,7 +54,11 @@ describe('ProcessSuggestionUseCase', () => {
       suggestionWith('pending'),
     ]);
     const generator = new InMemoryRestaurantDraftGenerator();
-    const useCase = new ProcessSuggestionUseCase(repository, generator);
+    const useCase = new ProcessSuggestionUseCase(
+      repository,
+      new InMemoryRestaurantRepository(),
+      generator,
+    );
 
     const processed = await useCase.execute(id);
 
@@ -68,6 +78,7 @@ describe('ProcessSuggestionUseCase', () => {
     ]);
     const useCase = new ProcessSuggestionUseCase(
       repository,
+      new InMemoryRestaurantRepository(),
       new InMemoryRestaurantDraftGenerator(
         'O Gemini não encontrou o restaurante.',
       ),
@@ -86,11 +97,15 @@ describe('ProcessSuggestionUseCase', () => {
     const repository = new InMemorySuggestionRepository([
       suggestionWith('pending'),
     ]);
-    const useCase = new ProcessSuggestionUseCase(repository, {
-      generate: async () => {
-        throw new TypeError('bug');
+    const useCase = new ProcessSuggestionUseCase(
+      repository,
+      new InMemoryRestaurantRepository(),
+      {
+        generate: async () => {
+          throw new TypeError('bug');
+        },
       },
-    });
+    );
 
     await expect(useCase.execute(id)).rejects.toThrow('bug');
     expect((await repository.findById(id))?.status).toBe('processing');
@@ -103,7 +118,11 @@ describe('ProcessSuggestionUseCase', () => {
         suggestionWith(status),
       ]);
       const generator = new InMemoryRestaurantDraftGenerator();
-      const useCase = new ProcessSuggestionUseCase(repository, generator);
+      const useCase = new ProcessSuggestionUseCase(
+        repository,
+        new InMemoryRestaurantRepository(),
+        generator,
+      );
 
       expect(await useCase.execute(id)).toBeNull();
       expect(generator.texts).toEqual([]);
@@ -120,6 +139,7 @@ describe('ProcessSuggestionUseCase', () => {
     const generator = new InMemoryRestaurantDraftGenerator();
     const useCase = new ProcessSuggestionUseCase(
       repository,
+      new InMemoryRestaurantRepository(),
       generator,
       () => now,
     );
@@ -141,6 +161,7 @@ describe('ProcessSuggestionUseCase', () => {
     ]);
     const useCase = new ProcessSuggestionUseCase(
       repository,
+      new InMemoryRestaurantRepository(),
       new InMemoryRestaurantDraftGenerator(),
       () => now,
     );
@@ -156,10 +177,115 @@ describe('ProcessSuggestionUseCase', () => {
     ]);
     const useCase = new ProcessSuggestionUseCase(
       repository,
+      new InMemoryRestaurantRepository(),
       new InMemoryRestaurantDraftGenerator(),
       () => new Date('2026-11-09T03:00:00Z'),
     );
 
     expect((await useCase.execute(id))?.status).toBe('ready');
+  });
+
+  describe('checks on the draft', () => {
+    const kairu: Restaurant = {
+      id: '6a2e5bcb-a4ae-4450-b16d-38e999a29c59',
+      name: 'Kairú',
+      description: null,
+      type: 'fully_vegan',
+      address: 'Rodovia Dr. Antônio Luiz Moura Gonzaga, 4703',
+      neighborhood: 'Rio Tavares',
+      latitude: -27.661458,
+      longitude: -48.499222,
+      phone: '48991242935',
+      website: 'https://kairu.com.br',
+      instagram: 'kairu.veg',
+      openingHours: null,
+      createdAt: new Date('2026-10-14T12:00:00Z'),
+      updatedAt: new Date('2026-10-14T12:00:00Z'),
+    };
+
+    // A draft of a restaurant that is not registered.
+    const draft: RestaurantDraft = {
+      name: 'Rancho Vegano',
+      description: null,
+      type: 'fully_vegan',
+      address: 'Rua das Flores, 100',
+      neighborhood: 'Campeche',
+      phone: '4833334444',
+      website: 'https://ranchovegano.com.br',
+      instagram: 'ranchovegano',
+      openingHours: null,
+    };
+
+    function process(generated: RestaurantDraft, city: string | null) {
+      const repository = new InMemorySuggestionRepository([
+        suggestionWith('pending'),
+      ]);
+      const useCase = new ProcessSuggestionUseCase(
+        repository,
+        new InMemoryRestaurantRepository([kairu]),
+        { generate: async () => ({ draft: generated, city }) },
+      );
+      return useCase.execute(id);
+    }
+
+    it.each(['Florianópolis', 'florianopolis', 'Florianópolis - SC', null])(
+      'accepts a restaurant in %s',
+      async (city) => {
+        expect(await process(draft, city)).toMatchObject({
+          status: 'ready',
+          draft,
+        });
+      },
+    );
+
+    it('fails a restaurant outside Florianópolis', async () => {
+      expect(await process(draft, 'São José')).toMatchObject({
+        status: 'failed',
+        draft: null,
+        error: 'O restaurante fica em São José, fora de Florianópolis.',
+      });
+    });
+
+    it.each<[string, Partial<RestaurantDraft>]>([
+      ['the Instagram', { instagram: 'Kairu.Veg' }],
+      ['the site', { website: 'http://www.kairu.com.br/' }],
+      ['the phone', { phone: '48991242935' }],
+      [
+        'the name in the neighborhood',
+        { name: 'kairu', neighborhood: 'rio tavares' },
+      ],
+    ])('fails a restaurant already registered, by %s', async (_, fields) => {
+      expect(
+        await process({ ...draft, ...fields }, 'Florianópolis'),
+      ).toMatchObject({
+        status: 'failed',
+        error: 'Já está no mapa como “Kairú” (Rio Tavares).',
+      });
+    });
+
+    it('accepts a restaurant with a registered name in another neighborhood', async () => {
+      expect(
+        await process(
+          { ...draft, name: 'Kairú', neighborhood: 'Centro' },
+          'Florianópolis',
+        ),
+      ).toMatchObject({ status: 'ready' });
+    });
+
+    it('accepts a draft without contacts nor neighborhood', async () => {
+      expect(
+        await process(
+          {
+            ...draft,
+            name: 'Kairú',
+            neighborhood: null,
+            phone: null,
+            website: null,
+            instagram: null,
+          },
+          'Florianópolis',
+        ),
+      ).toMatchObject({ status: 'ready' });
+    });
   });
 });

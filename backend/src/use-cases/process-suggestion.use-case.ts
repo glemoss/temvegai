@@ -1,9 +1,15 @@
 import type { Suggestion } from '../entities/suggestion.js';
+import type { RestaurantRepository } from '../repositories/restaurant.repository.js';
 import type { SuggestionRepository } from '../repositories/suggestion.repository.js';
 import {
   RestaurantDraftGenerationError,
+  type GeneratedDraft,
   type RestaurantDraftGenerator,
 } from '../services/restaurant-draft-generator.js';
+import {
+  findRegisteredRestaurant,
+  isInFlorianopolis,
+} from './suggestion-checks.js';
 
 // Keeps the AI bill predictable: each processing costs tokens and a few
 // paid Google searches.
@@ -22,6 +28,7 @@ function startOfDayInFlorianopolis(now: Date): Date {
 export class ProcessSuggestionUseCase {
   constructor(
     private readonly suggestionRepository: SuggestionRepository,
+    private readonly restaurantRepository: RestaurantRepository,
     private readonly draftGenerator: RestaurantDraftGenerator,
     private readonly now: () => Date = () => new Date(),
   ) {}
@@ -40,26 +47,48 @@ export class ProcessSuggestionUseCase {
         startOfDayInFlorianopolis(this.now()),
       );
     if (startedToday > DAILY_PROCESSING_LIMIT) {
-      return this.suggestionRepository.finishProcessing(id, {
-        status: 'failed',
-        error: 'Limite diário de processamentos atingido.',
-      });
+      return this.fail(id, 'Limite diário de processamentos atingido.');
     }
 
+    let generated: GeneratedDraft;
     try {
-      const draft = await this.draftGenerator.generate(suggestion.text);
-      return await this.suggestionRepository.finishProcessing(id, {
-        status: 'ready',
-        draft,
-      });
+      generated = await this.draftGenerator.generate(suggestion.text);
     } catch (error) {
       if (!(error instanceof RestaurantDraftGenerationError)) {
         throw error;
       }
-      return this.suggestionRepository.finishProcessing(id, {
-        status: 'failed',
-        error: error.message,
-      });
+      return this.fail(id, error.message);
     }
+
+    const { draft, city } = generated;
+    if (!isInFlorianopolis(city)) {
+      return this.fail(
+        id,
+        `O restaurante fica em ${city}, fora de Florianópolis.`,
+      );
+    }
+
+    const registered = findRegisteredRestaurant(
+      draft,
+      await this.restaurantRepository.findAll({}),
+    );
+    if (registered) {
+      return this.fail(
+        id,
+        `Já está no mapa como “${registered.name}” (${registered.neighborhood}).`,
+      );
+    }
+
+    return this.suggestionRepository.finishProcessing(id, {
+      status: 'ready',
+      draft,
+    });
+  }
+
+  private fail(id: string, error: string): Promise<Suggestion | null> {
+    return this.suggestionRepository.finishProcessing(id, {
+      status: 'failed',
+      error,
+    });
   }
 }
