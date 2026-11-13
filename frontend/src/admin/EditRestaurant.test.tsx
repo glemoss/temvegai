@@ -24,9 +24,9 @@ import {
   updateRestaurant,
   type Restaurant,
 } from '../api/restaurants';
-import { AdminHome } from './AdminHome';
 import { EditRestaurant } from './EditRestaurant';
 import { RequireAdmin } from './RequireAdmin';
+import { RestaurantsPage } from './RestaurantsPage';
 import { useCurrentAdmin } from './useCurrentAdmin';
 
 vi.mock('../api/restaurants', async (importOriginal) => ({
@@ -40,6 +40,10 @@ vi.mock('../api/geocoding', () => ({
   reverseGeocode: vi.fn(),
 }));
 vi.mock('./useCurrentAdmin', () => ({ useCurrentAdmin: vi.fn() }));
+vi.mock('../api/suggestions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/suggestions')>()),
+  fetchSuggestions: vi.fn().mockResolvedValue([]),
+}));
 vi.mock('../useNeighborhoods', () => ({
   useNeighborhoods: () => ({ status: 'loading' }),
 }));
@@ -80,9 +84,9 @@ function renderPanel(path: string) {
       <Routes>
         <Route path="/admin/login" element={<p>Tela de login</p>} />
         <Route path="/admin" element={<RequireAdmin />}>
-          <Route element={<AdminHome />}>
+          <Route path="restaurants" element={<RestaurantsPage />}>
             <Route index element={null} />
-            <Route path="restaurants/:id/edit" element={<EditRestaurant />} />
+            <Route path=":id/edit" element={<EditRestaurant />} />
           </Route>
         </Route>
       </Routes>
@@ -123,7 +127,7 @@ afterEach(() => {
 
 describe('EditRestaurant', () => {
   it('opens from the list as a modal filled with the restaurant', async () => {
-    renderPanel('/admin');
+    renderPanel('/admin/restaurants');
 
     fireEvent.click(
       await screen.findByRole('link', { name: 'Editar Mandarina' }),

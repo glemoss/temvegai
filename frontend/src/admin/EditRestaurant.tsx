@@ -9,7 +9,7 @@ import {
   type Restaurant,
   type RestaurantInput,
 } from '../api/restaurants';
-import { useAdminHome } from './AdminHome';
+import { useRestaurantsPage } from './RestaurantsPage';
 import { RestaurantDialog } from './RestaurantDialog';
 import { RestaurantForm } from './RestaurantForm';
 import { toRestaurantFormValues } from './restaurantFormSchema';
@@ -30,7 +30,7 @@ const ERROR = cn(MESSAGE, 'font-semibold text-destructive');
 export function EditRestaurant() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
-  const { onUpdated, onNotFound } = useAdminHome();
+  const { onUpdated, onNotFound } = useRestaurantsPage();
   const [state, setState] = useState<EditState>({ status: 'loading' });
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export function EditRestaurant() {
   }, [id]);
 
   function close() {
-    navigate('/admin', { replace: true });
+    navigate('/admin/restaurants', { replace: true });
   }
 
   async function save(input: RestaurantInput) {

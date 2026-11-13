@@ -15,8 +15,8 @@ import {
   UnauthenticatedError,
   type Restaurant,
 } from '../api/restaurants';
-import { AdminHome } from './AdminHome';
 import { RequireAdmin } from './RequireAdmin';
+import { RestaurantsPage } from './RestaurantsPage';
 import { useCurrentAdmin } from './useCurrentAdmin';
 
 vi.mock('../api/restaurants', async (importOriginal) => ({
@@ -25,6 +25,10 @@ vi.mock('../api/restaurants', async (importOriginal) => ({
   fetchRestaurants: vi.fn(),
 }));
 vi.mock('./useCurrentAdmin', () => ({ useCurrentAdmin: vi.fn() }));
+vi.mock('../api/suggestions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/suggestions')>()),
+  fetchSuggestions: vi.fn().mockResolvedValue([]),
+}));
 
 function restaurant(id: string, name: string): Restaurant {
   return {
@@ -48,11 +52,11 @@ const janela = restaurant('2', 'Janela Bar');
 
 function renderPanel() {
   render(
-    <MemoryRouter initialEntries={['/admin']}>
+    <MemoryRouter initialEntries={['/admin/restaurants']}>
       <Routes>
         <Route path="/admin/login" element={<p>Tela de login</p>} />
         <Route path="/admin" element={<RequireAdmin />}>
-          <Route element={<AdminHome />}>
+          <Route path="restaurants" element={<RestaurantsPage />}>
             <Route index element={null} />
           </Route>
         </Route>

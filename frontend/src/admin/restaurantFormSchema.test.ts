@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Restaurant } from '../api/restaurants';
 import {
+  draftToRestaurantFormValues,
   emptyRestaurantForm,
   emptyWeek,
   parseRestaurantForm,
@@ -252,5 +253,56 @@ describe('toRestaurantFormValues', () => {
       success: true,
       input: { ...restaurant, id: undefined },
     });
+  });
+});
+
+describe('draftToRestaurantFormValues', () => {
+  it('fills the form with the draft, leaving the location empty', () => {
+    const openingHours = {
+      ...emptyWeek,
+      friday: [{ opens: '18:00', closes: '23:00' }],
+    };
+
+    expect(
+      draftToRestaurantFormValues({
+        name: 'Kairú',
+        description: 'Cozinha vegana.',
+        type: 'fully_vegan',
+        address: 'Rodovia Dr. Antônio Luiz Moura Gonzaga, 4703',
+        neighborhood: 'Rio Tavares',
+        phone: '48991242935',
+        website: 'https://kairu.com.br',
+        instagram: 'kairu.veg',
+        openingHours,
+      }),
+    ).toEqual({
+      name: 'Kairú',
+      description: 'Cozinha vegana.',
+      type: 'fully_vegan',
+      address: 'Rodovia Dr. Antônio Luiz Moura Gonzaga, 4703',
+      neighborhood: 'Rio Tavares',
+      latitude: '',
+      longitude: '',
+      phone: '(48) 99124-2935',
+      website: 'https://kairu.com.br',
+      instagram: 'kairu.veg',
+      openingHours,
+    });
+  });
+
+  it('leaves empty what the AI did not find', () => {
+    expect(
+      draftToRestaurantFormValues({
+        name: 'Kairú',
+        description: null,
+        type: null,
+        address: null,
+        neighborhood: null,
+        phone: null,
+        website: null,
+        instagram: null,
+        openingHours: null,
+      }),
+    ).toEqual({ ...emptyRestaurantForm, name: 'Kairú' });
   });
 });
