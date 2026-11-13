@@ -1,11 +1,9 @@
-import { Navigate, Outlet } from 'react-router';
-import { Toaster } from '@/components/ui/sonner';
-import { AdminHeader } from './AdminHeader';
+import { Navigate } from 'react-router';
+import { AdminLayout } from './AdminLayout';
 import { useCurrentAdmin } from './useCurrentAdmin';
 
-// Layout of the panel pages: checks the session when the panel opens,
-// sends visitors without one to the login page and puts the header on top
-// of every page and the notices at the bottom.
+// Checks the session when the panel opens, sends visitors without one to
+// the login page and shows the panel to the admin.
 export function RequireAdmin() {
   const state = useCurrentAdmin();
 
@@ -14,13 +12,7 @@ export function RequireAdmin() {
   }
 
   if (state.status === 'authenticated') {
-    return (
-      <main className="min-h-full bg-secondary px-4 py-6">
-        <AdminHeader admin={state.admin} />
-        <Outlet />
-        <Toaster closeButton />
-      </main>
-    );
+    return <AdminLayout admin={state.admin} />;
   }
 
   return (

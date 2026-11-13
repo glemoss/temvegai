@@ -9,6 +9,7 @@ import type {
   TimeInterval,
   WeeklyHours,
 } from '../api/restaurants';
+import type { RestaurantDraft } from '../api/suggestions';
 import { maskPhone } from '../phone';
 
 // The inputs hold text, as typed; an empty time is a field not filled yet.
@@ -75,6 +76,27 @@ export function toRestaurantFormValues(
     website: restaurant.website ?? '',
     instagram: restaurant.instagram ?? '',
     openingHours: restaurant.openingHours ?? emptyWeek,
+  };
+}
+
+// The AI draft of a suggestion, for the admin to review; what the AI did not
+// find is an empty field, and the location is left for the admin to find
+// from the address.
+export function draftToRestaurantFormValues(
+  draft: RestaurantDraft,
+): RestaurantFormValues {
+  return {
+    name: draft.name,
+    description: draft.description ?? '',
+    type: draft.type ?? '',
+    address: draft.address ?? '',
+    neighborhood: draft.neighborhood ?? '',
+    latitude: '',
+    longitude: '',
+    phone: maskPhone(draft.phone ?? ''),
+    website: draft.website ?? '',
+    instagram: draft.instagram ?? '',
+    openingHours: draft.openingHours ?? emptyWeek,
   };
 }
 

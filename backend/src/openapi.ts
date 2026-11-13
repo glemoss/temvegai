@@ -1,5 +1,6 @@
 import type { StaticDocumentSpec } from '@fastify/swagger';
 import { z } from 'zod';
+import { paramsSchema as approveSuggestionParams } from './controllers/approve-suggestion.controller.js';
 import { paramsSchema as deleteRestaurantParams } from './controllers/delete-restaurant.controller.js';
 import { paramsSchema as getRestaurantParams } from './controllers/get-restaurant.controller.js';
 import { querySchema as listRestaurantsQuery } from './controllers/list-restaurants.controller.js';
@@ -201,6 +202,31 @@ export const openApiDocument: OpenApiDocument = {
           409: {
             description:
               'A sugestão não pode ser recusada no status atual (INVALID_SUGGESTION_STATUS)',
+          },
+        },
+      },
+    },
+    '/suggestions/{id}/approve': {
+      post: {
+        tags: ['suggestions'],
+        summary: 'Aprova uma sugestão e cria o restaurante',
+        description:
+          'Vale para sugestões `ready`; as demais respondem 409. O corpo é o mesmo de `POST /restaurants`, com o rascunho revisado pelo admin. O restaurante é criado e a sugestão passa a `approved`, com o `restaurantId` dele.',
+        security: adminOnly,
+        parameters: toParameters(approveSuggestionParams, 'path'),
+        requestBody: jsonBody(restaurantBodySchema),
+        responses: {
+          201: {
+            description: 'Restaurante criado e sugestão aprovada',
+          },
+          400: errorResponses[400],
+          401: errorResponses[401],
+          404: {
+            description: 'Sugestão não encontrada (SUGGESTION_NOT_FOUND)',
+          },
+          409: {
+            description:
+              'A sugestão não pode ser aprovada no status atual (INVALID_SUGGESTION_STATUS)',
           },
         },
       },

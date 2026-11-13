@@ -6,6 +6,10 @@ import { RequireAdmin } from './RequireAdmin';
 import { useCurrentAdmin } from './useCurrentAdmin';
 
 vi.mock('./useCurrentAdmin', () => ({ useCurrentAdmin: vi.fn() }));
+vi.mock('../api/suggestions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/suggestions')>()),
+  fetchSuggestions: vi.fn().mockResolvedValue([]),
+}));
 
 function renderPanel() {
   render(

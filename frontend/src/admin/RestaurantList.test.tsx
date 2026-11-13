@@ -89,7 +89,7 @@ describe('RestaurantList', () => {
     expect(screen.getByText('Nenhum restaurante cadastrado.')).toBeTruthy();
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('searchbox')).toBeNull();
-    expect(addLink().getAttribute('href')).toBe('/restaurants/new');
+    expect(addLink().getAttribute('href')).toBe('/admin/restaurants/new');
   });
 
   it('shows name, type and neighborhood of every restaurant', () => {
@@ -142,7 +142,7 @@ describe('RestaurantList', () => {
       screen
         .getByRole('link', { name: 'Editar Janela Bar' })
         .getAttribute('href'),
-    ).toBe('/restaurants/2/edit');
+    ).toBe('/admin/restaurants/2/edit');
   });
 
   it('asks to remove the restaurant of the row', () => {

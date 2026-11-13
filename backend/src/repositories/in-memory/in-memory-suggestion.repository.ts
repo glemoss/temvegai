@@ -94,6 +94,20 @@ export class InMemorySuggestionRepository implements SuggestionRepository {
     return { ...suggestion };
   }
 
+  async approve(id: string, restaurantId: string): Promise<Suggestion | null> {
+    const suggestion = this.suggestions.find(
+      (stored) => stored.id === id && stored.status === 'ready',
+    );
+    if (!suggestion) {
+      return null;
+    }
+
+    suggestion.status = 'approved';
+    suggestion.restaurantId = restaurantId;
+    suggestion.updatedAt = new Date();
+    return { ...suggestion };
+  }
+
   async countProcessingStartedSince(since: Date): Promise<number> {
     return this.suggestions.filter(
       ({ processingStartedAt }) =>

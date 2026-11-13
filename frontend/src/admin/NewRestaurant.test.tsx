@@ -23,9 +23,9 @@ import {
   UnauthenticatedError,
   type Restaurant,
 } from '../api/restaurants';
-import { AdminHome } from './AdminHome';
 import { NewRestaurant } from './NewRestaurant';
 import { RequireAdmin } from './RequireAdmin';
+import { RestaurantsPage } from './RestaurantsPage';
 import { useCurrentAdmin } from './useCurrentAdmin';
 
 vi.mock('../api/restaurants', async (importOriginal) => ({
@@ -35,6 +35,10 @@ vi.mock('../api/restaurants', async (importOriginal) => ({
 }));
 vi.mock('../api/geocoding', () => ({ geocodeAddress: vi.fn() }));
 vi.mock('./useCurrentAdmin', () => ({ useCurrentAdmin: vi.fn() }));
+vi.mock('../api/suggestions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/suggestions')>()),
+  fetchSuggestions: vi.fn().mockResolvedValue([]),
+}));
 vi.mock('../useNeighborhoods', () => ({
   useNeighborhoods: () => ({ status: 'loading' }),
 }));
@@ -86,9 +90,9 @@ function renderPanel(path: string) {
       <Routes>
         <Route path="/admin/login" element={<p>Tela de login</p>} />
         <Route path="/admin" element={<RequireAdmin />}>
-          <Route element={<AdminHome />}>
+          <Route path="restaurants" element={<RestaurantsPage />}>
             <Route index element={null} />
-            <Route path="restaurants/new" element={<NewRestaurant />} />
+            <Route path="new" element={<NewRestaurant />} />
           </Route>
         </Route>
       </Routes>
@@ -126,7 +130,7 @@ afterEach(() => {
 
 describe('NewRestaurant', () => {
   it('opens as a modal over the list, below the panel header', async () => {
-    renderPanel('/admin');
+    renderPanel('/admin/restaurants');
     expect(
       await screen.findByText('Nenhum restaurante cadastrado.'),
     ).toBeTruthy();

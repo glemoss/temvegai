@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Outlet } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from './AppRoutes';
 
@@ -11,11 +11,22 @@ vi.mock('./admin/AdminLogin', () => ({
   AdminLogin: () => <p>Tela de login</p>,
 }));
 vi.mock('./admin/RequireAdmin', () => ({
-  RequireAdmin: () => <p>Painel</p>,
+  RequireAdmin: () => (
+    <>
+      <p>Painel</p>
+      <Outlet />
+    </>
+  ),
 }));
-vi.mock('./admin/AdminHome', () => ({ AdminHome: () => null }));
+vi.mock('./admin/RestaurantsPage', () => ({
+  RestaurantsPage: () => <p>Módulo de restaurantes</p>,
+}));
+vi.mock('./admin/SuggestionsPage', () => ({
+  SuggestionsPage: () => <p>Módulo de sugestões</p>,
+}));
 vi.mock('./admin/NewRestaurant', () => ({ NewRestaurant: () => null }));
 vi.mock('./admin/EditRestaurant', () => ({ EditRestaurant: () => null }));
+vi.mock('./admin/ReviewSuggestion', () => ({ ReviewSuggestion: () => null }));
 
 function renderPath(path: string) {
   render(
@@ -54,12 +65,20 @@ describe('AppRoutes', () => {
 
   it.each([
     ['/', 'Mapa'],
-    ['/admin', 'Painel'],
+    ['/admin/restaurants', 'Módulo de restaurantes'],
+    ['/admin/suggestions', 'Módulo de sugestões'],
     ['/admin/login', 'Tela de login'],
   ])('keeps the page at %s', (path, page) => {
     renderPath(path);
 
     expect(screen.getByText(page)).toBeTruthy();
     expect(screen.queryByText('Página não encontrada')).toBeNull();
+  });
+
+  it('opens the panel on the restaurants module', () => {
+    renderPath('/admin');
+
+    expect(screen.getByText('Painel')).toBeTruthy();
+    expect(screen.getByText('Módulo de restaurantes')).toBeTruthy();
   });
 });

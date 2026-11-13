@@ -28,5 +28,8 @@ export interface SuggestionRepository {
     id: string,
     result: ProcessingResult,
   ): Promise<Suggestion | null>;
+  // Marks a ready suggestion as approved, with the restaurant created from
+  // it. Returns null when it is not ready.
+  approve(id: string, restaurantId: string): Promise<Suggestion | null>;
   countProcessingStartedSince(since: Date): Promise<number>;
 }

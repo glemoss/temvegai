@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { logout, type Admin } from '../api/auth';
 
-// The top of every panel page: the way back to the list, the logged in
-// admin and the logout button.
-export function AdminHeader({ admin }: { admin: Admin }) {
+// The top of every panel page: the way back to the panel, the menu given
+// as children, the logged in admin and the logout button.
+export function AdminHeader({
+  admin,
+  children,
+}: {
+  admin: Admin;
+  children?: ReactNode;
+}) {
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState(false);
@@ -31,6 +37,7 @@ export function AdminHeader({ admin }: { admin: Admin }) {
             Painel admin
           </Link>
         </h1>
+        {children}
         <p className="ml-auto wrap-anywhere text-muted-foreground">
           {admin.email}
         </p>

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import type { RestaurantDraft } from '../entities/suggestion.js';
 import {
   RestaurantDraftGenerationError,
+  type GeneratedDraft,
   type RestaurantDraftGenerator,
 } from './restaurant-draft-generator.js';
 import { restaurantDraftSchema } from './restaurant-draft.schema.js';
@@ -27,8 +27,9 @@ const dayHours = {
   },
 };
 
-// Shape of the answer, the restaurant form without the coordinates. Every
-// field is nullable so the model has a way to say it did not find it.
+// Shape of the answer, the restaurant form without the coordinates, plus
+// the city. Every field is nullable so the model has a way to say it did not
+// find it.
 const responseJsonSchema = {
   type: 'object',
   properties: {
@@ -37,6 +38,7 @@ const responseJsonSchema = {
     type: { type: ['string', 'null'], enum: ['fully_vegan', 'vegan_options'] },
     address: nullableString,
     neighborhood: nullableString,
+    city: nullableString,
     phone: nullableString,
     website: nullableString,
     instagram: nullableString,
@@ -68,6 +70,7 @@ const responseJsonSchema = {
     'type',
     'address',
     'neighborhood',
+    'city',
     'phone',
     'website',
     'instagram',
@@ -79,11 +82,12 @@ const INSTRUCTIONS = `Você ajuda a cadastrar restaurantes num mapa de lugares c
 
 Regras:
 - Use só o que encontrar na pesquisa. Não invente: o que não encontrar fica null.
-- Se não encontrar o restaurante, ou se ele não fica em Florianópolis, devolva name null.
+- Se não encontrar o restaurante, devolva name null.
 - description: até 300 caracteres, em português, sobre a comida e o lugar.
 - type: "fully_vegan" se o cardápio é todo vegano; "vegan_options" se tem opções veganas num cardápio comum.
 - address: rua e número, com complemento se houver, sem bairro, cidade nem CEP (ex.: "Rua Lauro Linhares, 1849").
-- neighborhood: o bairro de Florianópolis.
+- neighborhood: o bairro.
+- city: só o nome do município onde o restaurante fica, sem o estado (ex.: "Florianópolis", "São José").
 - phone: só os dígitos, com DDD (ex.: "48999998888").
 - website: endereço completo do site próprio, com https://. Não use Instagram, iFood nem redes sociais.
 - instagram: só o usuário, sem @.
@@ -106,6 +110,16 @@ const geminiResponseSchema = z.object({
     .optional(),
 });
 
+// The city is checked by the caller; anything but a text means not found.
+const citySchema = z.object({
+  city: z
+    .string()
+    .trim()
+    .transform((value) => value || null)
+    .nullable()
+    .catch(null),
+});
+
 const geminiErrorSchema = z.object({
   error: z.object({ code: z.number(), message: z.string() }),
 });
@@ -118,7 +132,7 @@ export class GeminiRestaurantDraftGenerator implements RestaurantDraftGenerator 
     private readonly fetchFn: Fetch = fetch,
   ) {}
 
-  async generate(text: string): Promise<RestaurantDraft> {
+  async generate(text: string): Promise<GeneratedDraft> {
     const response = await this.request(text);
     const answer = await this.answerText(response);
     return this.parseDraft(answer);
@@ -192,7 +206,7 @@ export class GeminiRestaurantDraftGenerator implements RestaurantDraftGenerator 
 
   // The schema asks for bare JSON, but a model may still wrap it in a
   // Markdown code block.
-  private parseDraft(answer: string): RestaurantDraft {
+  private parseDraft(answer: string): GeneratedDraft {
     const json = answer.replace(/^```(?:json)?\s*|\s*```$/g, '');
 
     let data: unknown;
@@ -210,6 +224,10 @@ export class GeminiRestaurantDraftGenerator implements RestaurantDraftGenerator 
         'O Gemini não encontrou o restaurante.',
       );
     }
-    return draft.data;
+    const city = citySchema.safeParse(data);
+    return {
+      draft: draft.data,
+      city: city.success ? city.data.city : null,
+    };
   }
 }

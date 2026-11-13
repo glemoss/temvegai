@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { authenticate } from '../authenticate.js';
+import type { ApproveSuggestionController } from '../controllers/approve-suggestion.controller.js';
 import type { CreateSuggestionController } from '../controllers/create-suggestion.controller.js';
 import type { ListSuggestionsController } from '../controllers/list-suggestions.controller.js';
 import type { RejectSuggestionController } from '../controllers/reject-suggestion.controller.js';
@@ -11,6 +12,7 @@ interface SuggestionsRoutesOptions {
   createSuggestionController: CreateSuggestionController;
   listSuggestionsController: ListSuggestionsController;
   rejectSuggestionController: RejectSuggestionController;
+  approveSuggestionController: ApproveSuggestionController;
   retrySuggestionController: RetrySuggestionController;
 }
 
@@ -20,6 +22,7 @@ export async function suggestionsRoutes(
     createSuggestionController,
     listSuggestionsController,
     rejectSuggestionController,
+    approveSuggestionController,
     retrySuggestionController,
   }: SuggestionsRoutesOptions,
 ): Promise<void> {
@@ -37,6 +40,11 @@ export async function suggestionsRoutes(
     '/suggestions/:id/reject',
     { preHandler: authenticate },
     rejectSuggestionController.handle,
+  );
+  app.post(
+    '/suggestions/:id/approve',
+    { preHandler: authenticate },
+    approveSuggestionController.handle,
   );
   app.post(
     '/suggestions/:id/process',

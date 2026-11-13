@@ -4,7 +4,7 @@ import {
   UnauthenticatedError,
   type RestaurantInput,
 } from '../api/restaurants';
-import { useAdminHome } from './AdminHome';
+import { useRestaurantsPage } from './RestaurantsPage';
 import { RestaurantDialog } from './RestaurantDialog';
 import { RestaurantForm } from './RestaurantForm';
 import { emptyRestaurantForm } from './restaurantFormSchema';
@@ -12,10 +12,10 @@ import { emptyRestaurantForm } from './restaurantFormSchema';
 // Esc, the close button and Cancel go back to the list.
 export function NewRestaurant() {
   const navigate = useNavigate();
-  const { onCreated } = useAdminHome();
+  const { onCreated } = useRestaurantsPage();
 
   function close() {
-    navigate('/admin', { replace: true });
+    navigate('/admin/restaurants', { replace: true });
   }
 
   async function create(input: RestaurantInput) {

@@ -30,7 +30,7 @@ export function RestaurantList({ state, onDelete }: RestaurantListProps) {
 
   return (
     <section
-      className="mx-auto mt-6 flex max-w-240 flex-col gap-3"
+      className="flex flex-col gap-3"
       aria-labelledby="restaurants-title"
     >
       <h2
@@ -58,7 +58,7 @@ export function RestaurantList({ state, onDelete }: RestaurantListProps) {
         )}
         <Button asChild size="icon-lg" className="ml-auto">
           <Link
-            to="restaurants/new"
+            to="/admin/restaurants/new"
             aria-label="Novo restaurante"
             title="Novo restaurante"
           >
@@ -153,7 +153,7 @@ function RestaurantTable({
                   className="text-muted-foreground"
                 >
                   <Link
-                    to={`restaurants/${restaurant.id}/edit`}
+                    to={`/admin/restaurants/${restaurant.id}/edit`}
                     aria-label={`Editar ${restaurant.name}`}
                     title="Editar"
                   >

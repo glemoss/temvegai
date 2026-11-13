@@ -104,6 +104,18 @@ export class KnexSuggestionRepository implements SuggestionRepository {
     return row ? toSuggestion(row as SuggestionRow) : null;
   }
 
+  async approve(id: string, restaurantId: string): Promise<Suggestion | null> {
+    const [row] = await this.db<SuggestionRow>('suggestions')
+      .where({ id, status: 'ready' })
+      .update({
+        status: 'approved',
+        restaurant_id: restaurantId,
+        updated_at: this.db.fn.now(),
+      })
+      .returning('*');
+    return row ? toSuggestion(row as SuggestionRow) : null;
+  }
+
   async countProcessingStartedSince(since: Date): Promise<number> {
     const result = await this.db('suggestions')
       .where('processing_started_at', '>=', since)
