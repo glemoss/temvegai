@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
 import { AppTitle } from './AppTitle';
@@ -84,77 +85,85 @@ export function App() {
     });
   }
 
+  // The page is isolated, so the map and the overlays, which sit above
+  // Leaflet's controls, stay below the suggestion dialog. The notices stay
+  // out of it, to show above the dialog.
   return (
-    <main>
-      {/* Top of the screen, centered: the header card and, below it, the
+    <>
+      <main className="isolate">
+        {/* Top of the screen, centered: the header card and, below it, the
         loading, error and empty messages. Clicks around them reach the
         map. */}
-      <div className="pointer-events-none absolute top-6 left-1/2 z-(--z-overlay) flex w-[26rem] max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-col items-center gap-2 *:pointer-events-auto max-sm:top-4 max-sm:right-2 max-sm:left-2 max-sm:w-auto max-sm:max-w-none max-sm:translate-x-0">
-        <header
-          ref={headerRef}
-          className="w-full rounded-lg bg-card px-4 py-3 shadow-(--shadow) max-sm:px-3 max-sm:pt-2.5"
-        >
-          <AppTitle />
-          <RestaurantFilters
-            type={type}
-            neighborhood={neighborhood}
-            name={query}
-            neighborhoods={neighborhoods}
-            onTypeChange={setType}
-            onNeighborhoodChange={changeNeighborhood}
-            onNameChange={changeQuery}
-            onNameSubmit={() => setName(query)}
-            onRestaurantSelect={selectSuggestion}
-          />
-        </header>
-        {/* Always present, so screen readers announce the messages that
+        <div className="pointer-events-none absolute top-6 left-1/2 z-(--z-overlay) flex w-[26rem] max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-col items-center gap-2 *:pointer-events-auto max-sm:top-4 max-sm:right-2 max-sm:left-2 max-sm:w-auto max-sm:max-w-none max-sm:translate-x-0">
+          <header
+            ref={headerRef}
+            className="w-full rounded-lg bg-card px-4 py-3 shadow-(--shadow) max-sm:px-3 max-sm:pt-2.5"
+          >
+            <AppTitle />
+            <RestaurantFilters
+              type={type}
+              neighborhood={neighborhood}
+              name={query}
+              neighborhoods={neighborhoods}
+              onTypeChange={setType}
+              onNeighborhoodChange={changeNeighborhood}
+              onNameChange={changeQuery}
+              onNameSubmit={() => setName(query)}
+              onRestaurantSelect={selectSuggestion}
+            />
+          </header>
+          {/* Always present, so screen readers announce the messages that
           appear inside it. */}
-        <div role="status">
-          {state.status === 'loading' && (
-            <p className={STATUS_MESSAGE}>Carregando restaurantes…</p>
-          )}
-          {state.status === 'error' && (
-            <p className={cn(STATUS_MESSAGE, 'font-semibold text-destructive')}>
-              Não foi possível carregar os restaurantes.
-            </p>
-          )}
-          {state.status === 'success' && restaurants.length === 0 && (
-            <p className={STATUS_MESSAGE}>
-              {hasFilters
-                ? 'Nenhum restaurante nesta área com esses filtros.'
-                : 'Nenhum restaurante nesta área. Afaste o mapa para ver mais.'}
-              {hasFilters && (
-                <Button
-                  type="button"
-                  className="h-10 font-semibold"
-                  onClick={clearFilters}
-                >
-                  Limpar filtros
-                </Button>
-              )}
-            </p>
-          )}
+          <div role="status">
+            {state.status === 'loading' && (
+              <p className={STATUS_MESSAGE}>Carregando restaurantes…</p>
+            )}
+            {state.status === 'error' && (
+              <p
+                className={cn(STATUS_MESSAGE, 'font-semibold text-destructive')}
+              >
+                Não foi possível carregar os restaurantes.
+              </p>
+            )}
+            {state.status === 'success' && restaurants.length === 0 && (
+              <p className={STATUS_MESSAGE}>
+                {hasFilters
+                  ? 'Nenhum restaurante nesta área com esses filtros.'
+                  : 'Nenhum restaurante nesta área. Afaste o mapa para ver mais.'}
+                {hasFilters && (
+                  <Button
+                    type="button"
+                    className="h-10 font-semibold"
+                    onClick={clearFilters}
+                  >
+                    Limpar filtros
+                  </Button>
+                )}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
-      <MapLegend />
-      <RestaurantMap
-        restaurants={restaurants}
-        focusBounds={focusBounds}
-        focusIsSelected={chosenBounds !== undefined}
-        selectedId={selected?.id}
-        headerRef={headerRef}
-        onSelect={setSelected}
-        onBoundsChange={setBounds}
-      />
-      {selected && (
-        <RestaurantDetails
-          // A new key per restaurant resets the panel, so switching
-          // restaurants starts with the content scrolled to the top.
-          key={selected.id}
-          restaurant={selected}
-          onClose={closeDetails}
+        <MapLegend />
+        <RestaurantMap
+          restaurants={restaurants}
+          focusBounds={focusBounds}
+          focusIsSelected={chosenBounds !== undefined}
+          selectedId={selected?.id}
+          headerRef={headerRef}
+          onSelect={setSelected}
+          onBoundsChange={setBounds}
         />
-      )}
-    </main>
+        {selected && (
+          <RestaurantDetails
+            // A new key per restaurant resets the panel, so switching
+            // restaurants starts with the content scrolled to the top.
+            key={selected.id}
+            restaurant={selected}
+            onClose={closeDetails}
+          />
+        )}
+      </main>
+      <Toaster closeButton />
+    </>
   );
 }

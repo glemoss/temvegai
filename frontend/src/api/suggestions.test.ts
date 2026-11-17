@@ -7,11 +7,13 @@ import {
 } from './restaurants';
 import {
   approveSuggestion,
+  createSuggestion,
   fetchSuggestions,
   rejectSuggestion,
   retrySuggestion,
   SuggestionNotFoundError,
   SuggestionStatusError,
+  TooManySuggestionsError,
   type Suggestion,
 } from './suggestions';
 
@@ -70,6 +72,44 @@ function stubFetch(response: Response | Error) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe('createSuggestion', () => {
+  it('posts the text to /suggestions without cookies', async () => {
+    const fetchMock = stubFetch(
+      Response.json(
+        { suggestion: { ...suggestion, status: 'pending' } },
+        {
+          status: 201,
+        },
+      ),
+    );
+
+    await expect(createSuggestion('Kairú, no Rio Tavares')).resolves.toBe(
+      undefined,
+    );
+    expect(fetchMock).toHaveBeenCalledWith('http://api.test/suggestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: 'Kairú, no Rio Tavares' }),
+    });
+  });
+
+  it('throws TooManySuggestionsError on 429', async () => {
+    stubFetch(Response.json({}, { status: 429 }));
+
+    await expect(createSuggestion('Kairú')).rejects.toBeInstanceOf(
+      TooManySuggestionsError,
+    );
+  });
+
+  it('fails on other error statuses', async () => {
+    stubFetch(Response.json({}, { status: 500 }));
+
+    await expect(createSuggestion('Kairú')).rejects.toThrow(
+      'POST /suggestions respondeu 500',
+    );
+  });
 });
 
 describe('fetchSuggestions', () => {

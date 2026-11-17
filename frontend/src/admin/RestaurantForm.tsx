@@ -6,6 +6,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -166,16 +167,27 @@ export function RestaurantForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  // The address to search, set only when the admin changes it, so opening
-  // the form does not move a pin already placed.
+  // The address to search, set when the admin changes it, so opening the
+  // form does not move a pin already placed. A form that opens with an
+  // address and no pin, as the draft of a suggestion, searches it at once.
   const [addressToFind, setAddressToFind] = useState<{
     address: string;
     neighborhood: string;
-  } | null>(null);
+  } | null>(() =>
+    initialValues.address.trim() && !toCoordinates(initialValues)
+      ? {
+          address: initialValues.address,
+          neighborhood: initialValues.neighborhood,
+        }
+      : null,
+  );
   // The point to describe, set only by a click on the map.
   const [pinToDescribe, setPinToDescribe] = useState<Coordinates | null>(null);
   // What the searches did, shown below the map.
   const [geocodeMessage, setGeocodeMessage] = useState<string | null>(null);
+  // The last search found the street but not the number, so the pin may be
+  // far from the restaurant; cleared when the address or the pin changes.
+  const [streetOnly, setStreetOnly] = useState(false);
   // Which fields a search filled rather than the admin typed; only those
   // may be replaced by the next search.
   const [filledBySearch, setFilledBySearch] = useState({
@@ -222,6 +234,7 @@ export function RestaurantForm({
       longitude: String(found.longitude),
       ...(neighborhood !== null && { neighborhood }),
     }));
+    setStreetOnly(!found.houseNumberFound);
     if (neighborhood !== null) {
       setFilledBySearch((current) => ({
         ...current,
@@ -369,6 +382,7 @@ export function RestaurantForm({
     setFilledBySearch((current) => ({ ...current, [key]: false }));
     setPinToDescribe(null);
     setGeocodeMessage(null);
+    setStreetOnly(false);
     setAddressToFind(
       next.address.trim()
         ? {
@@ -392,6 +406,7 @@ export function RestaurantForm({
     setAddressToFind(null);
     setPinToDescribe(location);
     setGeocodeMessage(null);
+    setStreetOnly(false);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -567,6 +582,19 @@ export function RestaurantForm({
         <p role="status" className={cn(HINT, 'min-h-[1.4em] leading-[1.4]')}>
           {geocodeMessage}
         </p>
+        {streetOnly && (
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-md border-2 border-amber-500 bg-amber-50 px-3 py-2.5 font-semibold text-amber-950"
+          >
+            <TriangleAlert
+              className="mt-0.5 size-5 shrink-0 text-amber-600"
+              aria-hidden="true"
+            />
+            Atenção: o mapa encontrou só a rua, não o número. O pin pode estar
+            longe do restaurante; confira e, se precisar, clique no lugar certo.
+          </p>
+        )}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3">
           <Field label="Latitude" error={errors.latitude} required>
             {(props) => (
