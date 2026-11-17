@@ -7,9 +7,13 @@ export interface Coordinates {
 }
 
 // Where an address is, and its neighborhood as OpenStreetMap names it:
-// the official division of the city, such as "Trindade Sul".
+// the official division of the city, such as "Trindade Sul". OpenStreetMap
+// knows few house numbers in Florianópolis; without the number it answers
+// with a point anywhere on the street, which on a long road may be far
+// from the restaurant.
 export interface GeocodedAddress extends Coordinates {
   neighborhood: string | null;
+  houseNumberFound: boolean;
 }
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
@@ -47,7 +51,7 @@ export async function geocodeAddress(
   const results = (await response.json()) as {
     lat: string;
     lon: string;
-    address?: { suburb?: string };
+    address?: { suburb?: string; house_number?: string };
   }[];
   const [first] = results;
   return first
@@ -55,6 +59,7 @@ export async function geocodeAddress(
         latitude: Number(first.lat),
         longitude: Number(first.lon),
         neighborhood: first.address?.suburb ?? null,
+        houseNumberFound: Boolean(first.address?.house_number),
       }
     : null;
 }

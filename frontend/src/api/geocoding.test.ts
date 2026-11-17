@@ -62,7 +62,24 @@ describe('geocodeAddress', () => {
       latitude: -27.661458,
       longitude: -48.499222,
       neighborhood: 'Campeche',
+      houseNumberFound: false,
     });
+  });
+
+  it('says when the house number was found', async () => {
+    stubFetch(
+      Response.json([
+        {
+          lat: '-27.661458',
+          lon: '-48.499222',
+          address: { house_number: '100', suburb: 'Campeche' },
+        },
+      ]),
+    );
+
+    await expect(
+      geocodeAddress('Rua das Flores, 100', ''),
+    ).resolves.toMatchObject({ houseNumberFound: true });
   });
 
   it('returns no neighborhood when the result has none', async () => {
@@ -72,6 +89,7 @@ describe('geocodeAddress', () => {
       latitude: -27.5,
       longitude: -48.5,
       neighborhood: null,
+      houseNumberFound: false,
     });
   });
 

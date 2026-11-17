@@ -490,11 +490,20 @@ describe('RestaurantForm, new neighborhood', () => {
 });
 
 describe('RestaurantForm, location by address', () => {
-  const found = { latitude: -27.59, longitude: -48.55, neighborhood: null };
+  const found = {
+    latitude: -27.59,
+    longitude: -48.55,
+    neighborhood: null,
+    houseNumberFound: true,
+  };
 
   beforeEach(() => {
     vi.useFakeTimers();
   });
+
+  function streetOnlyWarning() {
+    return screen.queryByText(/o mapa encontrou só a rua, não o número/);
+  }
 
   async function waitForSearch() {
     await act(async () => {
@@ -544,9 +553,34 @@ describe('RestaurantForm, location by address', () => {
     expect(inputValue('Latitude')).toBe('-27.59');
   });
 
-  it('does not search when the form opens or the address is empty', async () => {
+  it('searches the address of a form that opens without a pin', async () => {
+    vi.mocked(geocodeAddress).mockResolvedValue(found);
     renderForm({
-      initialValues: { ...emptyRestaurantForm, address: 'Rua das Flores' },
+      initialValues: {
+        ...emptyRestaurantForm,
+        address: 'Rua das Flores, 100',
+        neighborhood: 'Campeche',
+      },
+    });
+    await waitForSearch();
+
+    expect(geocodeAddress).toHaveBeenCalledWith(
+      'Rua das Flores, 100',
+      'Campeche',
+      expect.any(AbortSignal),
+    );
+    expect(inputValue('Latitude')).toBe('-27.59');
+    expect(inputValue('Longitude')).toBe('-48.55');
+  });
+
+  it('does not search when the form opens with a pin or the address is empty', async () => {
+    renderForm({
+      initialValues: {
+        ...emptyRestaurantForm,
+        address: 'Rua das Flores',
+        latitude: '-27.661458',
+        longitude: '-48.499222',
+      },
     });
     await waitForSearch();
 
@@ -554,6 +588,41 @@ describe('RestaurantForm, location by address', () => {
     await waitForSearch();
 
     expect(geocodeAddress).not.toHaveBeenCalled();
+  });
+
+  it('warns when only the street was found, until the pin or the address changes', async () => {
+    vi.mocked(geocodeAddress).mockResolvedValue({
+      ...found,
+      houseNumberFound: false,
+    });
+    renderForm();
+
+    type('Endereço', 'Rodovia SC-405, 4703');
+    await waitForSearch();
+
+    expect(inputValue('Latitude')).toBe('-27.59');
+    expect(streetOnlyWarning()?.getAttribute('role')).toBe('alert');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar no mapa' }));
+    expect(streetOnlyWarning()).toBeNull();
+
+    type('Endereço', 'Rodovia SC-405, 4800');
+    await waitForSearch();
+    expect(streetOnlyWarning()).not.toBeNull();
+
+    type('Endereço', 'Rodovia SC-405, 48');
+    expect(streetOnlyWarning()).toBeNull();
+  });
+
+  it('does not warn when the house number was found', async () => {
+    vi.mocked(geocodeAddress).mockResolvedValue(found);
+    renderForm();
+
+    type('Endereço', 'Rua das Flores, 100');
+    await waitForSearch();
+
+    expect(inputValue('Latitude')).toBe('-27.59');
+    expect(streetOnlyWarning()).toBeNull();
   });
 
   it('says when the address is not found', async () => {
