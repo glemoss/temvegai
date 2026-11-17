@@ -19,6 +19,7 @@ O site é uma PWA: pode ser instalado no celular e faz o papel de aplicativo mob
 - Buscar apenas os restaurantes dentro da área visível do mapa.
 - Ver a própria localização no mapa, pedida pelo botão "Minha localização" e usada só no navegador.
 - Instalar o site no celular, como app (PWA). O site fica guardado no aparelho para abrir rápido, avisa quando está sem internet e só troca de versão quando a pessoa toca em "Atualizar". Restaurantes e mapa continuam vindo da rede.
+- Convite para instalar, no rodapé do mapa, enquanto o site não está instalado: no Android e no computador, com o botão "Instalar", que abre a instalação do sistema; no Safari do iPhone, com as instruções do menu Compartilhar. Fechado, só volta depois de 30 dias.
 - Login de admin com e-mail e senha (entrar, sair, consultar a sessão atual).
 - Contas de admin criadas por um comando no terminal do servidor; não existe cadastro público.
 - Endpoints de escrita (criar, editar, remover) na API, exigindo admin logado.

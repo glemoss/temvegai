@@ -292,6 +292,10 @@ O botão "Como chegar" passa a mandar ao Google Maps o texto `Nome, endereço, F
 O site passa a ser uma PWA, no lugar do aplicativo mobile (decidido pelo dono). Manifest com nome, cores e ícones (192, 512, maskable e `apple-touch-icon`, gerados a partir do `favicon.svg`), e service worker que guarda o site (HTML, JS, CSS e o worker do MapLibre) no aparelho. `/api` e os tiles do mapa vão sempre pela rede; a fonte do título fica em cache depois da primeira visita. Uma versão nova só entra quando a pessoa toca em "Atualizar", no aviso "Nova versão disponível", para não perder um formulário do painel no meio; sem internet, aparece um aviso. Dependência aprovada pelo dono: `vite-plugin-pwa`.
 **Pronto quando:** o `build` gera o `manifest.webmanifest` e o `sw.js`; no `npm run preview`, o Chrome mostra o site como instalável; com a rede desligada no DevTools, o site abre e mostra o aviso; um build novo mostra o aviso de atualização. Com testes.
 
+### [x] M12 — Convite para instalar
+Aviso no rodapé do mapa do site, pelo `sonner`, enquanto o site não está instalado. Onde o navegador dispara o `beforeinstallprompt` (Android, Chrome e Edge no computador), o botão "Instalar" abre a instalação do sistema. No Safari do iPhone e do iPad, que não tem esse evento, o aviso explica o caminho: Compartilhar e "Adicionar à Tela de Início", com o botão "Entendi". Fechar, tocar em "Entendi" ou recusar a instalação do sistema guarda a data no `localStorage` do aparelho, e o convite só volta depois de 30 dias. O painel admin fica sem o convite. Sem dependência nova. Decidido pelo dono: aviso no rodapé, e não uma janela no meio da tela, e 30 dias depois de fechado.
+**Pronto quando:** no Chrome do computador e no Android, o botão abre a instalação do sistema; no Safari do iPhone, aparecem as instruções; depois de instalado ou fechado, o convite não aparece mais. Com testes.
+
 ---
 
 ## Fase S — Sugestões
@@ -392,3 +396,4 @@ Coisas notadas durante uma etapa que ficam para depois.
 - (M11) O `npm audit` aponta uma vulnerabilidade moderada no `glob` usado pelo `workbox-build`, que o `vite-plugin-pwa` traz. Só roda no build, não vai para o site. A correção sugerida pelo npm volta o plugin para a 1.1.0; decidir se espera a próxima versão do Workbox.
 - (M11) O site só procura uma versão nova ao ser aberto ou recarregado. Quem deixa o app aberto por dias só vê o aviso de atualização ao reabrir. Decidir se vale verificar de tempos em tempos (ex.: a cada hora).
 - (M11) O cache do site pesa cerca de 2,4 MB, baixados em segundo plano na primeira visita, quase tudo o mesmo JavaScript que a página já baixa. Separar o painel admin (pendência D0) também tiraria ele do cache de quem só usa o mapa.
+- (M12) O iPhone não avisa o site quando ele é instalado pelo menu Compartilhar. Quem instala sem tocar em "Entendi" continua vendo o convite ao abrir o site no Safari (no app instalado ele não aparece), até fechar o aviso.
