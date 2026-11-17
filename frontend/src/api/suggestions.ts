@@ -56,6 +56,29 @@ export class SuggestionStatusError extends Error {
   }
 }
 
+// The visitor sent too many suggestions in the last hour.
+export class TooManySuggestionsError extends Error {
+  constructor() {
+    super('Muitas sugestões enviadas. Tente novamente mais tarde.');
+    this.name = 'TooManySuggestionsError';
+  }
+}
+
+// Sent by a visitor, who has no session, so no cookie goes with it. The AI
+// works on the suggestion after the answer, so nothing comes back to show.
+export async function createSuggestion(text: string): Promise<void> {
+  const response = await fetch(`${config.apiUrl}/suggestions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+
+  if (response.status === 429) throw new TooManySuggestionsError();
+  if (!response.ok) {
+    throw new Error(`POST /suggestions respondeu ${response.status}`);
+  }
+}
+
 export async function fetchSuggestions(
   signal?: AbortSignal,
 ): Promise<Suggestion[]> {

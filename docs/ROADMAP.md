@@ -306,9 +306,9 @@ Interface `RestaurantDraftGenerator` e implementação com o Gemini, com a busca
 Lista das sugestões com status, texto do visitante e rascunho. "Revisar" abre o formulário de criação já existente, preenchido com o rascunho; salvar cria o restaurante e marca a sugestão `approved` com o `restaurant_id`. "Recusar" com confirmação, e "Processar de novo" nas `failed`.
 **Pronto quando:** aprovar cria o restaurante no mapa, recusar tira a sugestão das pendentes, e uma `failed` pode ser processada de novo. Com testes. Decidido pelo dono: o painel ganhou um menu com dois módulos, na linha do cabeçalho, entre "Painel admin" e o e-mail do admin: Restaurantes (`/admin/restaurants`, aberto por `/admin`) e Sugestões (`/admin/suggestions`, ícone de lâmpada), com o número de sugestões `ready` e `failed` em cima do ícone; as sugestões aprovadas e recusadas continuam na lista, com o status; a aprovação é a rota `POST /suggestions/:id/approve`, com o mesmo corpo de `POST /restaurants`, e cria o restaurante antes de marcar a sugestão, sem transação, porque o painel tem um admin só. "Processar de novo" também aparece nas `processing` paradas há mais de 10 minutos, que a API já aceita. Também decidido pelo dono, num terceiro commit: o processamento verifica se o restaurante fica em Florianópolis (só a cidade, não a região metropolitana) e se já está no mapa; nos dois casos a sugestão termina em `failed`, com o motivo, e o admin recusa.
 
-### [ ] S3 — Botão "Sugerir" no site
+### [x] S3 — Botão "Sugerir" no site
 Botão ao lado do botão de filtros, que abre um diálogo com o campo de texto e um contador (`120/300`). Avisos em português para sucesso, limite de envios atingido e erro.
-**Pronto quando:** o visitante envia uma sugestão pelo site e ela aparece no painel. Com testes.
+**Pronto quando:** o visitante envia uma sugestão pelo site e ela aparece no painel. Com testes. Decidido pelo dono: o ícone é uma lâmpada acesa, desenhada a partir do `Lightbulb` do Lucide com raios em volta, porque o Lucide não tem uma lâmpada acesa. Os avisos saem pelo `sonner`, que agora também está no site público; num erro, o diálogo continua aberto, com o texto. A página do mapa fica isolada (`isolation: isolate`) para o diálogo ficar acima do mapa e dos painéis, e os avisos ficam fora dela, para aparecer acima do diálogo.
 
 ## Depois da v1 (não planejado ainda)
 

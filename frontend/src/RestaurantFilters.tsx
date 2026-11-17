@@ -11,6 +11,7 @@ import type { Neighborhood } from './api/neighborhoods';
 import type { Restaurant, RestaurantType } from './api/restaurants';
 import { RestaurantSearch } from './RestaurantSearch';
 import { TYPE_LABELS } from './restaurantTypeLabels';
+import { SuggestRestaurant } from './SuggestRestaurant';
 
 const TYPES = Object.keys(TYPE_LABELS) as RestaurantType[];
 
@@ -86,6 +87,7 @@ export function RestaurantFilters({
             </Badge>
           )}
         </Button>
+        <SuggestRestaurant />
       </div>
       <div
         id={moreFiltersId}
