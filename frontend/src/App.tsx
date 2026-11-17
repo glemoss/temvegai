@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
 import { AppTitle } from './AppTitle';
+import { InstallPrompt } from './InstallPrompt';
 import { MapLegend } from './MapLegend';
 import { PwaNotices } from './PwaNotices';
 import { RestaurantDetails } from './RestaurantDetails';
@@ -166,6 +167,7 @@ export function App() {
       </main>
       <Toaster closeButton />
       <PwaNotices />
+      <InstallPrompt />
     </>
   );
 }
