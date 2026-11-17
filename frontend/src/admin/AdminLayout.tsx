@@ -1,6 +1,7 @@
 import { Outlet, useOutletContext } from 'react-router';
 import { Toaster } from '@/components/ui/sonner';
 import type { Admin } from '../api/auth';
+import { PwaNotices } from '../PwaNotices';
 import { AdminHeader } from './AdminHeader';
 import { AdminMenu } from './AdminMenu';
 import {
@@ -29,6 +30,7 @@ export function AdminLayout({ admin }: { admin: Admin }) {
         <Outlet context={{ suggestions, reloadSuggestions }} />
       </div>
       <Toaster closeButton />
+      <PwaNotices />
     </main>
   );
 }

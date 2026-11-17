@@ -4,7 +4,7 @@
 
 Um site com um mapa de Florianópolis que mostra restaurantes veganos. O visitante abre o mapa, vê os marcadores, filtra e clica em um restaurante para ver os detalhes.
 
-Um aplicativo mobile virá depois e vai consumir a mesma API. Por isso a API é um produto independente do frontend web.
+O site é uma PWA: pode ser instalado no celular e faz o papel de aplicativo mobile. A API continua um produto independente do frontend web.
 
 ## Usuários
 
@@ -18,6 +18,7 @@ Um aplicativo mobile virá depois e vai consumir a mesma API. Por isso a API é 
 - Filtrar por tipo, por bairro e por nome.
 - Buscar apenas os restaurantes dentro da área visível do mapa.
 - Ver a própria localização no mapa, pedida pelo botão "Minha localização" e usada só no navegador.
+- Instalar o site no celular, como app (PWA). O site fica guardado no aparelho para abrir rápido, avisa quando está sem internet e só troca de versão quando a pessoa toca em "Atualizar". Restaurantes e mapa continuam vindo da rede.
 - Login de admin com e-mail e senha (entrar, sair, consultar a sessão atual).
 - Contas de admin criadas por um comando no terminal do servidor; não existe cadastro público.
 - Endpoints de escrita (criar, editar, remover) na API, exigindo admin logado.
@@ -40,7 +41,8 @@ Não implementar, nem deixar "preparado":
 - Avaliações, comentários, favoritos.
 - Upload de fotos.
 - Outras cidades.
-- Aplicativo mobile.
+- Aplicativo mobile nativo: o site instalável (PWA) ocupa esse lugar.
+- Uso offline do mapa e dos restaurantes.
 - Importação automática de dados (Google Places, OpenStreetMap etc.). A IA só gera o rascunho de uma sugestão, que nunca entra no mapa sem a aprovação do admin; não há importação em massa.
 - Domínio próprio (a v1 usa os endereços da Vercel; o deploy está na fase D do `ROADMAP.md`).
 
@@ -59,6 +61,7 @@ Não implementar, nem deixar "preparado":
 | Testes | Vitest |
 | Frontend | React + Vite |
 | Interface do frontend | shadcn/ui (componentes copiados para `src/components/ui`) sobre Tailwind CSS (`tailwindcss` + `@tailwindcss/vite`), com `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `tw-animate-css` e `sonner` (avisos) |
+| PWA | `vite-plugin-pwa` (Workbox): manifest e service worker gerados no build, com o site em cache e `/api` e tiles sempre pela rede |
 | Rotas do frontend | React Router (site público em `/`, painel em `/admin`) |
 | Mapa | Leaflet (react-leaflet); no site, o estilo vetorial CARTO Voyager (dados do OpenStreetMap, chave grátis em `VITE_CARTO_KEY`), desenhado pelo MapLibre GL (`maplibre-gl`, ligado ao Leaflet por `@maplibre/maplibre-gl-leaflet`), com cores próprias em `mapColors.ts`; no painel admin, tiles do OpenStreetMap |
 | Geocodificação | Nominatim (OpenStreetMap), chamado pelo painel admin para marcar o endereço no mapa e preencher o endereço do ponto clicado |
