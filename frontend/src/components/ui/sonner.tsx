@@ -8,14 +8,18 @@ import {
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
 // The site has no dark theme, so the toasts are always light, in the dark
-// green of the identity.
+// green of the identity. The description is light too, as sonner paints it
+// dark gray, which disappears on the green.
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme="light"
       className="toaster group"
       containerAriaLabel="Avisos"
-      toastOptions={{ closeButtonAriaLabel: 'Fechar aviso' }}
+      toastOptions={{
+        closeButtonAriaLabel: 'Fechar aviso',
+        classNames: { description: '!text-primary-foreground/85' },
+      }}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
