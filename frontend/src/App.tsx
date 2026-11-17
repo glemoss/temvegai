@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { MapBounds, Restaurant, RestaurantType } from './api/restaurants';
 import { AppTitle } from './AppTitle';
 import { MapLegend } from './MapLegend';
+import { PwaNotices } from './PwaNotices';
 import { RestaurantDetails } from './RestaurantDetails';
 import { RestaurantFilters } from './RestaurantFilters';
 import { RestaurantMap } from './RestaurantMap';
@@ -164,6 +165,7 @@ export function App() {
         )}
       </main>
       <Toaster closeButton />
+      <PwaNotices />
     </>
   );
 }
