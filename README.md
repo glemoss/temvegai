@@ -13,17 +13,6 @@
   <a href="https://github.com/glemoss/temvegai/actions/workflows/ci.yml"><img src="https://github.com/glemoss/temvegai/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
-<p align="center">
-  <img src="docs/images/temvegai-mapa-filtros.gif" alt="Filtros por tipo e bairro no mapa e o painel de detalhes de um restaurante, com o horário da semana" width="68%">
-  <img src="docs/images/temvegai-celular.gif" alt="No celular, a busca pelo nome leva ao restaurante, e os detalhes abrem na parte de baixo da tela" width="28%">
-</p>
-
-<p align="center">
-  <img src="docs/images/temvegai-sugestao-ia.gif" alt="O visitante sugere um restaurante, a IA pesquisa e preenche o rascunho, e o admin revisa o formulário já preenchido no painel" width="96%">
-  <br>
-  <sub>O visitante sugere um restaurante pelo nome; o Gemini pesquisa na web e o admin revisa o rascunho já preenchido.</sub>
-</p>
-
 Projeto pessoal, feito de ponta a ponta e em produção: API, site, painel admin, banco, CI/CD e deploy.
 
 ## Em resumo
