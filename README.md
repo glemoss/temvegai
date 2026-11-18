@@ -15,6 +15,8 @@
 
 Projeto pessoal, feito de ponta a ponta e em produção: API, site, painel admin, banco, CI/CD e deploy.
 
+https://github.com/user-attachments/assets/5b1c1d51-f736-44b1-aaa1-af75e7d29812
+
 ## Em resumo
 
 - **Full stack em TypeScript `strict`:** API em Fastify com PostgreSQL e site em React, no mesmo repositório.
